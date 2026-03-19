@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit",
+      "Write",
+      "NotebookEdit",
+      "Bash(*)",
+      "mcp__clickup__*",
+      "mcp__supabase__*",
+      "mcp__trigger__*",
+      "mcp__context7__*"
+    ],
+    "additionalDirectories": [
+      "/private/tmp",
+      "$HOME/Downloads",
+      "$HOME/Library/LaunchAgents",
+      "$HOME/scripts"
+    ]
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "high"
+}
