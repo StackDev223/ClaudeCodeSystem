@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Read",
       "Edit",
       "Write",
       "NotebookEdit",
@@ -8,10 +9,12 @@
       "mcp__clickup__*",
       "mcp__supabase__*",
       "mcp__trigger__*",
-      "mcp__context7__*"
+      "mcp__context7__*",
+      "mcp__unframer__*"
     ],
     "additionalDirectories": [
       "/private/tmp",
+      "$HOME/Desktop",
       "$HOME/Downloads",
       "$HOME/Library/LaunchAgents",
       "$HOME/scripts"

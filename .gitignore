@@ -10,8 +10,9 @@
 # Obsidian
 .obsidian/
 
-# Claude Code
-.claude/
+# Claude Code (ignore everything except commands/)
+.claude/*
+!.claude/commands/
 !templates/CLAUDE.md
 
 # Node

@@ -1,5 +1,7 @@
 # Integration Architecture: How the Brain System Connects Everything
 
+> **You do not need to understand every detail in this document.** Claude can walk you through setting up any connection. This is a reference for when you want to know how things work under the hood.
+
 This document explains the technical architecture behind the Brain personal assistant system. It covers how a `.env` file, MCP servers, REST/GraphQL API calls, custom scripts, and slash commands work together to turn an Obsidian vault into an automated operations hub.
 
 ---
@@ -16,22 +18,32 @@ The system connects to external platforms through four layers, each serving a di
 │          Executes slash commands                  │
 ├─────────────────────────────────────────────────┤
 │                                                   │
-│  Layer 1: MCP Servers (native tool access)       │
+│  Layer 1: .env File                              │
+│  Where your login information is stored          │
+│  → Passwords, keys, and tokens in one place     │
+│                                                   │
+│  Layer 2: Direct Connections (MCP Servers)       │
+│  Tools Claude can use directly, like built-in    │
+│  apps                                            │
 │  ClickUp, Supabase, Google Calendar, etc.        │
-│  → Direct function calls, no shell needed        │
+│  → No extra steps needed, they just work         │
 │                                                   │
-│  Layer 2: REST/GraphQL APIs (via curl in shell)  │
+│  Layer 3: Tool Connections (REST/GraphQL APIs)   │
+│  Tools Claude accesses using your saved          │
+│  passwords                                       │
 │  Gmail, Slack, Fathom, Rize, n8n, Google Drive   │
-│  → Shell commands using credentials from .env    │
+│  → Claude runs commands using credentials        │
+│    from .env                                     │
 │                                                   │
-│  Layer 3: Custom Scripts (Python/Bash helpers)   │
-│  fathom-fetch.py, classify-transcript.py,        │
-│  rize-daily-triage.sh, eod-runner.sh, etc.       │
-│  → Encapsulate complex multi-step operations     │
+│  Layer 4: Custom Scripts (Python/Bash helpers)   │
+│  Multi-step recipes for complicated operations   │
+│  fathom-fetch.py, classify-transcript.py, etc.   │
+│  → Reusable scripts that handle complex tasks    │
 │                                                   │
-│  Layer 4: Cron Automation (launchd / cron)       │
+│  Layer 5: Scheduled Automation (launchd / cron)  │
+│  Runs things automatically on a schedule         │
 │  eod-cron.sh, version pinning, lockfiles         │
-│  → Unattended scheduled execution                │
+│  → Unattended nightly routines                   │
 │                                                   │
 ├─────────────────────────────────────────────────┤
 │                  Obsidian Vault                   │
@@ -113,9 +125,9 @@ This lets you browse your integrations in Obsidian without exposing secrets.
 
 ---
 
-## Layer 2: MCP Servers (Native Tool Access)
+## Layer 2: Direct Connections (MCP Servers)
 
-MCP (Model Context Protocol) servers give Claude Code direct function-call access to services. Instead of writing curl commands, the AI calls tools like `clickup_create_task` or `supabase_execute_sql` as native functions.
+Some tools have a direct connection built for Claude. Think of them as built-in apps -- Claude can use them directly without going through a browser or typing passwords. Technically these are called "MCP servers" (Model Context Protocol), but all you need to know is that once they are set up, they just work. Instead of writing commands, Claude calls tools like `clickup_create_task` or `supabase_execute_sql` as native functions.
 
 ### How MCP Servers Work
 
@@ -491,6 +503,30 @@ FATHOM_API_KEY=your_fathom_key
 
 Getting Google OAuth credentials requires creating a project in Google Cloud Console, enabling the relevant APIs (Gmail, Calendar, Drive), creating OAuth credentials, and completing the consent flow once to get a refresh token. This is the most involved setup step.
 
+### Check: Do You Have Google Admin Access?
+
+If you are connecting Google tools (Calendar, Gmail, Drive), you need access to Google Cloud Console. This is where you create the login credentials Claude uses.
+
+**Step 1: Check Cloud Console access**
+1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+2. Sign in with your work email
+3. If you see a dashboard with project options, you have access. Skip to Step 2 below.
+4. If you see "This service is not available" or get blocked, your organization's IT team has restricted access.
+
+**If you are blocked, you have three options:**
+- **Ask IT:** Request access to Google Cloud Console for creating OAuth credentials. Explain that you need it for a personal productivity tool that connects to your calendar and email.
+- **Use a personal Gmail:** Set up the connection with your personal Gmail account instead. You can still access your work calendar if it is shared with your personal account.
+- **Skip Google for now:** Use other tools first (ClickUp, Fathom, etc.) and come back to Google later.
+
+**Step 2: Check Google Workspace Admin (optional)**
+If you manage your organization's Google account:
+1. Go to [admin.google.com](https://admin.google.com)
+2. If you can sign in, you are a Google Workspace administrator
+3. This means you can enable APIs and create OAuth credentials without asking anyone
+4. This is a separate thing from Cloud Console -- you can have admin access without Cloud Console access, or vice versa
+
+Most people are NOT Google Workspace admins. If you just use Gmail and Calendar for your own work, you only need Cloud Console access (Step 1 above).
+
 ### Step 2: Configure MCP Servers
 
 In Claude Code's configuration, add MCP servers for services you use. ClickUp and Supabase are the most useful for task and data management. Each MCP server has its own setup process (usually an API key or OAuth flow).
@@ -540,6 +576,29 @@ Key considerations for unattended execution:
 - **Lockfiles**: Prevent overlapping runs
 - **Notifications**: macOS `osascript` for local, Slack DM for remote failure alerts
 - **Timeouts**: Use `perl -e 'alarm shift; exec @ARGV'` on macOS (no GNU `timeout`)
+
+---
+
+## Alternatives: Zapier, n8n, and Manual Connections
+
+Not every tool has a direct connection (MCP server) built for Claude. When a direct connection is not available, there are other ways to connect:
+
+### Zapier
+
+Zapier connects apps together without coding, like a middleman. You set up a "Zap" that says "when X happens in App A, do Y in App B." This is useful for:
+- Connecting tools that Claude cannot reach directly
+- Simple automations like "when I get an email from [sender], create a task in ClickUp"
+- Bridging tools without building custom scripts
+
+Zapier has a free tier for basic use. Visit [zapier.com](https://zapier.com) to explore.
+
+### n8n (Self-Hosted Automation)
+
+n8n is similar to Zapier but more powerful and customizable. This system uses n8n internally for some automation workflows. It requires more setup but gives you full control. Best for users who want to build complex multi-step automations.
+
+### Manual Connections (WebFetch/WebSearch)
+
+For occasional use, Claude can access many tools through the web. Using WebFetch and WebSearch, Claude can visit websites, read pages, and extract information without any special connection. This is slower and less reliable than a direct connection, but works for tools you only use occasionally.
 
 ---
 

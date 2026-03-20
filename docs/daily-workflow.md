@@ -46,7 +46,6 @@ The key insight: **tomorrow's plan is ready before you wake up**. The morning re
 | 8:00 | Morning review | Review this file, adjust if needed |
 | 8:05 | Deep Work 1 | [Client A] API integration |
 | 12:00 | Lunch | |
-| 12:30 | Nap | Alarm 12:55 |
 | 1:00 | [Contact Name] sync | [Client B], 30 min |
 | 1:30 | [Contact Name] check-in | [Client A], 30 min |
 | 2:30 | Deep Work 2 | Admin, async comms, reviews |

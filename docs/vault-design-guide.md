@@ -6,6 +6,18 @@ If you want to replicate something like this, here's everything you need to know
 
 ---
 
+## Why Obsidian?
+
+Obsidian is like a notes app, but your notes live on your computer as plain text files instead of on someone else's server. This matters for three reasons:
+
+1. **Speed.** Claude can read files on your computer instantly. If your notes were in a cloud app (like Notion or Google Docs), Claude would need to go through the internet to reach them, which is slower and more complicated to set up.
+
+2. **Simplicity.** Your notes are just text files in a folder. You can open them with any text editor, copy them, back them up, or move them to another computer by dragging a folder. No accounts, no subscriptions, no lock-in.
+
+3. **Longevity.** Plain text files (called "markdown" files) are tiny, open instantly, and will never become unreadable because a company shut down or changed their format. Notes you write today will be readable in 20 years.
+
+---
+
 ## The Core Idea
 
 An Obsidian vault is just a folder of markdown files. Claude Code is an AI agent that can read, write, and edit files, run shell commands, and call APIs. By pointing Claude Code at your vault and giving it a detailed instruction file (`CLAUDE.md`), you get an AI that:
@@ -346,47 +358,54 @@ After the review, improvement ideas go to a dedicated `System Improvements.md` f
 
 ## How to Build Your Own
 
-### Step 1: Set Up the Vault Structure
+### Step 1: Create Your Notes Folder
 
-Create the folder structure above. Start with just `Inbox/`, `Work/`, `Resources/`, and `Templates/`. Add `[YourCompany]/` and per-client `Transcripts/` folders as complexity grows.
+Create the folder structure above. Start with just `Inbox/`, `Work/`, `Resources/`, and `Templates/`. You can add more folders later as your system grows. Do not try to build the full structure on day one.
 
-### Step 2: Write Your CLAUDE.md
+If you are using Obsidian, create a new vault and add these folders inside it.
 
-Start small. Include:
+### Step 2: Write Claude's Instruction Manual
+
+The instruction manual (a file called `CLAUDE.md`) tells Claude how your system works. Start small. Include:
 - Your folder structure
 - Where new items go (your inbox system)
-- Your timezone and scheduling preferences
-- Any integrations you have
-- Your daily schedule skeleton
+- Your timezone and daily schedule
+- Any tools you have connected
 
-See `templates/CLAUDE.md` in this repo for a complete starting point.
+See `templates/CLAUDE.md` in this repository for a complete starting point. Copy it to your notes folder root and customize the parts in brackets.
 
-### Step 3: Connect Your APIs
+### Step 3: Connect Your First Tools
 
-Pick 2-3 integrations that would save you the most time. For most people:
-- **Calendar** (know what's coming tomorrow)
+Pick one or two tools that would save you the most time. For most people:
+- **Calendar** (know what is coming tomorrow)
 - **Email** (surface what needs responses)
-- **Meeting transcripts** (auto-extract action items)
+- **Meeting transcripts** (automatically capture action items from calls)
 
-Store credentials in `.env`. Document endpoints in a reference file.
+Store login information in a password keychain file (`.env`) at the root of your notes folder. See the [Integration Architecture](integration-architecture.md) guide for step-by-step instructions.
 
-### Step 4: Build Your First Slash Command
+### Step 4: Create Your First Saved Routine
 
-Start with an end-of-day routine. Even a simple version that just checks your calendar and email is valuable. Add sections as you connect more services.
+A saved routine (called a "slash command") is a text file that tells Claude how to run a multi-step process. Start with an end-of-day routine. Even a simple version that just checks your calendar and email is valuable. Add sections as you connect more tools.
 
-### Step 5: Add the Daily Workflow
+Create the file at `.claude/commands/your-routine-name.md`. See `examples/commands/` for working examples.
 
-Once your EOD is stable:
-1. Add a `/eod-today` phase that generates `Inbox/Today.md`
-2. Add a `/morning` command for interactive review
-3. Schedule EOD via `launchd` (macOS) or `cron` (Linux)
-4. Split into phases when context becomes a bottleneck
+### Step 5: Set Up Your Daily System
 
-### Step 6: Iterate
+Once your end-of-day routine is stable:
+1. Add a routine that generates tomorrow's plan (`Inbox/Today.md`)
+2. Add a morning review routine for confirming the plan
+3. Schedule the end-of-day to run automatically at night (see [Daily Workflow](daily-workflow.md))
+4. Split into phases later if the routine gets too long for a single session
 
-The system gets better every time you use it. When the AI makes a mistake, add a guideline to CLAUDE.md. When you discover a new workflow, add a slash command. When you learn an API quirk, save it to memory.
+### Step 6: Let It Grow
 
-The goal isn't to build the perfect system on day one. It's to build a system that improves itself every day.
+The system gets better every time you use it:
+- When Claude makes a mistake, add a guideline to CLAUDE.md
+- When you repeat something manually, turn it into a saved routine
+- When you learn a quirk about a tool, save it to Claude's memory files
+- Run a monthly review to clean up and improve the system
+
+The goal is not to build the perfect system on day one. It is to build a system that improves itself every day.
 
 ---
 
