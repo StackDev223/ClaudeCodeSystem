@@ -1,6 +1,11 @@
-# Onboard: Interactive Setup Interview
+# Onboard: Set Up Your Personal Assistant
 
-You are setting up the Claude Code Personal Assistant system for a new user. Walk them through the entire process using `AskUserQuestion` at every decision point. The user should never need to type long answers -- give them selectable options wherever possible.
+You are setting up the Claude Code Personal Assistant system for a new user. This is Part 1 of a 4-part setup process:
+
+1. **`/onboard`** (you are here) -- Permissions, learn about the user, build the vault and all files
+2. **`/train`** -- Learn how the system works (Obsidian, vault, slash commands, daily loop)
+3. **`/connect`** -- Connect all your tools (calendar, email, task manager, etc.)
+4. **`/finish`** -- Take it for a spin, learn how to improve it over time
 
 **Voice:** Friendly, patient, non-technical. Explain everything in plain language. Use technical terms only in parentheses after the plain version.
 
@@ -8,27 +13,129 @@ You are setting up the Claude Code Personal Assistant system for a new user. Wal
 
 ---
 
-## Phase 1: Welcome and Context
+## Phase 0: Detect Environment
 
-Start with a brief welcome. Tell the user:
-- What this system does (in 2-3 sentences, plain language)
-- That you will walk them through everything step by step
-- That the whole process takes about 30 minutes
-- They can stop at any point and pick up later by running `/onboard` again
+Before doing anything, figure out where you are running.
 
-Then begin the interview.
+1. **Check if this is the repo folder or a vault.** Look for `templates/CLAUDE.md` and `docs/` in the current directory or its children.
+   - If found in the current directory: you are inside the setup repo. Note the repo path. The vault will be created elsewhere (Phase 6A asks where).
+   - If found in a subfolder (e.g., `ClaudeCodeSystem/` or `ClaudeCodeSystem-main/`): the user dropped the repo inside their vault (or a folder that will become their vault). Note the repo subfolder path. The current directory is the vault root.
+
+2. **Locate the reference files.** Set `REPO_PATH` to wherever `templates/CLAUDE.md` lives. All template reads, example reads, and file copies will reference this path.
+
+3. **If the setup commands aren't at the project root yet** (i.e., you are running from a vault and the commands are in a subfolder): This means the user probably said "set me up" and Claude read this file from the repo's CLAUDE.md. The commands are already loaded. Proceed normally.
+
+Proceed to Phase 1.
 
 ---
 
-## Phase 2: About You
+## Phase 1: Permissions
 
-Collect the following using AskUserQuestion, one question at a time:
+**This must happen before anything else.** Without permissions, Claude will interrupt the entire setup with approval prompts for every action.
+
+Tell the user:
+"Before we get started, I need to set up permissions so I can work without asking you to approve every little thing. I am going to update your Claude Code settings file now."
+
+**Action:** Read `~/.claude/settings.json` (it may not exist yet).
+
+- If the file does not exist, create it with the contents from `examples/settings.json` in this repository.
+- If it exists, **merge** permissions: add any missing entries from `examples/settings.json` to the existing `allow` array and `additionalDirectories` array without removing anything. Preserve any other settings (like `mcpServers`).
+
+After writing: "Done. Permissions are set. You will not see approval prompts during setup."
+
+---
+
+Give a brief welcome:
+- What this system does (2-3 sentences, plain language: "I am going to build you a personal assistant that lives in a notes folder on your computer. It connects to your calendar, email, and task manager, and runs daily routines to keep you organized.")
+- That setup has 4 parts and the first part takes about 20 minutes
+- They can stop at any point and come back
+
+---
+
+## Phase 1B: Install Wispr Flow
+
+Now that they know what the system is, check if they have Wispr Flow (voice-to-text dictation). This makes the rest of setup easier because they can speak their answers instead of typing.
+
+AskUserQuestion: "One quick thing before we dive in. Do you have Wispr Flow installed? It is a voice dictation tool that lets you speak instead of type. It makes this setup easier and it is great for working with Claude day-to-day."
+Options:
+- Yes, I already have it
+- No, what is it?
+- No, and I do not want it
+
+**If "No, what is it?":**
+"Wispr Flow is a small app that turns your voice into text anywhere on your computer. Instead of typing answers to my questions, you just talk. It also works great during your day -- dictate emails, notes, task descriptions, anything. It is like having a stenographer built into your computer."
+
+AskUserQuestion: "Want to install it now? It takes about 2 minutes."
+Options:
+- Yes, let us do it
+- I will install it later
+- No thanks, I prefer typing
+
+**If they want to install:**
+1. "Open your browser and go to **wispr.com** (or search 'Wispr Flow download')."
+
+AskUserQuestion: "Are you on the Wispr Flow website?"
+Options:
+- Yes
+- I cannot find it
+
+2. "Click **Download** and install the app. It is a small download."
+
+AskUserQuestion: "Is it installed?"
+Options:
+- Yes, I see it in my menu bar
+- Still downloading / installing
+- I ran into an issue
+
+3. "Open Wispr Flow and go through the quick setup. It will ask for microphone permission -- click **Allow**."
+
+4. "Try it out: click on this text input area and press the Wispr hotkey (usually Option+Space on Mac or Ctrl+Space on Windows) and say something."
+
+AskUserQuestion: "Did it work? Did your spoken words appear as text?"
+Options:
+- Yes, it is working!
+- The hotkey did not do anything
+- It picked up my voice but the text was wrong
+
+If working: "Great! From now on, you can speak your answers to any of my questions instead of typing. Just press the Wispr hotkey and talk."
+
+If issues: Help troubleshoot (microphone permissions, hotkey conflicts), or let them skip and come back to it.
+
+---
+
+## Phase 2: Who Are You?
 
 ### 2A: Name
 Ask: "What should I call you?"
-- Free text input (no options needed for a name)
+- Free text input
 
-### 2B: Timezone
+### 2B: Company Name
+Ask: "What is the name of your company or business?"
+- Free text input
+
+### 2C: Research
+
+**Before asking more questions, research the user and their company.** Use WebSearch to look up:
+- The company name (website, what they do, industry, size)
+- The person's name + company (LinkedIn, role, bio)
+- Relevant context: what the company sells/does, who their clients are, team size
+
+**Present findings for verification:**
+
+"Here is what I found about you and [Company Name]:
+- [Company] appears to be a [description]
+- Your role seems to be [role/title if found]
+- [Other relevant details]"
+
+AskUserQuestion: "How accurate is this?"
+Options:
+- That is spot on
+- Mostly right, let me correct a few things
+- Pretty far off, let me explain
+
+Use corrections and research to inform the rest of the interview. If you found their actual clients, services, or team members, reference them by name later.
+
+### 2D: Timezone
 Ask: "What timezone are you in?"
 Options:
 - US Eastern (New York)
@@ -36,26 +143,23 @@ Options:
 - US Mountain (Denver)
 - US Pacific (Los Angeles)
 
-Include a note: "Type your timezone if it is not listed here."
+Note: "Type your timezone if it is not listed."
 
-### 2C: Work Type
-Ask: "What best describes your work?"
+### 2E: Work Type
+If research already reveals this, confirm instead of asking from scratch.
+
+Otherwise ask: "What best describes your work?"
 Options:
 - I run my own business or consultancy (solo or small team)
 - I work at a company and manage my own workload
 - I manage a team and need to track their work too
 - Something else (let me describe it)
 
-### 2D: Company Name (if applicable)
-If they chose option 1 or 3 above, ask: "What is your company or business name?"
-- Free text input
-- This will become the `[YourCompany]/` folder name
-
-If they chose option 2, ask: "What is your company name? (This is just for organizing your notes -- Claude will create a folder for company-specific documents.)"
-
 ---
 
 ## Phase 3: Your Tools
+
+Collect which tools they use. We are NOT connecting them yet -- just finding out what they have. Connections happen in `/connect`.
 
 ### 3A: Calendar
 Ask: "What calendar do you use?"
@@ -106,20 +210,6 @@ Options:
 - Yes, I use another tool (Toggl, Harvest, etc.)
 - No, but I would like to start
 - No, and I do not need this
-
-### 3G: Google Admin Check
-If they selected Google Calendar or Gmail, ask:
-"Have you ever used Google Cloud Console? (This is needed to connect Claude to your Google tools.)"
-Options:
-- Yes, I have access to console.cloud.google.com
-- I am not sure
-- No, and my company might block it
-- I would rather skip Google setup for now
-
-If they say "not sure" or "company might block it":
-- Walk them through checking: go to console.cloud.google.com, try to sign in
-- If blocked, explain the three options: ask IT, use personal Gmail, skip for now
-- Use AskUserQuestion to let them choose which path
 
 ---
 
@@ -173,46 +263,59 @@ Options:
 ### 5A: Morning Routine
 Ask: "How do you want to start your workday with Claude?"
 Options:
-- Full morning review: summary of today's tasks, meetings, and priorities, with options to adjust (recommended)
-- Quick check: just tell me the one most important thing to do first
+- Full morning review: summary of tasks, meetings, and priorities with options to adjust (recommended)
+- Quick check: just tell me the one most important thing
 - Meeting prep only: just prepare me for today's meetings
 - No morning routine
 
 ### 5B: End-of-Day Routine
 Ask: "How do you want to end your workday?"
 Options:
-- Full automated processing: Claude collects calls, emails, messages, and builds tomorrow's plan overnight (recommended)
+- Full processing: Run one command before wrapping up. Claude processes calls, emails, messages, and builds tomorrow's plan while you walk away. (recommended)
 - Simple daily note: Claude writes a summary of what happened today
-- Manual brain dump: I will tell Claude what to capture
+- Manual brain dump: I tell Claude what to capture
 - No end-of-day routine
 
 ### 5C: Client Structure
-Ask: "Do you work with multiple clients or projects that should be tracked separately?"
+If your research revealed clients, pre-populate: "It looks like you work with clients like [Client A] and [Client B]. Are these your current active clients?"
+
+Otherwise: "Do you work with multiple clients or projects that should be tracked separately?"
 Options:
-- Yes, I have multiple clients (ask for client names)
+- Yes, I have multiple clients (ask for names)
 - Yes, I have multiple projects but they are all internal
 - No, I mainly do one type of work
 
-If they have clients, ask: "List your active clients or projects (you can always add more later)."
-- Free text input, comma-separated
+If they have clients, confirm the list (free text, comma-separated). Pre-fill with any names from research.
 
 ### 5D: Client Tiers (if applicable)
-If they listed clients, ask: "Are some clients higher priority than others?"
+If they listed clients: "Are some clients higher priority than others?"
 Options:
-- Yes, let me rank them (then ask which are Tier 1 vs Tier 2)
-- They are all roughly equal priority
+- Yes, let me rank them (then ask Tier 1 vs Tier 2)
+- They are all roughly equal
 - It changes week to week
 
 ---
 
 ## Phase 6: Build Everything
 
-Now generate all the files based on the interview answers. Tell the user what you are about to create before creating it.
+Tell the user what you are about to create before creating it.
 
-### 6A: Create the Vault Folder Structure
+### 6A: Vault Folder Structure
 
-Using Bash, create the folder structure inside the current directory (or ask where they want it if this does not seem like the right location):
+**If Phase 0 detected the user is already inside a vault** (repo is a subfolder of the current directory):
+- The current directory IS the vault. Do not ask where to create it.
+- Tell the user: "I see you are already in a notes folder. I will build the system right here."
+- Skip the location question.
 
+**If running from the repo folder** (no vault detected):
+AskUserQuestion: "Where should I create your notes folder?"
+Options:
+- In my Documents folder (~/Documents/Brain)
+- On my Desktop (~/Desktop/Brain)
+- Next to this repo (../Brain)
+- Somewhere else (let me specify)
+
+Create the structure:
 ```
 Brain/
 ├── Inbox/
@@ -221,7 +324,7 @@ Brain/
 │   ├── SOPs/
 │   └── Transcripts/
 ├── Work/
-│   ├── Clients/    (with subfolders for each client if provided)
+│   ├── Clients/    (with subfolders per client)
 │   │   └── <ClientName>/
 │   │       ├── Transcripts/
 │   │       └── Archive/
@@ -239,147 +342,95 @@ Brain/
 └── Attachments/
 ```
 
-Skip folders that do not apply based on their answers (e.g., skip Sales Leads/ if they do not do sales).
+Skip folders that do not apply based on their answers.
 
-### 6B: Generate CLAUDE.md
+### 6B: CLAUDE.md
 
-Read `templates/CLAUDE.md` from this repository as the base template. Then customize it with the interview answers:
+Read `templates/CLAUDE.md` from this repo as the base. Customize with everything from the interview and web research:
 
-- Replace `[Your Name]` with their name
-- Replace `[Your Timezone]` with their timezone
-- Replace `[YourCompany]` with their company name
-- Update the daily schedule skeleton with their work hours, lunch, meeting window
-- Update the integrations section based on their tools:
-  - Remove integrations they do not use
-  - Add notes about tools they mentioned that are not in the template
-- Update client priority tiers if they provided clients
-- Update the Friday rule if they did not mention wanting meeting-free Fridays
-- Adjust the meeting window based on their preference
+- Replace all placeholders (`[Your Name]`, `[Your Timezone]`, `[YourCompany]`) with real values
+- Fill in company context from research
+- Update daily schedule skeleton with their hours, lunch, meeting window
+- Update integrations section: remove unused tools, add tools they mentioned
+- Use actual client names (not `[Client A]`) in priority tiers and examples
+- Adjust meeting window and protected time based on preferences
 
-Write the customized CLAUDE.md to the vault root (Brain/CLAUDE.md or wherever they created it).
+Write to `Brain/CLAUDE.md`.
 
-### 6C: Generate .env Template
+### 6C: .env Template
 
-Create a `.env` file at the vault root with only the services they selected, commented with instructions:
-
+Create `Brain/.env` with only the services they selected, commented with instructions:
 ```bash
 # Password keychain file for Claude
-# Fill in credentials as you connect each tool.
-# See docs/integration-architecture.md for setup instructions.
+# These will be filled in during /connect
 
-# Google (Calendar + Gmail) -- requires OAuth setup
-# GOOGLE_CLIENT_ID=
-# GOOGLE_CLIENT_SECRET=
-# GOOGLE_REFRESH_TOKEN=
-
-# (etc., only for tools they selected)
+# (only include sections for tools they selected)
 ```
 
-### 6D: Generate Settings Files
+### 6D: Local Settings
 
-Ask: "Where should I save your Claude Code permission settings?"
-Options:
-- Global settings (applies everywhere on your computer) -- recommended for most people
-- Just for this project (local settings only)
-- Both (global + local overrides)
+Write `Brain/.claude/settings.local.json` using `examples/settings.local.json` as the base.
 
-Then write the appropriate settings files:
-- Global: `~/.claude/settings.json` (read the existing file first if it exists, merge permissions)
-- Local: `Brain/.claude/settings.local.json`
+Update `~/.claude/settings.json` to add any MCP permissions for tools they selected that are not already in the allow list.
 
-Use the contents from `examples/settings.json` and `examples/settings.local.json` in this repo as the base. Customize the MCP permissions list to only include tools they are actually using.
+### 6E: Slash Commands
 
-### 6E: Create First Slash Command
+Based on workflow preferences, create commands in `Brain/.claude/commands/`:
 
-Based on their workflow preferences (Phase 5), create their first saved routine:
+- If they chose morning review -> `morning.md` based on `examples/commands/morning.md`
+- If they chose full EOD processing -> `eod.md` based on `examples/commands/eod.md` (customize phases to their tools; skip time tracking phase if they don't use a time tracker)
+- If they chose simple daily note -> `daily-note.md`
+- If they chose manual brain dump -> `brain-dump.md`
 
-- If they chose "full morning review" -> create `.claude/commands/morning.md` in their vault based on `examples/commands/morning.md`
-- If they chose "full automated processing" for EOD -> create `.claude/commands/eod.md` based on `examples/commands/eod-gather.md`
-- If they chose "simple daily note" -> create a simplified `.claude/commands/daily-note.md`
-- If they chose "manual brain dump" -> create `.claude/commands/brain-dump.md`
+Customize command content with their specific tools, clients, and schedule.
 
-Customize the command content based on their specific tools, clients, and schedule.
+**Also copy these setup commands** into `Brain/.claude/commands/`:
+- `train.md` (from this repo's `.claude/commands/train.md`)
+- `connect.md` (from this repo's `.claude/commands/connect.md`)
+- `finish.md` (from this repo's `.claude/commands/finish.md`)
 
-### 6F: Create Inbox Starter Files
+### 6F: Inbox Starter Files
 
-Create `Brain/Inbox/Incoming.md` with a starter structure:
-
-```markdown
-# Incoming -- Overview
-
-## Client Boards
-| Client | Open Tasks | Next Deadline | Status |
-|--------|-----------|---------------|--------|
-| [ClientA] | 0 | -- | New |
-(repeat for each client)
-
-## Cross-Client Tasks
-- (none yet)
-
-## Completed
-- (none yet)
-```
-
-Create a starter file for each client: `Brain/Inbox/ClientName.md`
-
-Create `Brain/Inbox/Today.md` with a simple first-day plan.
+Create `Brain/Inbox/Incoming.md` with client boards table using real client names.
+Create a starter file for each client: `Brain/Inbox/ClientName.md`.
+Create `Brain/Inbox/Today.md` with a simple first-day message.
 
 ---
 
-## Phase 7: First Tool Connection
+## Phase 7: Wrap Up and Restart
 
-Ask: "Would you like to connect your first tool right now?"
+Tell the user what was created (list every folder and file).
+
+Then explain what happens next:
+
+"Your notes folder is built and your instruction manual is customized. Before we continue, we need to restart Claude Code so it picks up the new permissions and finds your new slash commands."
+
+Walk them through it step by step:
+
+1. "Open Obsidian. If you have not installed it yet, download it from obsidian.md."
+2. "In Obsidian, choose **Open folder as vault** and navigate to your Brain/ folder at [path]. Click Open."
+3. "You should see your folder structure in the left sidebar. Take a moment to click around -- these are all just text files."
+
+AskUserQuestion: "Can you see your folders in Obsidian?"
 Options:
-- Yes, let us set up [their most impactful tool based on answers]
-- Yes, but a different one (show list)
-- No, I will do this later
+- Yes, I can see Inbox, Work, Resources, etc.
+- I need help installing Obsidian first
+- Something does not look right
 
-If yes, walk them through the connection step by step:
-- For Google: OAuth setup in Cloud Console (check admin access first)
-- For ClickUp: MCP server setup in Claude Code settings
-- For Fathom: API key from their Fathom settings page
-- For Slack: OAuth app creation or API token
+4. "Now close this Claude Code session and open a new one in your Brain/ folder:"
+   ```
+   cd [vault_path]
+   claude
+   ```
+5. "Once you are in the new session, type `/train` to learn how the system works."
 
-Use AskUserQuestion at each step to confirm they completed it before moving on.
-
----
-
-## Phase 8: Summary and Next Steps
-
-Present a clear summary of everything that was created:
-
-```
-Here is what I set up for you:
-
-Folders created:
-- Brain/Inbox/ (with starter files for [N] clients)
-- Brain/Work/Clients/ (with folders for [Client A], [Client B])
-- Brain/[Company]/ (company docs)
-- (etc.)
-
-Files created:
-- Brain/CLAUDE.md (your instruction manual, customized)
-- Brain/.env (password keychain template)
-- Brain/.claude/commands/morning.md (your morning review routine)
-- (etc.)
-
-Settings updated:
-- ~/.claude/settings.json (permissions configured)
-```
-
-Then give them three concrete next steps:
-
-1. **Right now:** Open Obsidian and point it at the Brain/ folder you just created
-2. **Today:** Fill in your first `.env` credential (walk them through whichever tool they chose)
-3. **Tomorrow morning:** Try running `/morning` to see your first daily review
-
-Ask: "Any questions about what we set up, or would you like to adjust anything?"
+**Important final note:** "When you restart, Claude will read your CLAUDE.md file automatically. That is your instruction manual -- it tells Claude everything about you, your tools, your schedule, and how you like things done. `/train` will walk you through it."
 
 ---
 
 ## Error Handling
 
-- If the user seems confused at any point, back up and explain in simpler terms
-- If they want to skip a section, let them. Mark it as "skipped" and mention they can come back
-- If a file already exists (e.g., they ran `/onboard` before), ask before overwriting
-- If they are running this from the repo directory (not a vault), create the vault structure in a sibling directory or ask where they want it
+- If the user seems confused, back up and explain in simpler terms
+- If they want to skip a section, let them and note what was skipped
+- If a file already exists (ran `/onboard` before), ask before overwriting
+- If running from the repo directory, create the vault in a separate location (ask where)

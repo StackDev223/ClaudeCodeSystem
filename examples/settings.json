@@ -6,11 +6,7 @@
       "Write",
       "NotebookEdit",
       "Bash(*)",
-      "mcp__clickup__*",
-      "mcp__supabase__*",
-      "mcp__trigger__*",
-      "mcp__context7__*",
-      "mcp__unframer__*"
+      "mcp__context7__*"
     ],
     "additionalDirectories": [
       "/private/tmp",

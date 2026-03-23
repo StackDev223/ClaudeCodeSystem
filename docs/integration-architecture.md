@@ -6,9 +6,9 @@ This document explains the technical architecture behind the Brain personal assi
 
 ---
 
-## The Four Integration Layers
+## The Five Integration Layers
 
-The system connects to external platforms through four layers, each serving a different purpose:
+The system connects to external platforms through five layers, each serving a different purpose:
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -25,13 +25,13 @@ The system connects to external platforms through four layers, each serving a di
 │  Layer 2: Direct Connections (MCP Servers)       │
 │  Tools Claude can use directly, like built-in    │
 │  apps                                            │
-│  ClickUp, Supabase, Google Calendar, etc.        │
+│  Task Manager, Google Calendar, etc.              │
 │  → No extra steps needed, they just work         │
 │                                                   │
 │  Layer 3: Tool Connections (REST/GraphQL APIs)   │
 │  Tools Claude accesses using your saved          │
 │  passwords                                       │
-│  Gmail, Slack, Fathom, Rize, n8n, Google Drive   │
+│  Gmail, Slack, Google Drive, Transcripts          │
 │  → Claude runs commands using credentials        │
 │    from .env                                     │
 │                                                   │
@@ -43,7 +43,7 @@ The system connects to external platforms through four layers, each serving a di
 │  Layer 5: Scheduled Automation (launchd / cron)  │
 │  Runs things automatically on a schedule         │
 │  eod-cron.sh, version pinning, lockfiles         │
-│  → Unattended nightly routines                   │
+│  → Unattended scheduled routines (advanced)       │
 │                                                   │
 ├─────────────────────────────────────────────────┤
 │                  Obsidian Vault                   │
@@ -81,11 +81,8 @@ SLACK_TOKEN_WORKSPACE_C=xoxp-...
 # Rize (time tracking)
 RIZE_API_KEY=...
 
-# n8n (one URL + key per instance)
-N8N_INSTANCE_A_URL=https://...
-N8N_INSTANCE_A_API_KEY=...
-N8N_INSTANCE_B_URL=https://...
-N8N_INSTANCE_B_API_KEY=...
+# Add more services as needed:
+# SERVICE_API_KEY=...
 ```
 
 See `templates/.env.example` for a full list of supported variables with descriptions.
@@ -127,12 +124,12 @@ This lets you browse your integrations in Obsidian without exposing secrets.
 
 ## Layer 2: Direct Connections (MCP Servers)
 
-Some tools have a direct connection built for Claude. Think of them as built-in apps -- Claude can use them directly without going through a browser or typing passwords. Technically these are called "MCP servers" (Model Context Protocol), but all you need to know is that once they are set up, they just work. Instead of writing commands, Claude calls tools like `clickup_create_task` or `supabase_execute_sql` as native functions.
+Some tools have a direct connection built for Claude. Think of them as built-in apps -- Claude can use them directly without going through a browser or typing passwords. Technically these are called "MCP servers" (Model Context Protocol), but all you need to know is that once they are set up, they just work. Instead of writing commands, Claude calls tools as native functions (e.g., `clickup_create_task` or `gcal_list_events`).
 
 ### How MCP Servers Work
 
 MCP servers are configured in Claude Code's settings (not in the vault). Each server:
-1. Connects to an external service (ClickUp, Supabase, Google Calendar, etc.)
+1. Connects to an external service (your task manager, Google Calendar, etc.)
 2. Exposes a set of tools (functions) the AI can call directly
 3. Handles authentication internally (credentials configured once during setup)
 
@@ -145,9 +142,9 @@ MCP servers are configured in Claude Code's settings (not in the vault). Each se
 | The operation is common and well-supported | The operation is niche or custom |
 | You want the AI to have typed parameters and validation | You need full control over headers, pagination, etc. |
 
-### Example: ClickUp (MCP)
+### Example: Task Manager (ClickUp via MCP)
 
-The AI can call ClickUp tools directly:
+This example uses ClickUp. The same pattern applies to any task manager with an MCP server. The AI can call tools directly:
 
 ```
 clickup_create_task(
@@ -160,19 +157,6 @@ clickup_create_task(
 ```
 
 No curl, no auth headers, no JSON parsing. The MCP server handles all of that.
-
-### Example: Supabase (MCP)
-
-Direct SQL execution against your database:
-
-```
-supabase_execute_sql(
-  project_id: "your_project_id",
-  query: "SELECT * FROM projects WHERE customer_id = 'abc123'"
-)
-```
-
-This is used heavily in audit delivery workflows to populate client portals, insert assessment scores, and create project structures.
 
 ---
 
@@ -199,7 +183,7 @@ curl -s "https://gmail.googleapis.com/gmail/v1/users/me/messages?q=newer_than:1d
 
 **Key gotcha**: Each shell command runs in an isolated session. Environment variables don't persist between commands. Either chain commands with `&&` or extract the token value and pass it explicitly.
 
-### API Key Auth (Fathom, n8n)
+### API Key Auth (Example: Fathom)
 
 Simpler services use static API keys passed in headers:
 
@@ -209,10 +193,6 @@ source ".env"
 # Fathom: list today's meetings
 curl -s -H "X-Api-Key: ${FATHOM_API_KEY}" \
   "https://api.fathom.ai/external/v1/meetings?created_after=2026-03-06T00:00:00Z&include_transcript=true"
-
-# n8n: list workflows on an instance
-curl -s -H "X-N8N-API-KEY: ${N8N_INSTANCE_A_API_KEY}" \
-  "${N8N_INSTANCE_A_URL}/api/v1/workflows"
 ```
 
 ### Per-Workspace Tokens (Slack)
@@ -231,7 +211,7 @@ curl -s -X POST "https://slack.com/api/chat.postMessage" \
   -d '{"channel":"C0AGY6548HH","text":"Hello from the AI"}'
 ```
 
-### GraphQL (Rize Time Tracking)
+### GraphQL (Example: Rize Time Tracking)
 
 ```bash
 curl -s -X POST "https://api.rize.io/api/v1/graphql" \
@@ -259,12 +239,11 @@ When an operation is too complex for a single curl command, or needs to be reusa
 |--------|----------|---------|
 | `fathom-fetch.py` | Python | Deterministic Fathom transcript download. Downloads today's calls, classifies per-client routing, returns JSON report. |
 | `classify-transcript.py` | Python | Routes transcript files to the correct client folder based on participant names and call title. |
-| `rize-daily-triage.sh` | Bash | Fetches Rize time tracking sessions, detects gaps, generates classification input. |
-| `rize_classify.py` | Python | Two-axis classification: client (who) + work_type (delivery/sales/audit/meeting/admin/internal). |
+| `rize-triage.sh` | Bash | Fetches Rize time tracking sessions, detects gaps, generates classification input. |
+| `rize-classify.py` | Python | Two-axis classification: client (who) + work_type (delivery/sales/audit/meeting/admin/internal). |
 | `eod-runner.sh` | Bash | Orchestrates EOD phases sequentially with timeouts, logging, and notifications. |
 | `eod-cron.sh` | Bash | Cron wrapper with version pinning, lockfiles, and Gatekeeper handling. |
-| `n8n-test.py` | Python | Tests n8n workflows across multiple instances. Trigger, activate, inspect node data. |
-| `chrome-debug.sh` | Bash | Launches Chrome with remote debugging port for agent-browser CDP mode. |
+| `md-to-gdoc.py` | Python | Converts markdown to styled HTML and uploads to Google Drive as a Google Doc. Preferred method for formatted docs. |
 
 ### Transcript Routing Architecture
 
@@ -286,9 +265,9 @@ classify-transcript.py (determines client from participants + title)
 
 The classifier uses a contact-to-client mapping (configured in the script) and falls back to title-based heuristics for edge cases. The AI can override classifications when the script gets it wrong.
 
-### Rize Time Tracking Architecture
+### Time Tracking Architecture (Example: Rize)
 
-Time tracking uses a two-axis classification system:
+If you use a time tracking tool, the system can classify sessions automatically. This example uses Rize, but the pattern works with any time tracker that has an API. Time tracking uses a two-axis classification system:
 
 - **Axis 1: Client** -- Who is the time for? (Client A, Client B, internal, etc.)
 - **Axis 2: Work Type** -- What kind of work? (delivery, sales, audit, meeting, admin, internal)
@@ -297,10 +276,10 @@ Time tracking uses a two-axis classification system:
 Rize API (sessions)
     |
     v
-rize-daily-triage.sh (fetch + gap detection)
+rize-triage.sh (fetch + gap detection)
     |
     v
-rize_classify.py (two-axis classification)
+rize-classify.py (two-axis classification)
     |
     v
 EOD Phase 3: review + relabel via Rize API
@@ -340,7 +319,7 @@ cd "$BRAIN_DIR"
 source "$RUNNER"
 ```
 
-The `launchd` plist schedules this at 11:30 PM weekdays. See `examples/scripts/` for full sanitized versions.
+For scheduled automation, a `launchd` plist can trigger this on a schedule (e.g., 11:30 PM weekdays). See `examples/scripts/` for full sanitized versions. Most users run `/eod` manually instead.
 
 ---
 
@@ -356,7 +335,7 @@ Each command file is essentially a detailed prompt with:
 2. **Data gathering**: Pull from APIs, read vault files, query databases
 3. **Processing**: Classify, extract, transform, score
 4. **Routing**: Write results to the right vault files
-5. **Sync**: Push state to external systems (ClickUp, Supabase, Slack)
+5. **Sync**: Push state to external systems (task manager, database, Slack)
 6. **Summary**: Report what was done
 
 ### Command Catalog
@@ -384,16 +363,16 @@ The daily workhorse. Touches nearly every integration:
 | Deduplication | Vault files | Remove duplicate tasks across client files |
 | Completed cleanup | Vault files | Move checked items to Completed sections |
 | Client Boards | Vault files | Update overview table in Incoming.md |
-| ClickUp sync | ClickUp MCP | Create new tasks, update statuses |
+| Task sync | Task Manager MCP | Create new tasks, update statuses |
 | Vault hygiene | Vault files | Flag stale items, Monday weekly archiving |
 
-#### EOD Phase 3: `/eod-rize` (Time Tracking)
+#### EOD Phase 3: `/eod-time` (Time Tracking, if configured)
 
 | Step | Integration | What It Does |
 |---|---|---|
 | Fetch sessions | Rize GraphQL API | Pull today's time tracking data |
 | Gap detection | Rize API + calendar | Find untracked periods, reconstruct from app data |
-| Classification | rize_classify.py | Two-axis: client + work type |
+| Classification | rize-classify.py | Two-axis: client + work type |
 | Relabeling | Rize API mutations | Apply correct labels via API |
 
 #### EOD Phase 4: `/eod-note` (Daily Note)
@@ -410,7 +389,7 @@ The daily workhorse. Touches nearly every integration:
 | Priority ranking | Vault files (inbox + manifest) | Select top 5-7 tasks by tier and deadline |
 | Meeting prep | Vault files (transcripts + profiles) | Context for each meeting |
 | Carry forward | Today's Today.md | Detect unchecked tasks, increment carry count |
-| Team priorities | Vault files + ClickUp | Generate delegation message |
+| Team priorities | Vault files + task manager | Generate delegation message |
 | Write Today.md | Vault write | Overwrite `Inbox/Today.md` |
 
 #### `/morning` (Morning Review)
@@ -444,7 +423,6 @@ Interactive command with `AskUserQuestion` at every decision point:
 | `/audit-roadmap [Client]` | Transform research into client-facing roadmap |
 | `/audit-review [Client]` | 11-point QC gate with auto-fix offer |
 | `/audit-deliver [Client]` | Populate portal, create projects/milestones, draft email |
-| `/browse [URL]` | Browser automation via agent-browser |
 
 ---
 
@@ -462,7 +440,7 @@ Gmail API ──────► Important emails ──► Email tasks ───
 Slack API ──────► Unread messages ───► Slack tasks ───────────────────┤
 (N workspaces)                                                         │
                                                                        ├──► Client files in Inbox/
-Rize GraphQL ───► Time sessions ─────► rize_classify.py ──────────────┤    (routed by client)
+Time Tracker ───► Time sessions ─────► classification ─────────────────┤    (if configured)
                                        (client + work type)            │
                                                                        │
 Google Calendar ► Tomorrow's events ─► Schedule ──────────────────────┤
@@ -472,8 +450,8 @@ Brain Dump ─────► Classify + route ──► Client tasks ───�
                                      Manifest (audit trail)
                                           │
                                           ▼
-                                    ClickUp Sync
-                                    (new tasks → ClickUp)
+                                    Task Manager Sync
+                                    (new tasks → task manager)
                                     (done tasks → update status)
                                           │
                                           ▼
@@ -501,35 +479,151 @@ GOOGLE_REFRESH_TOKEN=your_refresh_token
 FATHOM_API_KEY=your_fathom_key
 ```
 
-Getting Google OAuth credentials requires creating a project in Google Cloud Console, enabling the relevant APIs (Gmail, Calendar, Drive), creating OAuth credentials, and completing the consent flow once to get a refresh token. This is the most involved setup step.
+There are two ways to connect Google services. Choose whichever works for you:
+
+- **Easy way (recommended): Claude.ai managed connections.** You sign in to Google through Claude.ai's Settings > Integrations page. No Cloud Console project needed. Claude gets direct access to Gmail and Google Calendar as built-in tools. Add `"mcp__claude_ai_Gmail__*"` and `"mcp__claude_ai_Google_Calendar__*"` to your settings.json allow list.
+
+- **Full-control way (recommended): `gws` CLI.** Use the `gws` CLI to create or reuse Google access for the system. It is the preferred custom path because it is faster and less error-prone than clicking through Cloud Console. If `gws` is unavailable, use the Cloud Console walkthrough below.
+
+### `gws` CLI First, Cloud Console Fallback
+
+If you are using the easy way (Claude.ai managed connections), skip this entire section.
+
+Preferred path: use the `gws` CLI if it is installed on the machine. Cloud Console is the fallback path when the CLI is unavailable or fails.
+
+This fallback walkthrough assumes you have never used Google Cloud Console and have no existing project. If you run `/onboard`, Claude will walk you through these same steps interactively.
+
+#### Check: Can You Access Cloud Console?
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+2. Sign in with the Google account you want to connect
+
+**If you see a dashboard:** You have access. Continue below.
+
+**If you see "This service is not available" or a blocked page:** Your organization's IT team has restricted access. Your options:
+- **Ask IT:** Request access to Google Cloud Console. Tell them: "I need to create OAuth credentials for a personal productivity tool that reads my calendar and email. I need access to create a project, enable APIs, and generate OAuth client credentials."
+- **Use a personal Gmail:** Set up with your personal account instead. You can still access your work calendar if it is shared with your personal account.
+- **Use the easy way instead:** Connect through Claude.ai's managed integrations (no Cloud Console needed).
+- **Skip Google for now:** Use other tools first and come back later.
+
+#### 1. Create a Project
+
+1. At the top of the Cloud Console page, click the **project selector dropdown** (it might say "Select a project" or show an existing project name)
+2. In the popup, click **New Project** (top-right corner)
+3. For **Project name**, type **Claude Assistant** (or whatever you like -- this is just a label)
+4. Leave **Location** as "No organization" (or select your organization if one appears)
+5. Click **Create**
+6. Wait a few seconds for the notification, then click **Select Project** in the notification, or use the project dropdown to select your new project
+
+You should now see "Claude Assistant" (or your name) in the top-left dropdown.
+
+#### 2. Enable APIs
+
+You need to turn on each Google service Claude will use. Think of this like flipping switches.
+
+For each API below:
+1. Click the **search bar** at the top of the page
+2. Type the API name and press Enter
+3. Click on the API in the results
+4. Click the blue **Enable** button
+
+Enable these APIs:
+- **Google Calendar API** (required for calendar access)
+- **Gmail API** (required for email access)
+- **Google Drive API** (optional -- only if you want document management)
+
+#### 3. Set Up the OAuth Consent Screen
+
+This tells Google what "app" is requesting access. You are just filling in a few fields.
+
+1. In the left sidebar, click **APIs & Services**, then **OAuth consent screen**
+   - If you cannot find the sidebar, click the hamburger menu (three horizontal lines) in the top-left corner
+2. Choose a user type:
+   - **Internal** (if available and you are using a Google Workspace/company account) -- simpler, recommended
+   - **External** (if using a personal Gmail or Internal is not available) -- works fine, one extra step later
+3. Click **Create**
+
+Fill in the form:
+- **App name:** Claude Assistant
+- **User support email:** Select your email from the dropdown
+- **Developer contact information** (at the bottom): Enter your email again
+- Skip the logo and app domain fields -- leave them blank
+- Click **Save and Continue**
+
+On the **Scopes** page:
+1. Click **Add or Remove Scopes**
+2. Search for and check these scopes:
+   - `https://www.googleapis.com/auth/calendar` (full calendar access)
+   - `https://www.googleapis.com/auth/gmail.modify` (read and send email)
+   - `https://www.googleapis.com/auth/drive` (only if you enabled Drive API)
+3. Click **Update**, then **Save and Continue**
+
+On the **Test Users** page (only appears for External user type):
+1. Click **Add Users**
+2. Enter your own email address
+3. Click **Add**, then **Save and Continue**
+
+On the **Summary** page, click **Back to Dashboard**.
+
+#### 4. Create OAuth Credentials
+
+1. In the left sidebar, go to **APIs & Services** > **Credentials**
+2. Click **+ Create Credentials** at the top
+3. Choose **OAuth client ID**
+4. For **Application type**, choose **Desktop app** (not Web application)
+5. For **Name**, type **Claude Assistant**
+6. Click **Create**
+
+A popup appears showing your **Client ID** and **Client Secret**. Copy both values and save them somewhere safe. You can also click **Download JSON** to save them as a file.
+
+#### 5. Get a Refresh Token
+
+This is a one-time sign-in so Google gives Claude a long-lasting key to access your account.
+
+1. Open [developers.google.com/oauthplayground](https://developers.google.com/oauthplayground) in a new tab
+2. Click the **gear icon** (Settings) in the top-right corner
+3. Check **Use your own OAuth credentials**
+4. Paste your **Client ID** and **Client Secret** into the fields
+5. Click **Close**
+6. On the left side, find and check these scopes (scroll or use the search box):
+   - Under **Google Calendar API v3**: `https://www.googleapis.com/auth/calendar`
+   - Under **Gmail API v1**: `https://www.googleapis.com/auth/gmail.modify`
+   - Under **Google Drive API v3**: `https://www.googleapis.com/auth/drive` (if applicable)
+7. Click **Authorize APIs** (blue button)
+8. Sign in with your Google account and click **Allow**
+   - You may see a warning: "Google hasn't verified this app." Click **Advanced**, then **Go to Claude Assistant (unsafe)**. This is normal for personal projects -- you are authorizing your own app.
+9. After approving, you are redirected back to the playground with an **Authorization code**
+10. Click **Exchange authorization code for tokens**
+11. Copy the **Refresh token** from the response (it is a long string starting with `1//`)
+
+#### 6. Save Your Credentials
+
+Add these three values to your password keychain file (`.env`) at the root of your notes folder:
+
+```bash
+GOOGLE_CLIENT_ID=paste_your_client_id_here
+GOOGLE_CLIENT_SECRET=paste_your_client_secret_here
+GOOGLE_REFRESH_TOKEN=paste_your_refresh_token_here
+```
+
+#### 7. Test the Connection
+
+Ask Claude to test it by running a quick calendar check. If Claude can pull your upcoming events, the connection is working.
 
 ### Check: Do You Have Google Admin Access?
 
-If you are connecting Google tools (Calendar, Gmail, Drive), you need access to Google Cloud Console. This is where you create the login credentials Claude uses.
+This section is only relevant if you are a Google Workspace administrator (you manage your organization's Google accounts). Most people are not.
 
-**Step 1: Check Cloud Console access**
-1. Go to [console.cloud.google.com](https://console.cloud.google.com)
-2. Sign in with your work email
-3. If you see a dashboard with project options, you have access. Skip to Step 2 below.
-4. If you see "This service is not available" or get blocked, your organization's IT team has restricted access.
-
-**If you are blocked, you have three options:**
-- **Ask IT:** Request access to Google Cloud Console for creating OAuth credentials. Explain that you need it for a personal productivity tool that connects to your calendar and email.
-- **Use a personal Gmail:** Set up the connection with your personal Gmail account instead. You can still access your work calendar if it is shared with your personal account.
-- **Skip Google for now:** Use other tools first (ClickUp, Fathom, etc.) and come back to Google later.
-
-**Step 2: Check Google Workspace Admin (optional)**
-If you manage your organization's Google account:
 1. Go to [admin.google.com](https://admin.google.com)
 2. If you can sign in, you are a Google Workspace administrator
-3. This means you can enable APIs and create OAuth credentials without asking anyone
-4. This is a separate thing from Cloud Console -- you can have admin access without Cloud Console access, or vice versa
+3. This means you can enable APIs and create OAuth credentials for your entire organization
+4. This is separate from Cloud Console access -- you can have one without the other
 
-Most people are NOT Google Workspace admins. If you just use Gmail and Calendar for your own work, you only need Cloud Console access (Step 1 above).
+If you are a Workspace admin, you can also pre-approve the OAuth consent screen for your organization so other team members do not see the "unverified app" warning.
 
 ### Step 2: Configure MCP Servers
 
-In Claude Code's configuration, add MCP servers for services you use. ClickUp and Supabase are the most useful for task and data management. Each MCP server has its own setup process (usually an API key or OAuth flow).
+In Claude Code's configuration, add MCP servers for services you use. Your task manager and any database tools are common first choices. Each MCP server has its own setup process (usually an API key or OAuth flow). See the `/connect` command for step-by-step guidance.
 
 ### Step 3: Document Your Integrations
 
@@ -561,25 +655,13 @@ Then add sections as you connect more integrations: meeting transcripts, Slack, 
 
 When a slash command step gets too complex for inline curl commands (pagination, state tracking, multi-step logic), extract it into a Python script in `scripts/`. Give the script a `--json` output flag so the AI can parse results programmatically.
 
-### Step 6: Automate with Cron
+### Step 6 (Advanced): Schedule Automation
 
-Once a slash command works reliably in autonomous mode, schedule it with `launchd` (macOS) or `cron` (Linux). The pattern:
-
-```bash
-#!/bin/bash
-cd "/path/to/vault"
-claude --command "/your-command" --dangerously-skip-permissions --no-input
-```
-
-Key considerations for unattended execution:
-- **Version pinning**: Pin a specific Claude CLI version to avoid TCC dialogs on macOS when new versions auto-update
-- **Lockfiles**: Prevent overlapping runs
-- **Notifications**: macOS `osascript` for local, Slack DM for remote failure alerts
-- **Timeouts**: Use `perl -e 'alarm shift; exec @ARGV'` on macOS (no GNU `timeout`)
+Most users just run `/eod` manually before wrapping up. If you want it to run on a schedule (e.g., 11:30 PM weekdays), see `examples/scripts/` in the setup repository for shell orchestrators, cron wrappers, and macOS `launchd` configs. This requires terminal experience and is completely optional.
 
 ---
 
-## Alternatives: Zapier, n8n, and Manual Connections
+## Alternatives: Zapier and Manual Connections
 
 Not every tool has a direct connection (MCP server) built for Claude. When a direct connection is not available, there are other ways to connect:
 
@@ -587,14 +669,10 @@ Not every tool has a direct connection (MCP server) built for Claude. When a dir
 
 Zapier connects apps together without coding, like a middleman. You set up a "Zap" that says "when X happens in App A, do Y in App B." This is useful for:
 - Connecting tools that Claude cannot reach directly
-- Simple automations like "when I get an email from [sender], create a task in ClickUp"
+- Simple automations like "when I get an email from [sender], create a task in my task manager"
 - Bridging tools without building custom scripts
 
 Zapier has a free tier for basic use. Visit [zapier.com](https://zapier.com) to explore.
-
-### n8n (Self-Hosted Automation)
-
-n8n is similar to Zapier but more powerful and customizable. This system uses n8n internally for some automation workflows. It requires more setup but gives you full control. Best for users who want to build complex multi-step automations.
 
 ### Manual Connections (WebFetch/WebSearch)
 
@@ -642,8 +720,10 @@ Every system that syncs data between two sources needs deduplication. The AI che
 
 For long-running workflows (like EOD with multiple sections), use a manifest file to track every item extracted. This prevents items from being lost to context compression (when the AI's conversation gets too long, older context gets summarized). The manifest serves as a persistent ledger the AI can read back at any point.
 
-### macOS Gatekeeper and TCC
+### macOS Gatekeeper and TCC (Advanced)
 
-When running Claude Code from `launchd` (unattended), two macOS security systems can block execution:
+Only relevant if running Claude Code from `launchd` (unattended scheduled automation). Two macOS security systems can block execution:
 - **Gatekeeper**: Blocks binaries with `com.apple.provenance` xattr (downloaded files). Strip with `xattr -d`.
 - **TCC (Transparency, Consent, Control)**: File access permissions are granted per-binary. When Claude auto-updates, the new binary needs fresh TCC grants. Solution: pin a specific version that already has permissions.
+
+Most users do not need to worry about this. It only applies to scheduled automation.

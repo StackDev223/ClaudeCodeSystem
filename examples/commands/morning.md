@@ -222,7 +222,7 @@ If no meetings: "No meetings today. Full deep work runway. [Top priority] starts
 
 - Use `AskUserQuestion` for ALL interaction points. Never just ask a question in text and wait for the user to type. Every decision point must use selectable options.
 - If the plan looks clean and "All good" is selected in Step 3, the entire review can complete with just 3 taps: "All good" -> "Skip"/"Create all" -> done. Minimize friction.
-- Today.md is ephemeral (overwritten nightly by EOD Phase 5). The daily note (`Work/Daily/YYYY-MM-DD.md`) is the permanent record.
+- Today.md is ephemeral (overwritten each EOD run). The daily note (`Work/Daily/YYYY-MM-DD.md`) is the permanent record.
 - For iCloud-safe writes to Inbox files, always use Python read-modify-write (same pattern as EOD).
 - **Time block granularity**: Don't create 15-minute blocks for everything. Group related small tasks into blocks of 30-90 minutes.
 - **Overcommitment guard**: If total estimated work exceeds available deep work time, force a prioritization conversation in Step 3 before creating blocks.

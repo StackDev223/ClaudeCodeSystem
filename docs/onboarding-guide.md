@@ -6,16 +6,25 @@ This guide is a reference for what the setup process covers. **You do not need t
 /onboard
 ```
 
-Claude will interview you using a friendly question-and-answer format with selectable options (no typing required for most questions). It will ask about your name, tools, schedule, and preferences, then build everything for you in about 30 minutes.
+Claude will interview you using a friendly question-and-answer format with selectable options (no typing required for most questions). It will ask about your name, tools, schedule, and preferences, then build everything for you in about 20 minutes.
 
-The steps below explain what `/onboard` sets up, so you can understand what each piece does or make changes later.
+The setup has 4 parts:
+
+| Step | Command | What It Does | Time |
+|------|---------|-------------|------|
+| 1 | `/onboard` | Permissions, learn about you, build your notes folder and files | ~20 min |
+| 2 | `/train` | Walk through Obsidian, your vault, slash commands, and the daily loop | ~15 min |
+| 3 | `/connect` | Connect each of your tools (calendar, email, tasks, etc.) one by one | ~20 min |
+| 4 | `/finish` | Live demo with real data, improvement tips, how to maximize the system | ~10 min |
+
+The steps below explain what each part sets up, so you can understand what each piece does or make changes later.
 
 **What you will need:**
 - A Mac or PC
 - [Obsidian](https://obsidian.md) (free)
-- A [Claude Code subscription](https://claude.ai)
+- A [Claude Max subscription](https://claude.ai) ($100/month -- includes Claude Code)
 
-**What you are building:** A personal assistant that lives in your notes folder. It reads your calendar, processes your email, tracks your tasks, and builds tomorrow's plan while you sleep. By the end of setup, you will have a working daily system.
+**What you are building:** A personal assistant that lives in your notes folder. It reads your calendar, processes your email, tracks your tasks, and builds tomorrow's plan while you sleep. By the end of all 4 steps, you will have a working daily system.
 
 ---
 
@@ -38,11 +47,7 @@ Copy and paste this into the file:
       "Write",
       "NotebookEdit",
       "Bash(*)",
-      "mcp__clickup__*",
-      "mcp__supabase__*",
-      "mcp__trigger__*",
-      "mcp__context7__*",
-      "mcp__unframer__*"
+      "mcp__context7__*"
     ],
     "additionalDirectories": [
       "/private/tmp",
@@ -66,11 +71,9 @@ Copy and paste this into the file:
 | `Write` | Claude can create new files |
 | `NotebookEdit` | Claude can work with notebook files |
 | `Bash(*)` | Claude can run terminal commands |
-| `mcp__clickup__*` | Claude can use ClickUp (task management) |
-| `mcp__supabase__*` | Claude can use Supabase (database) |
-| `mcp__trigger__*` | Claude can use Trigger.dev (automation) |
 | `mcp__context7__*` | Claude can look up documentation |
-| `mcp__unframer__*` | Claude can use Unframer (design tool) |
+
+**Adding more tools:** Each tool Claude connects to needs its own permission line. When you run `/connect`, Claude will add these automatically. The pattern is always `mcp__` followed by the tool name and `__*`. For example, if you connect ClickUp, Claude adds `"mcp__clickup__*"` to the allow list.
 
 **Adding more tools:** Each tool Claude connects to needs its own permission line. If you connect Claude to Gmail or Google Calendar through Claude.ai, add lines like `"mcp__claude_ai_Gmail__*"` and `"mcp__claude_ai_Google_Calendar__*"` to the allow list. The pattern is always `mcp__` followed by the tool name and `__*`.
 
@@ -161,148 +164,67 @@ The template includes sections for:
 
 ---
 
-## Step 4: Connect Your First Tool
+## Step 4: Connect Your Tools (`/connect`)
 
-Start with one tool. The best first connection depends on what would save you the most time.
+The `/connect` command walks you through connecting each tool one by one, testing each connection with real data before moving on.
 
 **Recommended first connections:**
 - **Google Calendar** -- Know what is coming tomorrow, create time blocks
-- **ClickUp** (or your task manager) -- Track and update tasks
+- **Your task manager** (ClickUp, Asana, Todoist, etc.) -- Track and update tasks
 - **Gmail** -- Surface emails needing responses
 
-### Google Calendar or Gmail Setup
+For Google services, `/connect` offers two paths:
+- **Easy way:** Sign in through Claude.ai's settings page (2 minutes, no technical setup)
+- **Full control way:** Use the `gws` CLI to set up Google access (recommended for custom Google Drive/Docs workflows). Cloud Console is the fallback if the CLI is unavailable.
 
-Google tools require a secure login handshake (called "OAuth"). This means you need to set up a Google project that gives Claude permission to access your calendar and email.
-
-#### Check: Do You Have Google Admin Access?
-
-Before starting, check whether your Google account allows you to set up these connections:
-
-1. Go to [console.cloud.google.com](https://console.cloud.google.com)
-2. Try to sign in with your work email
-
-**If you can sign in and see a dashboard:** You have access. Continue to the setup below.
-
-**If you see "This service is not available" or a blocked page:** Your organization's IT team has restricted access. You have three options:
-- **Ask IT:** Request access to Google Cloud Console for creating OAuth credentials. Explain you need it for a personal productivity tool.
-- **Use a personal Gmail:** Set up the connection with your personal Gmail account instead. You can still add your work calendar later using calendar sharing.
-- **Skip Google for now:** Move on to a different tool (like ClickUp) and come back to Google later.
-
-#### Google Workspace Admin (Optional)
-
-If you manage your organization's Google account, there is a separate admin panel at [admin.google.com](https://admin.google.com). This is where you control things like which apps your team can use. You only need this if you want to enable Google connections for other people in your organization. For personal use, the Cloud Console above is all you need.
-
-### Setting Up the Connection
-
-See [Integration Architecture](integration-architecture.md) for detailed step-by-step instructions on connecting each tool, including how to get your login credentials and store them in the password keychain file (.env).
+See [Integration Architecture](integration-architecture.md) for the full technical reference on how each tool connects, including credential types and API details.
 
 ---
 
-## Step 5: Discover Your Personal Workflow
+## Step 5: Learn the System (`/train`)
 
-Before building saved routines, think about how you want your day to flow. This section helps you figure out what would be most useful.
+The `/train` command gives you a guided tour of everything `/onboard` built: your folder structure, CLAUDE.md instruction manual, slash commands, and the daily loop. It takes about 15 minutes and is designed as a show-and-tell (not a lecture).
 
-### How Do You Want to Start Your Day?
-
-Pick the option that sounds most like you:
-
-- **A) "Show me what is on my plate."** You want a summary of today's tasks, meetings, and priorities. (This is the `/morning` routine.)
-- **B) "Just tell me the one thing to focus on."** You want a single top priority, not a full review. (A simplified morning check.)
-- **C) "I already know what I am doing. Just prep my meetings."** You want meeting context and prep notes without the full planning flow.
-
-### How Do You Want to End Your Day?
-
-- **A) "Process everything automatically while I sleep."** Full end-of-day pipeline: transcripts, email, Slack, task sync, tomorrow's plan. (The `/eod` pipeline.)
-- **B) "Just capture what happened today."** A daily summary note without the full processing. (A simplified daily note.)
-- **C) "I will tell Claude what happened."** A manual brain dump where you dictate what to capture.
-
-### What Routines Would Help You Most?
-
-Pick all that apply:
-
-- [ ] **Morning review** -- Confirm today's plan, adjust priorities, create calendar time blocks
-- [ ] **Meeting prep** -- Context and talking points before each meeting
-- [ ] **Email triage** -- Surface emails that need responses, draft replies
-- [ ] **Task sync** -- Keep your notes folder and task manager in sync
-- [ ] **Daily summary** -- A record of what happened today
-- [ ] **Tomorrow's plan** -- Pre-built schedule and priorities for the next day
-- [ ] **Weekly reset** -- Archive completed work, carry forward open items
-- [ ] **Monthly review** -- Check what is working, clean up, improve the system
-
-Your answers shape which saved routines you should build first. Start with one or two that would save you the most time.
+Key things you will learn:
+- What each folder is for
+- How CLAUDE.md works and how to edit it
+- How slash commands work (they are just text files)
+- The daily loop: EOD processing, morning review, day, repeat
 
 ---
 
-## Step 6: Create Your First Saved Routine
+## Step 6: Take It for a Spin (`/finish`)
 
-A saved routine (called a "slash command") is a text file that tells Claude how to run a multi-step process. You type `/routine-name` and Claude does the rest.
+The `/finish` command is the payoff. Claude pulls real data from your connected tools and shows you the system working:
 
-### Create the Folder
+- Tomorrow's calendar and schedule
+- Emails needing attention
+- Open tasks from your task manager
+- Meeting prep for upcoming calls
+- A generated plan for tomorrow (`Inbox/Today.md`)
 
-Inside your notes folder, create this path:
-
-```
-Brain/.claude/commands/
-```
-
-### Write Your First Routine
-
-Based on your workflow answers in Step 5, pick one to start with. Here is a simple morning review example:
-
-Create a file called `morning.md` inside `.claude/commands/`:
-
-```markdown
-# Morning Review
-
-## Step 1: Check the Date
-Run `date` to verify today's date.
-
-## Step 2: Read Today's Plan
-Read `Inbox/Today.md` and summarize:
-- How many meetings today and when
-- Top 3 priorities
-- Any deadlines this week
-
-## Step 3: Ask for Adjustments
-Ask: "Any changes to today's plan?"
-- If yes, discuss and update
-- If no, confirm the plan is locked
-
-## Step 4: Send-Off
-Announce the first priority and wish a good morning.
-```
-
-Now when you type `/morning` in Claude Code, it will run through these steps automatically.
-
-### Building More Routines
-
-See the [examples/commands/](../examples/commands/) folder for full examples of:
-- End-of-day processing (`eod-gather.md`)
-- Morning interactive review (`morning.md`)
-
-Start simple. Add complexity as you learn what works for you.
+It also covers:
+- How to add rules when Claude makes a mistake
+- How to create new saved routines for repeated tasks
+- The monthly review process
+- Power tips specific to your setup
 
 ---
 
-## Step 7: Your First Full Day
-
-Here is what a day looks like with the system running:
+## What a Typical Day Looks Like
 
 ### The Night Before
 
-If you have the nightly automation set up (see [Daily Workflow](daily-workflow.md)), Claude processes your calls, emails, and messages overnight and builds tomorrow's plan in `Inbox/Today.md`.
+If you ran `/eod` the day before, Claude has already processed your calls, emails, and messages and built today's plan in `Inbox/Today.md`.
 
-If you do not have automation yet, you can run `/eod` manually before bed, or skip this step and start fresh in the morning.
+If you did not run `/eod` yet, you can run it now, or start fresh and run it tonight.
 
 ### Morning (5 minutes)
 
 1. Open Obsidian and read `Inbox/Today.md`
 2. Open Claude Code in your notes folder
 3. Type `/morning`
-4. Claude walks you through:
-   - Today's schedule and priorities
-   - Any conflicts or concerns
-   - Calendar time blocks to create
+4. Claude walks you through the plan and helps you adjust if needed
 5. Confirm the plan. You are ready to start.
 
 ### During the Day
@@ -315,10 +237,7 @@ Use Claude whenever you need help:
 
 ### End of Day
 
-Run `/eod` (or let it run automatically at 11:30 PM) to:
-- Process any remaining items
-- Sync tasks with your task manager
-- Generate tomorrow's plan
+Run `/eod` before wrapping up. Claude processes the day and generates tomorrow's plan while you walk away.
 
 ### Over Time
 
@@ -345,5 +264,5 @@ Plain-language definitions for terms you will see in the documentation.
 | **.env file** | Your password keychain file. A text file that stores all the login information Claude needs for your tools. It never leaves your computer. |
 | **Manifest** | A tracking list. During long processes, Claude writes down every item it finds so nothing gets lost. |
 | **EOD pipeline** | The end-of-day routine. A multi-step process that collects everything from your day and builds tomorrow's plan. |
-| **launchd / cron** | Scheduled task runners. They tell your computer to run something at a specific time (like the nightly end-of-day at 11:30 PM). launchd is for Mac, cron is for Linux. |
+| **Sub-agent** | A separate Claude session launched from within your current session. The `/eod` command uses sub-agents so each phase gets a fresh context window. You do not need to do anything special; it happens automatically when you run `/eod`. |
 | **Context window** | Claude's working memory for a single conversation. Claude can hold a lot of information at once, but very long sessions may compress older details. That is why important things get written to files. |

@@ -1,6 +1,6 @@
 # Daily Workflow System
 
-This document covers the daily loop that powers the Brain personal assistant system: how the nightly EOD generates tomorrow's plan, how the morning review confirms it, and how automated orchestration ties everything together.
+This document covers the daily loop that powers the Brain personal assistant system: how the EOD generates tomorrow's plan, how the morning review confirms it, and how the two routines create a self-sustaining daily rhythm.
 
 ---
 
@@ -9,25 +9,25 @@ This document covers the daily loop that powers the Brain personal assistant sys
 The system operates on a continuous daily cycle:
 
 ```
- 11:30 PM  EOD Pipeline (automated)
-           ├── Phase 1: Gather data (Fathom, email, Slack, calendar)
-           ├── Phase 2: Sync + hygiene (dedup, ClickUp, archiving)
-           ├── Phase 3: Time tracking (Rize classification)
-           ├── Phase 4: Daily note (permanent record)
-           └── Phase 5: Generate Tomorrow's Today.md
-                |
-                v
-  8:00 AM  Read Today.md (pre-built plan)
-  8:00 AM  Run /morning (interactive 3-5 min review)
-  8:05 AM  Deep Work 1 begins
-                |
-               ...  Day happens (meetings, tasks, Slack, email)
-                |
-                v
- 11:30 PM  EOD Pipeline runs again
+ End of day  Run /eod (walk away while it processes)
+             ├── Phase 1: Gather data (transcripts, email, Slack, calendar)
+             ├── Phase 2: Sync + hygiene (dedup, task sync, archiving)
+             ├── Phase 3: Time tracking (if configured)
+             ├── Phase 4: Daily note (permanent record)
+             └── Phase 5: Generate Tomorrow's Today.md
+                  |
+                  v
+  Morning    Read Today.md (pre-built plan)
+  Morning    Run /morning (interactive 3-5 min review)
+  Morning    Deep work begins
+                  |
+                 ...  Day happens (meetings, tasks, Slack, email)
+                  |
+                  v
+ End of day  Run /eod again
 ```
 
-The key insight: **tomorrow's plan is ready before you wake up**. The morning review takes 3-5 minutes of confirming a pre-built plan, not 30 minutes of figuring out what to do.
+The key insight: **tomorrow's plan is built before you close the laptop**. The morning review takes 3-5 minutes of confirming a pre-built plan, not 30 minutes of figuring out what to do.
 
 ---
 
@@ -66,7 +66,7 @@ None. Full deep work block protected.
 
 ### Deep Work 2 (2:30 - 5:30)
 - [ ] **[Client C]** Reply to email re: timeline <!-- src:Inbox/ClientC.md|Reply to email re: timeline -->
-- [ ] **[Cross-Client]** Update ClickUp statuses <!-- src:Inbox/Incoming.md|Update ClickUp statuses -->
+- [ ] **[Cross-Client]** Update task manager statuses <!-- src:Inbox/Incoming.md|Update task manager statuses -->
 
 ### Carried Forward
 _(empty on fresh day; populated if items rolled from yesterday)_
@@ -220,33 +220,44 @@ Step 6: Send-off
 
 ## EOD Pipeline Architecture
 
-The end-of-day runs as a multi-phase pipeline, each phase in a fresh Claude Code context. This avoids context overflow on busy days.
+The default `/eod` should run in one Claude session. Claude Code now supports long-context sessions, so most users do not need to split the workflow anymore. Keep the phased version as an advanced fallback for unusually heavy days or unattended scheduled automation.
 
 ### Why Phases?
 
-A monolithic `/eod` command works fine on light days (2 calls, 20 Slack messages). On heavy days (5+ calls, 100+ Slack messages, complex email threads), the single context fills up and items start getting lost to context compression. Splitting into phases means each phase starts fresh and writes to disk for the next phase to pick up.
+Historically, EOD was split because long daily closeout sessions could overflow the model context on busy days. With long-context Claude Code sessions, that workaround is no longer the default recommendation. Keep phased EOD only when a specific user's workflow is still too large for one run, or when you need extra resilience for unattended scheduled jobs.
 
 ### Phase Architecture
 
+Default architecture:
 ```
-eod-cron.sh (launchd trigger)
-    |
-    v
-eod-runner.sh (orchestrator)
-    |
-    ├── Phase 1: claude -p "/eod-gather" ──> manifest + inbox files + transcripts
-    ├── Phase 2: claude -p "/eod-sync"   ──> deduped inbox + ClickUp sync
-    ├── Phase 3: claude -p "/eod-rize"   ──> time tracking labels
-    ├── Phase 4: claude -p "/eod-note"   ──> Work/Daily/YYYY-MM-DD.md
-    └── Phase 5: claude -p "/eod-today"  ──> Inbox/Today.md
+You type: /eod
+    │
+    ▼
+One Claude session
+    ├── Gather: transcripts, email, Slack, calendar, brain dump
+    ├── Route: write items to inbox files and manifest
+    ├── Sync: dedup, cleanup, task manager sync
+    ├── Note: write Work/Daily/YYYY-MM-DD.md
+    └── Plan: write Inbox/Today.md for tomorrow
 ```
 
-Each phase:
-- Gets a fresh context window (no bleed from previous phases)
-- Reads its inputs from disk (manifest files, inbox files, temp files in `/tmp/`)
-- Writes its outputs to disk (same locations)
-- Has an independent timeout (25 min for gather, 5 min for daily note)
-- Can fail without blocking later phases
+Advanced fallback:
+```
+You type: /eod
+    │
+    ▼
+Phased /eod
+    ├── Gather
+    ├── Sync
+    ├── Time (optional)
+    ├── Note
+    └── Plan
+```
+
+For either approach:
+- Write important state to disk as you go
+- Route items immediately instead of batching them in memory
+- Skip sections for tools the user does not use
 
 ### The Manifest File
 
@@ -259,8 +270,8 @@ The manifest (`/tmp/eod-manifest-TODAY.md`) is the audit trail:
 
 | # | Item | Client | Type | Source | Routed To | Status |
 |---|------|--------|------|--------|-----------|--------|
-| 1 | Review PR #234 | [Client A] | action-owner | Fathom: [Contact] call | Inbox/ClientA.md | ✓ |
-| 2 | Follow up: [Team Member] to send mockups | [Client B] | followup | Fathom: [Contact] call | Inbox/ClientB.md | ✓ |
+| 1 | Review PR #234 | [Client A] | action-owner | Transcript: [Contact] call | Inbox/ClientA.md | ✓ |
+| 2 | Follow up: [Team Member] to send mockups | [Client B] | followup | Transcript: [Contact] call | Inbox/ClientB.md | ✓ |
 | 3 | Reply re: timeline | [Client C] | email-response | Email: [Contact]@... | Inbox/ClientC.md | ✓ |
 | 4 | Staging deploy status? | [Client B] | research | Slack: DM | Inbox/ClientB.md | ✓ |
 ```
@@ -271,91 +282,30 @@ Phase 1 creates the manifest. Phase 2 reads it for deduplication. Phase 5 reads 
 
 - If Phase 1 fails, later phases still run with whatever data was written before the failure
 - If Phase 2 fails, time tracking and daily note still generate
-- Failures trigger macOS notifications and optional Slack DMs
-- The `--phase N` flag lets you re-run a single failed phase
-- The `--dry-run` flag previews what would execute
+- You can ask Claude to re-run a specific phase if one fails
+- Each phase is independent: partial data is better than no data
 
 ---
 
-## Cron Automation
+## Advanced: Scheduled Automation
 
-### launchd (macOS)
+For power users who want the EOD to run on a schedule (e.g., 11:30 PM weekdays) without manual intervention. This requires terminal setup and is completely optional. Most users just run `/eod` manually.
 
-The EOD pipeline runs via a `launchd` user agent:
+See `examples/scripts/` in the setup repository for:
+- `eod-runner.sh` -- Shell orchestrator that runs each phase as a separate Claude CLI invocation
+- `eod-cron.sh` -- Cron wrapper with version pinning, lockfiles, and macOS Gatekeeper handling
+- `com.brain.eod-runner.plist` -- macOS `launchd` config for scheduling
 
-```xml
-<key>StartCalendarInterval</key>
-<array>
-    <!-- Monday through Friday at 11:30 PM -->
-    <dict>
-        <key>Weekday</key><integer>1</integer>
-        <key>Hour</key><integer>23</integer>
-        <key>Minute</key><integer>30</integer>
-    </dict>
-    <!-- ... repeat for weekdays 2-5 -->
-</array>
-```
-
-Install with:
-```bash
-cp com.brain.eod-runner.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.brain.eod-runner.plist
-```
-
-### Version Pinning
-
-Claude Code auto-updates. On macOS, each new version is a new binary that needs TCC (Transparency, Consent, Control) file access permissions. If the EOD runs with an un-permissioned binary, it silently fails to read vault files.
-
-Solution: pin a specific version:
-
-```bash
-# Pin the current version
-echo "2.1.14" > ~/scripts/eod-claude-version
-
-# The cron wrapper reads this and uses the pinned binary
-PINNED_BIN="$HOME/.local/share/claude/versions/$PINNED_VER"
-export EOD_CLAUDE="$PINNED_BIN"
-```
-
-When Claude updates, the cron wrapper sends a notification: "Claude 2.1.15 available. EOD pinned to 2.1.14." You then:
-1. Grant the new version file access permissions
-2. Update the pin: `echo "2.1.15" > ~/scripts/eod-claude-version`
-
-### Lockfile Pattern
-
-Prevents overlapping runs (important if a phase runs long):
-
-```bash
-LOCKFILE="/tmp/eod-runner.lock"
-if [ -f "$LOCKFILE" ]; then
-  LOCK_PID=$(cat "$LOCKFILE")
-  if kill -0 "$LOCK_PID" 2>/dev/null; then
-    echo "SKIPPED: Previous run still active"
-    exit 0
-  fi
-  rm -f "$LOCKFILE"  # Stale lock
-fi
-echo $$ > "$LOCKFILE"
-trap 'rm -f "$LOCKFILE"' EXIT
-```
-
-### Timeout Pattern (macOS)
-
-macOS doesn't have GNU `timeout`. Use Perl's alarm signal:
-
-```bash
-# Timeout after 25 minutes (1500 seconds)
-perl -e 'alarm shift; exec @ARGV' 1500 \
-    claude -p "/eod-gather" --dangerously-skip-permissions
-```
-
-Exit code 142 (128 + SIGALRM 14) indicates a timeout.
+Key considerations for unattended execution:
+- **Version pinning**: Pin a specific Claude CLI version to avoid macOS TCC permission dialogs from auto-updates
+- **Lockfiles**: Prevent overlapping runs
+- **Notifications**: macOS `osascript` for local, Slack DM for remote failure alerts
 
 ---
 
 ## The Monolithic Alternative
 
-If the phased pipeline is too complex to start with, a single `/eod` command works fine:
+The default recommendation is to keep `/eod` as one command:
 
 ```markdown
 # End of Day
@@ -364,7 +314,7 @@ If the phased pipeline is too complex to start with, a single `/eod` command wor
 Source .env, verify date, create manifest.
 
 ## Section 1: Call Transcripts
-Pull from Fathom, save, extract action items, route.
+Pull call transcripts, save, extract action items, route.
 
 ## Section 2: Tomorrow's Calendar
 Fetch events, format schedule.
@@ -379,7 +329,7 @@ Check all workspaces, route.
 Pull Rize data, classify, generate relabel checklist.
 
 ## Section 6: Verify + Sync
-Dedup, ClickUp sync, hygiene.
+Dedup, task manager sync, hygiene.
 
 ## Section 7: Daily Note
 Generate summary.
