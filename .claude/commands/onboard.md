@@ -18,8 +18,8 @@ You are setting up the Claude Code Personal Assistant system for a new user. Thi
 Before doing anything, figure out where you are running.
 
 1. **Check if this is the repo folder or a vault.** Look for `templates/CLAUDE.md` and `docs/` in the current directory or its children.
-   - If found in the current directory: you are inside the setup repo. Note the repo path. The vault will be created elsewhere (Phase 6A asks where).
-   - If found in a subfolder (e.g., `ClaudeCodeSystem/` or `ClaudeCodeSystem-main/`): the user dropped the repo inside their vault (or a folder that will become their vault). Note the repo subfolder path. The current directory is the vault root.
+   - If found in the current directory: you are inside the setup repo. Note the repo path. The vault will be created elsewhere (Phase 6A asks where). Do not assume the vault path yet.
+   - If found in a subfolder (e.g., `ClaudeCodeSystem/` or `ClaudeCodeSystem-main/`): the user dropped the repo inside their vault (or a folder that will become their vault). Note the repo subfolder path. The current directory is the vault root. Set `VAULT_PATH` to the current directory immediately.
 
 2. **Locate the reference files.** Set `REPO_PATH` to wherever `templates/CLAUDE.md` lives. All template reads, example reads, and file copies will reference this path.
 
@@ -304,6 +304,7 @@ Tell the user what you are about to create before creating it.
 
 **If Phase 0 detected the user is already inside a vault** (repo is a subfolder of the current directory):
 - The current directory IS the vault. Do not ask where to create it.
+- Set `VAULT_PATH` to the current directory if it is not already set.
 - Tell the user: "I see you are already in a notes folder. I will build the system right here."
 - Skip the location question.
 
@@ -315,9 +316,11 @@ Options:
 - Next to this repo (../Brain)
 - Somewhere else (let me specify)
 
-Create the structure:
+Set `VAULT_PATH` based on their answer.
+
+Create the structure at `VAULT_PATH`:
 ```
-Brain/
+<vault root>/
 ├── Inbox/
 ├── [CompanyName]/  (if provided)
 │   ├── Hiring/
@@ -355,11 +358,11 @@ Read `templates/CLAUDE.md` from this repo as the base. Customize with everything
 - Use actual client names (not `[Client A]`) in priority tiers and examples
 - Adjust meeting window and protected time based on preferences
 
-Write to `Brain/CLAUDE.md`.
+Write to `VAULT_PATH/CLAUDE.md`.
 
 ### 6C: .env Template
 
-Create `Brain/.env` with only the services they selected, commented with instructions:
+Create `VAULT_PATH/.env` with only the services they selected, commented with instructions:
 ```bash
 # Password keychain file for Claude
 # These will be filled in during /connect
@@ -369,31 +372,31 @@ Create `Brain/.env` with only the services they selected, commented with instruc
 
 ### 6D: Local Settings
 
-Write `Brain/.claude/settings.local.json` using `examples/settings.local.json` as the base.
+Write `VAULT_PATH/.claude/settings.local.json` using `examples/settings.local.json` as the base.
 
 Update `~/.claude/settings.json` to add any MCP permissions for tools they selected that are not already in the allow list.
 
 ### 6E: Slash Commands
 
-Based on workflow preferences, create commands in `Brain/.claude/commands/`:
+Based on workflow preferences, create commands in `VAULT_PATH/.claude/commands/`:
 
 - If they chose morning review -> `morning.md` based on `examples/commands/morning.md`
-- If they chose full EOD processing -> `eod.md` based on `examples/commands/eod.md` (customize phases to their tools; skip time tracking phase if they don't use a time tracker)
+- If they chose full EOD processing -> `eod.md` based on `examples/commands/eod.md` (customize sections to their tools; skip time tracking if they do not use a time tracker)
 - If they chose simple daily note -> `daily-note.md`
 - If they chose manual brain dump -> `brain-dump.md`
 
 Customize command content with their specific tools, clients, and schedule.
 
-**Also copy these setup commands** into `Brain/.claude/commands/`:
+**Also copy these setup commands** into `VAULT_PATH/.claude/commands/`:
 - `train.md` (from this repo's `.claude/commands/train.md`)
 - `connect.md` (from this repo's `.claude/commands/connect.md`)
 - `finish.md` (from this repo's `.claude/commands/finish.md`)
 
 ### 6F: Inbox Starter Files
 
-Create `Brain/Inbox/Incoming.md` with client boards table using real client names.
-Create a starter file for each client: `Brain/Inbox/ClientName.md`.
-Create `Brain/Inbox/Today.md` with a simple first-day message.
+Create `VAULT_PATH/Inbox/Incoming.md` with client boards table using real client names.
+Create a starter file for each client: `VAULT_PATH/Inbox/ClientName.md`.
+Create `VAULT_PATH/Inbox/Today.md` with a simple first-day message.
 
 ---
 
@@ -408,7 +411,7 @@ Then explain what happens next:
 Walk them through it step by step:
 
 1. "Open Obsidian. If you have not installed it yet, download it from obsidian.md."
-2. "In Obsidian, choose **Open folder as vault** and navigate to your Brain/ folder at [path]. Click Open."
+2. "In Obsidian, make sure your vault is the folder at [vault_path]. If this is a brand new setup, choose **Open folder as vault** and pick that folder. If you were already in an existing vault, you can stay right where you are."
 3. "You should see your folder structure in the left sidebar. Take a moment to click around -- these are all just text files."
 
 AskUserQuestion: "Can you see your folders in Obsidian?"
@@ -417,7 +420,7 @@ Options:
 - I need help installing Obsidian first
 - Something does not look right
 
-4. "Now close this Claude Code session and open a new one in your Brain/ folder:"
+4. "Now close this Claude Code session and open a new one in your vault folder:"
    ```
    cd [vault_path]
    claude
@@ -434,3 +437,4 @@ Options:
 - If they want to skip a section, let them and note what was skipped
 - If a file already exists (ran `/onboard` before), ask before overwriting
 - If running from the repo directory, create the vault in a separate location (ask where)
+- Never hardcode `Brain/` when `VAULT_PATH` is known. All generated files should be written relative to `VAULT_PATH`.
