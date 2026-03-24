@@ -124,6 +124,7 @@ The system operates on a daily loop: EOD generates tomorrow's plan, morning conf
 
 `Inbox/Today.md` is an ephemeral file overwritten each time you run `/eod`. It contains:
 
+- **Brain Dump**: Quick-capture area at the top. Jot anything throughout the day — EOD Phase 1 routes client-specific items and Phase 5 carries unrouted items forward to tomorrow
 - **Schedule table**: Time blocks with the day's skeleton (deep work, meetings, breaks)
 - **Morning exceptions**: Any calls before 1 PM, with fragmentation cost notes
 - **Tasks section**: Prioritized tasks assigned to time blocks, with source tags linking back to client inbox files
@@ -138,6 +139,8 @@ Tasks in Today.md include invisible HTML comments:
 - `<!-- src:Inbox/ClientA.md|fingerprint text here -->` -- Links back to the source task in the client file
 - `<!-- type:meeting -->` -- Calendar meetings (don't carry forward)
 - `<!-- carried:N -->` -- Items carried forward from previous days (N = number of days)
+
+These tags close the loop between Today.md and the inbox files. When you check off a task in Today.md during your day, Phase 2 of the next EOD run reads those completions and uses the source tags to mark the matching tasks as done in the client inbox files. From there, the normal cleanup logic moves them to the Completed section.
 
 When generating tomorrow's Today.md, the system checks today's unchecked tasks. If a task is re-selected for tomorrow, its carry count increments. Tasks carried for multiple days surface as a concern during the morning review.
 

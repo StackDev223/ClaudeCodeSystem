@@ -56,9 +56,9 @@ Data gathering phase. Triages Brain Dump first, then fetches Fathom transcripts,
 
 ## Section 0: Brain Dump Triage
 
-Process the Brain Dump section in `Inbox/Incoming.md`. Classify each item, route client-specific items to the correct client file, and clean up the Brain Dump.
+Process the Brain Dump section in `Inbox/Today.md`. This is the user's quick-capture area throughout the day. Classify each item, route client-specific items to the correct client file, and clean up the Brain Dump.
 
-1. **Read** `Inbox/Incoming.md` and extract the Brain Dump section (everything between `## Brain Dump` and the next `---` separator).
+1. **Read** `Inbox/Today.md` and extract the Brain Dump section (everything between `## Brain Dump` and the next `##` header).
 
 2. **Parse each item** (bullets and sub-bullets). Skip items that are:
    - Already completed: `- [x]`
@@ -92,9 +92,10 @@ Process the Brain Dump section in `Inbox/Incoming.md`. Classify each item, route
       - Notes (plain bullets): insert under `## Notes` section, under a `### Notes from <source>` header
       - Dedup check: if the same task already exists in the client file, skip it (don't duplicate)
       - Write the file back
-   b. Mark routed items in `Incoming.md` Brain Dump:
-      - Tasks: change to `- [x] ~~<original text>~~ moved to <Client>.md (checkmark) TODAY`
+   b. Mark routed items in `Today.md` Brain Dump:
+      - Tasks: change to `- [x] ~~<original text>~~ moved to <Client>.md ✅ TODAY`
       - Notes: remove from Brain Dump entirely (they now live in the client file's Notes section)
+      - Personal items and ideas: leave in place (they don't route — they carry forward to tomorrow)
    c. Append a manifest row for each routed item with Source = "Brain Dump"
 
 6. **Summary**: Print count of items routed per client, items left in Brain Dump, orphans.

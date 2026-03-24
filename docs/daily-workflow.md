@@ -29,6 +29,24 @@ The system operates on a continuous daily cycle:
 
 The key insight: **tomorrow's plan is built before you close the laptop**. The morning review takes 3-5 minutes of confirming a pre-built plan, not 30 minutes of figuring out what to do.
 
+### The Completion Loop
+
+Tasks flow in both directions between inbox files and Today.md:
+
+```
+Phase 5 (tonight) ──> Today.md (tomorrow's plan)
+                         │
+                     You work. Check off tasks.
+                         │
+Phase 2 (tomorrow night) reads Today.md completions
+         │
+         ├── Reverse-syncs ✓ back to source inbox files
+         ├── Moves completed items to Completed sections
+         └── Updates client boards with new counts
+```
+
+This means you can check off tasks in Today.md during your day and trust that the completion flows back to the source client file automatically. You never have to update both places.
+
 ---
 
 ## Today.md: The Daily Plan
@@ -39,6 +57,12 @@ The key insight: **tomorrow's plan is built before you close the laptop**. The m
 
 ```markdown
 # Today -- Monday, March 17, 2026
+
+## Brain Dump
+> Quick capture. Jot anything here throughout the day. EOD will file or carry forward.
+
+- idea: weekly status email template for clients
+- [Client B] ask [Contact Name] about staging creds
 
 ## Schedule
 | Time | Block | Notes |
@@ -116,13 +140,27 @@ _(empty on fresh day; populated if items rolled from yesterday)_
 
 ### Conventions
 
+#### Brain Dump
+The `## Brain Dump` section sits at the top of Today.md for quick capture throughout the day. Jot anything — tasks, ideas, notes, reminders — without worrying about where it belongs.
+
+At EOD:
+- **Phase 1 (Section 0)** reads the Brain Dump, classifies each item, and routes client-specific tasks to the correct inbox file
+- Items that can't be routed (personal, ideas, ambiguous) stay in the dump
+- **Phase 5** carries unrouted items forward into tomorrow's Brain Dump
+- Routed items (marked with strikethrough) are dropped
+
+This means you never lose a thought — everything either gets filed or carries forward until it does.
+
 #### Source Tags
 Every work task includes an invisible HTML comment linking back to its source:
 ```
 - [ ] **[Client A]** Task description <!-- src:Inbox/ClientA.md|fingerprint text -->
 ```
 
-The fingerprint is a 30-40 character substring from the task text in the source file, unique enough to identify the exact task via substring match. This enables the morning review to trace tasks back to their origin and the carry-forward system to track which tasks persist across days.
+The fingerprint is a 30-40 character substring from the task text in the source file, unique enough to identify the exact task via substring match. These tags serve three purposes:
+1. **Reverse sync**: When you check off a task in Today.md, Phase 2 uses the source tag to find and mark the task complete in the client inbox file
+2. **Morning review**: Trace tasks back to their origin for context
+3. **Carry-forward**: Track which tasks persist across days
 
 #### Meeting Tags
 Calendar meetings use a different tag:

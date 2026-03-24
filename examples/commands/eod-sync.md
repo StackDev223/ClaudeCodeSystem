@@ -28,11 +28,30 @@ Cleanup, deduplication, and external sync phase. Reads state from disk (manifest
 3. Set `TODAY` as the current date in `YYYY-MM-DD` format
 4. Set `DOW` to the current day of the week (for Monday archive logic)
 5. **Read the manifest** from `/tmp/eod-manifest-TODAY.md`. Confirm it exists and contains at least one item row. If missing, abort with a clear error: "No manifest found. Run Phase 1 first."
-6. Initialize counters: `DEDUPED=0`, `CLEANED=0`, `SYNCED=0`
+6. Initialize counters: `SYNCED_BACK=0`, `DEDUPED=0`, `CLEANED=0`, `SYNCED=0`
 
 ---
 
-## Step 1: Deduplication
+## Step 1: Today.md Reverse Sync
+
+Sync task completions from today's `Inbox/Today.md` back to their source inbox files. This closes the loop: tasks checked off during the day in Today.md get marked complete in the client file they came from, so the rest of Phase 2 can move them to Completed normally.
+
+1. **Read `Inbox/Today.md`**. If the file is missing or has a stale date header, skip this step (nothing to sync).
+2. **Find all checked tasks** (`- [x]`) that have a source tag: `<!-- src:path/to/file.md|fingerprint -->`
+3. **Skip meetings** (`<!-- type:meeting -->`). Meeting checkboxes are attendance tracking, not task completion.
+4. **For each completed task** (atomic write per source file):
+   - Parse the source file path and fingerprint from the `<!-- src:... -->` tag
+   - Read the source file
+   - Search for the matching task by substring-matching the fingerprint against `- [ ]` lines
+   - If found: change `- [ ]` to `- [x]` for that line
+   - If not found (task was already completed, moved, or reworded): skip silently
+   - Increment `SYNCED_BACK`
+5. **Batch by file**: if multiple completed tasks point to the same source file, apply all changes in a single atomic write to that file.
+6. Log: `"Synced {SYNCED_BACK} completions from Today.md back to inbox files"`
+
+---
+
+## Step 2: Deduplication
 
 Scan all client inbox files for duplicate tasks. Two tasks are duplicates if their text matches after stripping checkbox prefix, whitespace, and trailing source notes.
 
@@ -50,7 +69,7 @@ Scan all client inbox files for duplicate tasks. Two tasks are duplicates if the
 
 ---
 
-## Step 2: Completed Task Cleanup
+## Step 3: Completed Task Cleanup
 
 Find checked items (`- [x]`) in each client file and move them to that file's Completed section.
 
@@ -66,7 +85,7 @@ Find checked items (`- [x]`) in each client file and move them to that file's Co
 
 ---
 
-## Step 3: Client Boards Update
+## Step 4: Client Boards Update
 
 Update the Client Boards table in `Inbox/Incoming.md` with current counts.
 
@@ -87,9 +106,9 @@ Update the Client Boards table in `Inbox/Incoming.md` with current counts.
 
 ---
 
-## Step 4: Task Manager Sync
+## Step 5: Task Manager Sync
 
-**Skip this step if no task manager is configured.** Check CLAUDE.md for a task manager entry (e.g., ClickUp, Asana, Todoist). If none, skip to Step 5.
+**Skip this step if no task manager is configured.** Check CLAUDE.md for a task manager entry (e.g., ClickUp, Asana, Todoist). If none, skip to Step 6.
 
 Sync new and completed tasks with the configured task manager using its MCP tools or API.
 
@@ -100,7 +119,7 @@ Sync new and completed tasks with the configured task manager using its MCP tool
    - Log the external task ID back into the manifest's Status column
    - Increment `SYNCED`
 
-2. **Completed tasks**: for each item moved to Completed in Step 2:
+2. **Completed tasks**: for each item moved to Completed in Step 3:
    - Search the task manager for a matching task by name
    - If found, update its status to done/complete
    - Increment `SYNCED`
@@ -109,7 +128,7 @@ Sync new and completed tasks with the configured task manager using its MCP tool
 
 ---
 
-## Step 5: Vault Hygiene
+## Step 6: Vault Hygiene
 
 1. **Stale item flagging**: for each client file, find `- [ ]` items in `## Open Tasks` older than 14 days (based on date in source note or `### New from` header date). Prepend a flag: `- [ ] **STALE** <original text>`
 2. **Monday archive** (only if `DOW` = Monday):
@@ -127,6 +146,7 @@ After all steps finish:
 2. Print summary:
    ```
    Phase 2 complete.
+   - Today.md completions synced back: {SYNCED_BACK}
    - Duplicates merged: {DEDUPED}
    - Completed tasks cleaned: {CLEANED}
    - Tasks synced to task manager: {SYNCED}
