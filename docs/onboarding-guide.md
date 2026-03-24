@@ -59,10 +59,14 @@ Copy and paste this into the file:
   "permissions": {
     "allow": [
       "Read",
+      "LS",
+      "Glob",
+      "Grep",
       "Edit",
       "Write",
       "NotebookEdit",
       "Bash(*)",
+      "WebSearch",
       "mcp__context7__*"
     ],
     "additionalDirectories": [
@@ -83,10 +87,14 @@ Copy and paste this into the file:
 | Permission | What it allows |
 |---|---|
 | `Read` | Claude can read files on your computer |
+| `LS` | Claude can list folders on your computer |
+| `Glob` | Claude can find files by name or pattern |
+| `Grep` | Claude can search file contents on your computer |
 | `Edit` | Claude can make changes to existing files |
 | `Write` | Claude can create new files |
 | `NotebookEdit` | Claude can work with notebook files |
 | `Bash(*)` | Claude can run terminal commands |
+| `WebSearch` | Claude can search the web for current information |
 | `mcp__context7__*` | Claude can look up documentation |
 
 **Adding more tools:** This is mainly for CLI users. Each tool Claude connects to needs its own permission line. When you run `/connect`, Claude will add these automatically for the CLI path. The pattern is always `mcp__` followed by the tool name and `__*`. For example, if you connect ClickUp, Claude adds `"mcp__clickup__*"` to the allow list. If you connect Claude to Gmail or Google Calendar through Claude.ai, CLI users add lines like `"mcp__claude_ai_Gmail__*"` and `"mcp__claude_ai_Google_Calendar__*"` to the allow list. Desktop users do not need to manage this manually for app UI connectors.
