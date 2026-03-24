@@ -31,8 +31,21 @@ Proceed to Phase 1.
 
 ## Phase 1: Permissions
 
-**This must happen before anything else.** Without permissions, Claude will interrupt the entire setup with approval prompts for every action.
+**Before permissions, determine how they use Claude.** The setup path is different in Claude Desktop vs the Claude Code CLI.
 
+AskUserQuestion: "How are you using Claude right now?"
+Options:
+- Claude Desktop app (most likely if you downloaded Claude from the web)
+- Claude Code in the terminal / command line
+- Both
+
+Record this as `CLAUDE_RUNTIME`.
+
+**If Claude Desktop app:**
+- Tell the user: "You are most likely using the Desktop app, so I will not rely on writing local MCP config files. Built-in connectors will be set up later in the app UI. I will still create your `.env` file for API-based tools and scripts."
+- Skip `~/.claude/settings.json` edits unless they explicitly say they also use the CLI.
+
+**If Claude Code CLI or Both:**
 Tell the user:
 "Before we get started, I need to set up permissions so I can work without asking you to approve every little thing. I am going to update your Claude Code settings file now."
 
@@ -352,6 +365,7 @@ Skip folders that do not apply based on their answers.
 Read `templates/CLAUDE.md` from this repo as the base. Customize with everything from the interview and web research:
 
 - Replace all placeholders (`[Your Name]`, `[Your Timezone]`, `[YourCompany]`) with real values
+- Replace `[Claude Runtime]` with `Claude Desktop`, `Claude Code CLI`, or `Both`
 - Fill in company context from research
 - Update daily schedule skeleton with their hours, lunch, meeting window
 - Update integrations section: remove unused tools, add tools they mentioned
@@ -372,9 +386,11 @@ Create `VAULT_PATH/.env` with only the services they selected, commented with in
 
 ### 6D: Local Settings
 
-Write `VAULT_PATH/.claude/settings.local.json` using `examples/settings.local.json` as the base.
+If `CLAUDE_RUNTIME` includes CLI, write `VAULT_PATH/.claude/settings.local.json` using `examples/settings.local.json` as the base.
 
-Update `~/.claude/settings.json` to add any MCP permissions for tools they selected that are not already in the allow list.
+If `CLAUDE_RUNTIME` includes CLI, update `~/.claude/settings.json` to add any MCP permissions for tools they selected that are not already in the allow list.
+
+If `CLAUDE_RUNTIME` is Desktop only, skip CLI-specific settings files and note in the summary that built-in connectors will be configured later in the app UI instead.
 
 ### 6E: Slash Commands
 
@@ -406,7 +422,7 @@ Tell the user what was created (list every folder and file).
 
 Then explain what happens next:
 
-"Your notes folder is built and your instruction manual is customized. Before we continue, we need to restart Claude Code so it picks up the new permissions and finds your new slash commands."
+"Your notes folder is built and your instruction manual is customized. Before we continue, open a fresh Claude session in your vault so it picks up your new files. If you are using the CLI, restarting also picks up your new permissions."
 
 Walk them through it step by step:
 
@@ -420,12 +436,17 @@ Options:
 - I need help installing Obsidian first
 - Something does not look right
 
-4. "Now close this Claude Code session and open a new one in your vault folder:"
-   ```
-   cd [vault_path]
-   claude
-   ```
-5. "Once you are in the new session, type `/train` to learn how the system works."
+4. If `CLAUDE_RUNTIME` is Desktop:
+   - "Now close this conversation and open a fresh Claude Desktop session with this vault at [vault_path]."
+   - "Once you are back in the app, type `/train` to learn how the system works."
+
+5. If `CLAUDE_RUNTIME` includes CLI:
+   - "Now close this Claude Code session and open a new one in your vault folder:"
+     ```
+     cd [vault_path]
+     claude
+     ```
+   - "Once you are in the new session, type `/train` to learn how the system works."
 
 **Important final note:** "When you restart, Claude will read your CLAUDE.md file automatically. That is your instruction manual -- it tells Claude everything about you, your tools, your schedule, and how you like things done. `/train` will walk you through it."
 

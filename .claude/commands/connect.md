@@ -12,6 +12,23 @@ This is Part 3 of 4 in the setup process. The user has already run `/onboard` (b
 
 ## Step 0: Check Prerequisites
 
+### Runtime Mode
+
+Before anything else, determine which Claude interface the user is using for connections.
+
+AskUserQuestion: "Which Claude interface are you using for this setup?"
+Options:
+- Claude Desktop app (most likely if you downloaded Claude from the web)
+- Claude Code in the terminal / command line
+- Both
+
+Set `CLAUDE_RUNTIME` from their answer.
+
+Connection rules:
+- **Desktop**: Built-in connectors and MCP-style integrations must be configured in the app UI. Do not rely on writing local `mcpServers` config files for Desktop users.
+- **CLI**: Local Claude Code config files are valid. MCP servers can be configured in `~/.claude/settings.json`.
+- **Both**: Use the app UI for Desktop connectors. Only add CLI config for tools they also need in terminal sessions. `.env` works for both.
+
 Before connecting any tools, verify the user's machine has what we need. Run these checks silently and only surface issues.
 
 ### Python packages
@@ -35,7 +52,7 @@ Options:
 
 ### Node.js and npx
 
-Some tool connections (MCP servers like task managers, databases, etc.) need Node.js. Check: `npx --version 2>&1`
+Only relevant if `CLAUDE_RUNTIME` includes CLI, or if a local script explicitly needs Node.js. Some CLI MCP servers need Node.js. Check: `npx --version 2>&1`
 
 If npx is not found:
 
@@ -138,7 +155,8 @@ Options:
 
 6. Repeat for **Gmail** if they want email connected.
 
-7. After connecting, update their permissions. Write to `~/.claude/settings.json`, adding `"mcp__claude_ai_Google_Calendar__*"` and/or `"mcp__claude_ai_Gmail__*"` to the allow list.
+7. If `CLAUDE_RUNTIME` includes CLI, update CLI permissions in `~/.claude/settings.json`, adding `"mcp__claude_ai_Google_Calendar__*"` and/or `"mcp__claude_ai_Gmail__*"` to the allow list.
+   - If Desktop only: do not write local config here. The connector lives in the app UI.
 
 8. Test the connection:
 - "Let me pull up your calendar to make sure it is working..."
@@ -371,7 +389,15 @@ Options:
 CLICKUP_API_KEY=<token>
 ```
 
-5. **Configure the MCP server.** Read `~/.claude/settings.json`. Add a `mcpServers` block for ClickUp (merge with existing mcpServers if any):
+5. **Choose the connection path based on `CLAUDE_RUNTIME`.**
+
+**If Desktop or Both:**
+- Check whether ClickUp is available in the app's connector/integration UI.
+- If yes, walk the user through connecting it there. Do not rely on a local `mcpServers` file for Desktop.
+- If no Desktop connector exists, keep the API token in `.env` and treat ClickUp as an API-based integration for now.
+
+**If CLI or Both and they want terminal support too:**
+- Read `~/.claude/settings.json`. Add a `mcpServers` block for ClickUp (merge with existing mcpServers if any):
 
 ```json
 {
@@ -402,9 +428,11 @@ If using an API-key-based server, pass the key via the env block:
 }
 ```
 
-After writing the config, tell the user: "I have added the ClickUp connection to your settings. Let me test it."
+After writing the CLI config, tell the user: "I have added the ClickUp connection to your CLI settings. Let me test it."
 
-6. **Test the connection.** Use the ClickUp MCP tools to list their workspaces or spaces. Show results.
+6. **Test the connection.**
+- If they connected ClickUp through a Desktop connector or CLI MCP server, use the ClickUp tools to list their workspaces or spaces. Show results.
+- If they are using the API-token fallback, test with a lightweight ClickUp API call using the token saved in `.env`.
 
 AskUserQuestion: "I found these ClickUp spaces: [list]. Right?"
 Options:
@@ -563,9 +591,14 @@ Options:
 
 For tools not covered above (Asana, Trello, Todoist, Teams, Otter, Fireflies, Toggl, Harvest, etc.):
 
-**First, check if an MCP server exists for the tool.** Use WebSearch: `"[tool name] MCP server" claude` or `"[tool name] model context protocol"`. Many popular tools now have MCP servers.
+**First, check if an app connector or MCP server exists for the tool.** Use WebSearch: `"[tool name] Claude connector"`, `"[tool name] MCP server" claude`, or `"[tool name] model context protocol"`.
 
-**If an MCP server exists:**
+**If a Desktop connector exists and `CLAUDE_RUNTIME` includes Desktop:**
+1. Walk the user through connecting it in the app UI
+2. Test with a lightweight tool call
+3. Update CLAUDE.md integrations section
+
+**If a CLI MCP server exists and `CLAUDE_RUNTIME` includes CLI:**
 1. Search for the install command (usually `npx -y @some-org/mcp-server-toolname`)
 2. Walk the user through getting credentials (API key, OAuth token, etc.)
 3. Save credentials to `.env`
@@ -587,7 +620,7 @@ For tools not covered above (Asana, Trello, Todoist, Teams, Otter, Fireflies, To
 6. Test with a lightweight MCP tool call
 7. Update CLAUDE.md integrations section (add to "Direct Connections")
 
-**If no MCP server exists:**
+**If no usable Desktop connector or CLI MCP server exists:**
 1. Search for the tool's REST API documentation
 2. Walk the user through getting an API key or personal access token
 3. Save to `.env`
@@ -605,11 +638,11 @@ For tools not covered above (Asana, Trello, Todoist, Teams, Otter, Fireflies, To
 
 When all tools are connected (or explicitly skipped):
 
-### Verify settings.json
+### Verify connector setup
 
-Read `~/.claude/settings.json` and confirm:
-1. Every connected MCP server has an entry in `mcpServers`
-2. Every MCP server has a matching `"mcp__servername__*"` entry in `permissions.allow`
+If `CLAUDE_RUNTIME` includes CLI, read `~/.claude/settings.json` and confirm:
+1. Every connected CLI MCP server has an entry in `mcpServers`
+2. Every CLI MCP server has a matching `"mcp__servername__*"` entry in `permissions.allow`
 3. No placeholder values remain (no `your_...` or `<token>` strings in env blocks)
 
 If anything is missing, fix it now.
@@ -631,6 +664,6 @@ Read CLAUDE.md and confirm:
 
 "Here is where we stand:"
 - List each tool with ✓ (connected and tested) or ○ (skipped, with reason)
-- Note any MCP servers configured, permissions added, credentials saved
+- Note which tools were connected in the Desktop app UI, which were configured for CLI, and which credentials were saved in `.env`
 
 Then: "All your tools are connected and tested. The last step is `/finish` -- I will show you the system in action with your real data and teach you how to get the most out of it over time. Type `/finish` when you are ready."

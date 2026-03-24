@@ -6,13 +6,13 @@ This guide is a reference for what the setup process covers. **You do not need t
 /onboard
 ```
 
-Claude will interview you using a friendly question-and-answer format with selectable options (no typing required for most questions). It will ask about your name, tools, schedule, and preferences, then build everything for you in about 20 minutes.
+Claude will interview you using a friendly question-and-answer format with selectable options (no typing required for most questions). It will first ask whether you are using the Claude Desktop app or the Claude Code CLI, then ask about your name, tools, schedule, and preferences, and build everything for you in about 20 minutes.
 
 The setup has 4 parts:
 
 | Step | Command | What It Does | Time |
 |------|---------|-------------|------|
-| 1 | `/onboard` | Permissions, learn about you, build your notes folder and files | ~20 min |
+| 1 | `/onboard` | Detect Desktop vs CLI, learn about you, build your notes folder and files | ~20 min |
 | 2 | `/train` | Walk through Obsidian, your vault, slash commands, and the daily loop | ~15 min |
 | 3 | `/connect` | Connect each of your tools (calendar, email, tasks, etc.) one by one | ~20 min |
 | 4 | `/finish` | Live demo with real data, improvement tips, how to maximize the system | ~10 min |
@@ -28,9 +28,25 @@ The steps below explain what each part sets up, so you can understand what each 
 
 ---
 
-## Step 1: Give Claude Permission to Help You
+## Step 1: Pick Your Claude Interface
+
+The setup works in two environments:
+- **Claude Desktop app** -- most likely if you downloaded Claude from the web and use the app UI
+- **Claude Code CLI** -- if you opened Terminal and ran `claude`
+- **Both** -- if you move between the app and terminal
+
+This matters because built-in connectors are configured differently:
+- **Desktop** -- use the app's connector/integration UI
+- **CLI** -- use Claude Code settings files
+- **Both** -- use the app UI for Desktop, and only add CLI config for tools you need in terminal sessions
+
+Claude asks this during `/onboard` and records it in your CLAUDE.md so later setup steps know which path to use.
+
+## Step 2: Give Claude Permission to Help You
 
 Before Claude can do anything, it needs permission to read and write files, run commands, and connect to your tools. There are two permission files: one for global settings (applies everywhere) and one for local settings (applies only inside your notes folder).
+
+**Important:** the settings-file path below is for CLI users. If you are Desktop-only, you do not need to rely on local MCP config files for built-in connectors. Desktop users set those up later in the app UI. `.env` still works in both environments for API-based tools and scripts.
 
 ### Global Settings
 
@@ -73,9 +89,7 @@ Copy and paste this into the file:
 | `Bash(*)` | Claude can run terminal commands |
 | `mcp__context7__*` | Claude can look up documentation |
 
-**Adding more tools:** Each tool Claude connects to needs its own permission line. When you run `/connect`, Claude will add these automatically. The pattern is always `mcp__` followed by the tool name and `__*`. For example, if you connect ClickUp, Claude adds `"mcp__clickup__*"` to the allow list.
-
-**Adding more tools:** Each tool Claude connects to needs its own permission line. If you connect Claude to Gmail or Google Calendar through Claude.ai, add lines like `"mcp__claude_ai_Gmail__*"` and `"mcp__claude_ai_Google_Calendar__*"` to the allow list. The pattern is always `mcp__` followed by the tool name and `__*`.
+**Adding more tools:** This is mainly for CLI users. Each tool Claude connects to needs its own permission line. When you run `/connect`, Claude will add these automatically for the CLI path. The pattern is always `mcp__` followed by the tool name and `__*`. For example, if you connect ClickUp, Claude adds `"mcp__clickup__*"` to the allow list. If you connect Claude to Gmail or Google Calendar through Claude.ai, CLI users add lines like `"mcp__claude_ai_Gmail__*"` and `"mcp__claude_ai_Google_Calendar__*"` to the allow list. Desktop users do not need to manage this manually for app UI connectors.
 
 **Additional directories** are folders outside your notes folder that Claude can access. The defaults cover your Desktop, Downloads, temporary files, scheduled tasks, and scripts.
 
@@ -111,7 +125,7 @@ You do not need to duplicate permissions from the global file here. The global s
 
 ---
 
-## Step 2: Install Obsidian and Create Your Notes Folder
+## Step 3: Install Obsidian and Create Your Notes Folder
 
 Obsidian is a notes app where your notes live on your computer as plain text files instead of on someone else's server. Claude can read files on your computer instantly, which makes Obsidian a perfect workspace.
 
@@ -140,7 +154,7 @@ For a detailed guide on folder structure and how everything fits together, see t
 
 ---
 
-## Step 3: Create Claude's Instruction Manual
+## Step 4: Create Claude's Instruction Manual
 
 The instruction manual (called `CLAUDE.md`) is the most important file in the system. Claude reads it every session to know how you want things done.
 
@@ -164,9 +178,9 @@ The template includes sections for:
 
 ---
 
-## Step 4: Connect Your Tools (`/connect`)
+## Step 5: Connect Your Tools (`/connect`)
 
-The `/connect` command walks you through connecting each tool one by one, testing each connection with real data before moving on.
+The `/connect` command walks you through connecting each tool one by one, testing each connection with real data before moving on. It uses a different strategy depending on whether you are on Desktop or CLI.
 
 **Recommended first connections:**
 - **Google Calendar** -- Know what is coming tomorrow, create time blocks
@@ -177,11 +191,16 @@ For Google services, `/connect` offers two paths:
 - **Easy way:** Sign in through Claude.ai's settings page (2 minutes, no technical setup)
 - **Full control way:** Use the `gws` CLI to set up Google access (recommended for custom Google Drive/Docs workflows). Cloud Console is the fallback if the CLI is unavailable.
 
+For other built-in connectors:
+- **Desktop users** connect them in the app UI
+- **CLI users** can use local Claude Code config where supported
+- **Both** can do both, but only if they need the connector in both places
+
 See [Integration Architecture](integration-architecture.md) for the full technical reference on how each tool connects, including credential types and API details.
 
 ---
 
-## Step 5: Learn the System (`/train`)
+## Step 6: Learn the System (`/train`)
 
 The `/train` command gives you a guided tour of everything `/onboard` built: your folder structure, CLAUDE.md instruction manual, slash commands, and the daily loop. It takes about 15 minutes and is designed as a show-and-tell (not a lecture).
 
@@ -193,7 +212,7 @@ Key things you will learn:
 
 ---
 
-## Step 6: Take It for a Spin (`/finish`)
+## Step 7: Take It for a Spin (`/finish`)
 
 The `/finish` command is the payoff. Claude pulls real data from your connected tools and shows you the system working:
 

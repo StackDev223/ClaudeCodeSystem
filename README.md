@@ -2,6 +2,8 @@
 
 An AI-powered personal assistant built on [Obsidian](https://obsidian.md) + [Claude Code](https://docs.anthropic.com/en/docs/claude-code). The vault is the operating system; Claude Code is the brain. Together they handle task management, meeting processing, email triage, time tracking, client work, and daily planning -- replacing a human executive assistant.
 
+It can be used from either the Claude Desktop app or the Claude Code CLI. The setup now asks which one the user is using and changes the connector setup path accordingly.
+
 > **You do not need to be technical.** Claude will walk you through everything step by step.
 >
 > **What you will need:** A Mac or PC, [Obsidian](https://obsidian.md) (free), and a [Claude Max subscription](https://claude.ai) ($100/month -- includes Claude Code).
@@ -27,7 +29,7 @@ Either way, Claude interviews you in a friendly question-and-answer format (no m
 
 | Step | Command | What It Does | Time |
 |------|---------|-------------|------|
-| 1 | `/onboard` | Permissions, learn about you, build your notes folder and files | ~20 min |
+| 1 | `/onboard` | Detect Desktop vs CLI, learn about you, build your notes folder and files | ~20 min |
 | 2 | `/train` | Walk through Obsidian, your vault, slash commands, and the daily loop | ~15 min |
 | 3 | `/connect` | Connect each of your tools (calendar, email, tasks, etc.) one by one | ~20 min |
 | 4 | `/finish` | Live demo with real data, improvement tips, how to maximize the system | ~10 min |
@@ -103,8 +105,8 @@ ClaudeCodeSystem/
 │   ├── CLAUDE.md                       # Starting CLAUDE.md template (customized by /onboard)
 │   └── .env.example                    # All env var names with descriptions
 ├── examples/
-│   ├── settings.json                   # Global Claude Code settings (permissions, additional dirs)
-│   ├── settings.local.json             # Project-level permissions
+│   ├── settings.json                   # CLI example: global Claude Code settings
+│   ├── settings.local.json             # CLI example: project-level permissions
 │   ├── scripts/
 │   │   ├── md-to-gdoc.py              # Markdown to Google Doc converter
 │   │   ├── eod-runner.sh               # (Advanced) EOD phase orchestrator for cron

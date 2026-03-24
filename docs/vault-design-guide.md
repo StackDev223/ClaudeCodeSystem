@@ -1,6 +1,6 @@
 # How to Build an AI-Powered Obsidian Vault (Personal Assistant System)
 
-This is a breakdown of how an Obsidian vault works as an AI-powered personal assistant system. The vault is the central hub; Claude Code (Anthropic's CLI agent) is the brain that operates on it. Together they replace a human executive assistant for task management, meeting processing, email triage, time tracking, and client work.
+This is a breakdown of how an Obsidian vault works as an AI-powered personal assistant system. The vault is the central hub; Claude is the brain that operates on it, whether through the Claude Desktop app or the Claude Code CLI. Together they replace a human executive assistant for task management, meeting processing, email triage, time tracking, and client work.
 
 If you want to replicate something like this, here's everything you need to know.
 
