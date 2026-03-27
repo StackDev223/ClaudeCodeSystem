@@ -44,11 +44,11 @@ For each script listed under "Local Tools":
 3. Check one level deeper for each documented subfolder (e.g., does `Work/Clients/` exist and have client subfolders?).
 4. Flag: folders listed but not on disk, folders on disk but not documented.
 
-### 2d: Slash Commands
+### 2d: Skills
 
 1. List all `.md` files in `.claude/commands/`.
-2. Compare against any slash commands referenced in CLAUDE.md (under Common Workflows, EOD Pipeline, etc.).
-3. Flag: commands referenced in CLAUDE.md but missing from disk, commands on disk but not mentioned in CLAUDE.md.
+2. Compare against any skills referenced in CLAUDE.md (under Common Workflows, EOD Pipeline, etc.).
+3. Flag: skills referenced in CLAUDE.md but missing from disk, skills on disk but not mentioned in CLAUDE.md.
 
 ### 2e: File Size Check
 

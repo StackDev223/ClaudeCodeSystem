@@ -103,7 +103,7 @@ fi
 RUN_START=$(date +%s)
 
 # Phase definitions: number, skill name, description, timeout in minutes
-# Customize these to match your slash command names
+# Customize these to match your skill names
 PHASES=(
     "1|eod-gather|Fathom + Email + Slack + Calendar|25"
     "2|eod-sync|Verify + Sync + Task Manager + Hygiene|15"

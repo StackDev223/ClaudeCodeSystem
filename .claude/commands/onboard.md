@@ -3,7 +3,7 @@
 You are setting up the Claude Code Personal Assistant system for a new user. This is Part 1 of a 4-part setup process:
 
 1. **`/onboard`** (you are here) -- Permissions, learn about the user, build the vault and all files
-2. **`/train`** -- Learn how the system works (Obsidian, vault, slash commands, daily loop)
+2. **`/train`** -- Learn how the system works (Obsidian, vault, skills, daily loop)
 3. **`/connect`** -- Connect all your tools (calendar, email, task manager, etc.)
 4. **`/finish`** -- Take it for a spin, learn how to improve it over time
 
@@ -25,7 +25,30 @@ Before doing anything, figure out where you are running.
 
 3. **If the setup commands aren't at the project root yet** (i.e., you are running from a vault and the commands are in a subfolder): This means the user probably said "set me up" and Claude read this file from the repo's CLAUDE.md. The commands are already loaded. Proceed normally.
 
-Proceed to Phase 1.
+Proceed to Phase 0B.
+
+---
+
+## Phase 0B: Verify Windows Prerequisites (Windows only)
+
+**Skip this phase entirely if the user is on macOS or Linux.** Detect the platform by running `uname -s` or checking for Windows-specific paths.
+
+Windows users should have completed the prerequisite steps from the README before opening Claude (Git Bash, Developer Mode, Virtual Machine Platform, and a restart). This phase does a quick verification. Run checks silently and only surface issues.
+
+### Verify Git
+Run: `git --version 2>&1`
+
+If Git is not found: "It looks like Git is not installed yet. The README has Windows setup steps that need to be done before we can continue. Here is the quick version:"
+1. "Go to **git-scm.com** and click **Download for Windows**."
+2. "Run the installer and accept all defaults."
+3. "After installing, you will need to **restart your computer**, then open Claude again and type `/onboard`."
+
+Stop here if Git is missing -- the restart is required.
+
+### Note Windows vault default
+On Windows, default the vault location to `Documents\Brain` (i.e., `C:\Users\<username>\Documents\Brain`). This will be used later in Phase 6A if the user does not specify a custom location.
+
+**If Git is present**, proceed to Phase 1.
 
 ---
 
@@ -42,7 +65,7 @@ Options:
 Record this as `CLAUDE_RUNTIME`.
 
 **If Claude Desktop app:**
-- Tell the user: "You are most likely using the Desktop app, so I will not rely on writing local MCP config files. Built-in connectors will be set up later in the app UI. I will still create your `.env` file for API-based tools and scripts."
+- Tell the user: "You are using the Desktop app, so direct tool connections (like Google Calendar or your task manager) will be set up later through the app's settings by you. I cannot configure those connections myself. I will still create your `.env` file for API-based tools and scripts."
 - Skip `~/.claude/settings.json` edits unless they explicitly say they also use the CLI.
 
 **If Claude Code CLI or Both:**
@@ -324,10 +347,12 @@ Tell the user what you are about to create before creating it.
 **If running from the repo folder** (no vault detected):
 AskUserQuestion: "Where should I create your notes folder?"
 Options:
-- In my Documents folder (~/Documents/Brain)
+- In my Documents folder (~/Documents/Brain on Mac/Linux, Documents\Brain on Windows)
 - On my Desktop (~/Desktop/Brain)
 - Next to this repo (../Brain)
 - Somewhere else (let me specify)
+
+On Windows, default to `C:\Users\<username>\Documents\Brain` if they choose Documents.
 
 Set `VAULT_PATH` based on their answer.
 
@@ -392,18 +417,18 @@ If `CLAUDE_RUNTIME` includes CLI, update `~/.claude/settings.json` to add any MC
 
 If `CLAUDE_RUNTIME` is Desktop only, skip CLI-specific settings files and note in the summary that built-in connectors will be configured later in the app UI instead.
 
-### 6E: Slash Commands
+### 6E: Skills
 
-Based on workflow preferences, create commands in `VAULT_PATH/.claude/commands/`:
+Based on workflow preferences, create skills in `VAULT_PATH/.claude/commands/`:
 
 - If they chose morning review -> `morning.md` based on `examples/commands/morning.md`
 - If they chose full EOD processing -> `eod.md` based on `examples/commands/eod.md` (customize sections to their tools; skip time tracking if they do not use a time tracker)
 - If they chose simple daily note -> `daily-note.md`
 - If they chose manual brain dump -> `brain-dump.md`
 
-Customize command content with their specific tools, clients, and schedule.
+Customize skill content with their specific tools, clients, and schedule.
 
-**Also copy these setup commands** into `VAULT_PATH/.claude/commands/`:
+**Also copy these setup skills** into `VAULT_PATH/.claude/commands/`:
 - `train.md` (from this repo's `.claude/commands/train.md`)
 - `connect.md` (from this repo's `.claude/commands/connect.md`)
 - `finish.md` (from this repo's `.claude/commands/finish.md`)

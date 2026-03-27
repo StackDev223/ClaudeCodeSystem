@@ -90,13 +90,13 @@ Make adjustments if requested.
 
 "I will add these to your instruction manual (CLAUDE.md) so every future session follows them."
 
-### Creating New Routines
-"If you find yourself repeating something, ask me to turn it into a saved routine:"
-- "Create a slash command that preps me for client meetings"
-- "Build a routine for weekly invoicing"
-- "Make a command that drafts a weekly status update for [Client]"
+### Turning Tasks into Skills
+"When we complete something that could be useful again, I will offer to turn it into a skill. You can also ask me directly:"
+- "Turn this into a skill"
+- "I want to do this every week"
+- "Save this as a skill for client meeting prep"
 
-"I will create a new file in `.claude/commands/` and you can run it with `/command-name` anytime."
+"I will create a text file in `.claude/commands/` with the steps we used, and you can run it anytime with `/skill-name`. For example, if we just prepped for a client meeting together and it went well, I might say: 'This worked well. Want me to save this as a skill so you can run it before every client meeting?' Your system gets smarter every time you do this."
 
 ### Teaching Claude About Your Work
 "The more context I have, the better I work. You can help by:"
@@ -160,7 +160,7 @@ Your system:
 - Notes folder: [path]
 - Instruction manual: CLAUDE.md (customized for you)
 - Tools connected: [list with ✓]
-- Saved routines: [list their commands]
+- Skills: [list their skills]
 - EOD routine: /eod (run before wrapping up each day)
 
 Your daily rhythm:
@@ -171,7 +171,7 @@ Your daily rhythm:
 How to improve:
 - Tell Claude when it gets something wrong
 - Add rules to CLAUDE.md
-- Create new routines for repeated tasks
+- Turn successful tasks into skills
 - Run /monthly-review once a month
 ```
 

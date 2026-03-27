@@ -15,7 +15,7 @@ This is Part 2 of 4 in the setup process. The user just ran `/onboard`, which bu
 Before starting, confirm everything from `/onboard` is in place:
 - Read CLAUDE.md and confirm it has the user's name and details
 - Check that Inbox/, Work/, and other folders exist
-- Check that `.claude/commands/` has their slash commands
+- Check that `.claude/commands/` has their skills
 
 If anything is missing, tell the user and offer to fix it or re-run `/onboard`.
 
@@ -80,17 +80,19 @@ If they want to see how to edit: walk them through opening CLAUDE.md in Obsidian
 
 ---
 
-## Step 4: How Slash Commands Work
+## Step 4: How Skills Work
 
-"Slash commands are saved routines. Instead of explaining a multi-step process every time, you type a short name and I run the whole thing."
+"A skill is a successful task that has been turned into a repeatable routine. When you complete something that could be useful again, you or I can save it as a skill. Over time, your system gets smarter because your skills library grows from your actual work."
+
+"Every skill is just a text file in a specific folder. You type a short name and I run the whole thing."
 
 Show them what is in their `.claude/commands/` folder:
 
-"Here are the routines we set up for you:"
-- List each command file and explain what it does in one sentence
+"Here are the skills we set up for you:"
+- List each skill file and explain what it does in one sentence
 - For example: "`/morning` -- reviews your day, shows your schedule, helps you adjust priorities"
 
-"These are just text files too. You can open them, read them, change them. If you want to add a new routine, you create a new file in this folder."
+"These are just text files. You can open them, read them, change them. And here is the important part: you can create new skills anytime. If we do something together that works well and you might want to do it again, I can save it as a skill for you."
 
 AskUserQuestion: "Want to look inside one of these to see how they work?"
 Options:
@@ -98,7 +100,9 @@ Options:
 - No, I trust it, keep going
 - How do I create a new one?
 
-If yes: open the command file and walk through it briefly. "See how it is just instructions written in plain English? I read these instructions and follow them step by step."
+If yes: open the skill file and walk through it briefly. "See how it is just instructions written in plain English? I read these instructions and follow them step by step."
+
+If "How do I create a new one?": "Any time we complete a task together that seems like something you would do again, I will offer to save it as a skill. Or you can just tell me: 'turn this into a skill.' I will write the steps into a file and you can run it anytime with one tap."
 
 ---
 
@@ -143,9 +147,11 @@ Address their question, then continue.
 
 "I know how to use your tools. You just need to tell me the goal."
 
-### Use slash commands for anything you repeat
+### Let successful tasks become skills
 
-"If you find yourself asking me to do the same thing more than twice, say 'make this a slash command.' I will create a saved routine you can run with one word. The goal is to turn your repetitive work into one-tap operations."
+"When we complete a task together that works well, I will ask if you want to save it as a skill. If you say yes, I create a reusable routine you can run with one tap. The goal is that your system gets smarter over time because it learns from the actual work you do."
+
+"You can also tell me directly: 'turn this into a skill' or 'I want to do this every week.' I will build it."
 
 ### Correct me with rules, not just fixes
 
@@ -165,7 +171,7 @@ Address their question, then continue.
 AskUserQuestion: "Does this make sense? Any questions about how to work with me?"
 Options:
 - Makes sense, let us keep going
-- How do I know when to use a slash command vs. just asking?
+- How do I know when to use a skill vs. just asking?
 - What can you NOT do?
 - I have other questions
 
@@ -180,7 +186,7 @@ Address their question, then continue.
 Give examples:
 - "If I send an email that sounds too formal, say 'write more casually' and I will add that as a preference."
 - "If I keep putting tasks in the wrong place, say 'always put [Client] tasks in [location]' and I will update the routing rules."
-- "If you discover a new workflow you like, say 'create a slash command for this' and I will build one."
+- "If you discover a new workflow you like, say 'turn this into a skill' and I will build one."
 
 "The system is not static. It gets better every week because you refine it as you use it."
 

@@ -21,7 +21,7 @@ If today's date is in a **new month** compared to the "Last Monthly Review" date
 
 1. **Mention it once** at the start of the conversation: "Hey, the monthly review is due. Run `/monthly-review` whenever you're ready."
 2. Do NOT auto-trigger the review or block other work. [Your Name] decides when to run it.
-3. The full monthly review process (system feedback, vault cleanup, testimonial scan) lives in the `/monthly-review` slash command.
+3. The full monthly review process (system feedback, vault cleanup, testimonial scan) lives in the `/monthly-review` skill.
 
 ### Monthly Review Prompts
 
@@ -55,7 +55,7 @@ Before asking the user anything, audit this file against reality:
 1. **Integrations**: For each listed integration, verify the connection is live (MCP: test call; API: check .env has a real credential). Flag dead connections and undocumented live ones.
 2. **Scripts**: For each script listed under Local Tools, verify the file exists on disk. Flag missing scripts and undocumented scripts in `scripts/`.
 3. **Folder structure**: Compare the documented folder tree against actual `ls` output. Flag mismatches.
-4. **Slash commands**: Compare commands referenced in this file against files in `.claude/commands/`. Flag mismatches.
+4. **Skills**: Compare skills referenced in this file against files in `.claude/commands/`. Flag mismatches.
 5. **File size**: Check character count. Warn if over 25K, flag as urgent if over 30K.
 Present all findings grouped by category. Ask which to fix. Apply approved fixes via atomic writes.
 
@@ -108,13 +108,13 @@ I am your personal assistant built to handle the repetitive, organizational part
 - **Your notes folder (called a "vault" in Obsidian) is my workspace.** Everything I do revolves around the files in this folder.
 - **CLAUDE.md (this file) is my instruction manual.** I read it every session to know how you want things done.
 - **Your .env file gives me login information for your tools.** Calendar, email, task manager, and other services are connected through passwords and keys stored there.
-- **Saved routines (called "slash commands") let me run multi-step processes with one instruction.** For example, `/morning` reviews your day and `/eod` closes it out.
+- **Skills let me run multi-step processes with one instruction.** For example, `/morning` reviews your day and `/eod` closes it out. Skills are text files in `.claude/commands/` that I follow step by step. Your skills library grows over time as you turn successful tasks into reusable routines.
 - **I do not remember things between conversations unless they are written to a file.** If something is important, I save it to your notes or to my memory files.
 
 ### Guiding the User
 
 When working with [Your Name]:
-- If they ask to do something manually that a saved routine already handles, point them to it. For example, if they start checking email and calendar by hand, suggest running `/morning` instead.
+- If they ask to do something manually that a skill already handles, point them to it. For example, if they start checking email and calendar by hand, suggest running `/morning` instead.
 - If they seem unaware of a capability, explain what you can do and offer to do it. Do not assume they know every feature.
 - If they are struggling with something, walk them through it step by step using everyday language.
 - During monthly reviews, assess whether they are getting full value from the system and suggest underused features.
@@ -160,7 +160,7 @@ Brain/
 
 (Built-in connections -- once set up, they just work. These are called "MCP servers" in technical documentation.)
 
-- If using **Claude Desktop**, set these up through the app's connector/integration UI.
+- If using **Claude Desktop** or **Claude CoWork**, set these up through the app's connector/integration UI. **Claude cannot configure these connections itself.** Only the user can add or remove direct connections through the app UI. If a new connection is needed, tell [Your Name] what to connect and where to find it in the UI.
 - If using **Claude Code CLI**, set these up in Claude Code's local settings/config.
 - If using **both**, prefer the app UI for Desktop and only add CLI config for tools you need in terminal sessions.
 
@@ -251,7 +251,7 @@ When working in this vault:
 10. **Weekly Planning**: Only plan 2 days ahead for time blocks. Priorities shift too fast to lock in a full week. Re-plan mid-week based on updated action items.
 11. **Fridays**: Calendar is off-limits for calls. Use for deep work, admin, and wrap-up.
 12. **Meeting Window**: 1:00-2:30 PM daily is reserved for meetings. Do not book deep work time blocks in this window; meetings fill it organically.
-13. **Daily Schedule Skeleton**: Morning review 8:00, deep work 8:05, lunch 12:00, meetings 1:00-2:30, deep work 2 after 2:30, wind down 5:30. [Your Name] reads `Inbox/Today.md` first each morning, runs `/morning` (saved routine) for interactive review.
+13. **Daily Schedule Skeleton**: Morning review 8:00, deep work 8:05, lunch 12:00, meetings 1:00-2:30, deep work 2 after 2:30, wind down 5:30. [Your Name] reads `Inbox/Today.md` first each morning, runs `/morning` (skill) for interactive review.
 14. **LinkedIn**: 15-minute slots, 2 days per week (not daily).
 15. **Writing Style Rules**: <!-- Add your own style preferences here. Examples: -->
     - Never use em dashes in any written output. Use commas, periods, colons, semicolons, or parentheses instead.
@@ -263,13 +263,14 @@ When working in this vault:
     3. **Claude.ai managed connection** -- If no API is available but Claude.ai has a built-in integration for the service (Gmail, Google Calendar, etc. via the Claude.ai Integrations page), use that.
     4. **Ask [Your Name]** -- If none of the above work, tell [Your Name] what access you need. They may be able to get you API credentials or enable a connection. Do not try to work around it.
     Never use browser automation (agent-browser, Playwright, Puppeteer, or any headless browser tool). Never fall back to a browser to work around a blocked page, missing API, or 403 error. If a service has no API and no Claude.ai integration, it is not connected yet -- say so and ask how [Your Name] wants to handle it.
-18. **Script-First for API Calls**: Do not write raw curl commands inline for API interactions. Instead, create a reusable Python script in `scripts/` for any API call that will be used more than once. Scripts must: source credentials from `.env`, handle errors and non-200 responses gracefully, support `--json` output for machine-readable results, include a `--help` flag, and log what they did. If a script already exists for the task, use it. This makes API interactions consistent, testable, and debuggable instead of fragile one-liners that break silently. One-off exploratory API calls (testing an endpoint, checking a value) are fine as inline curl, but anything that runs in a slash command or will be repeated should be a script.
+    **Never configure direct connections (MCP servers) yourself.** If [Your Name] is using Claude Desktop or Claude CoWork, direct connections can only be added through the app's UI by the user. Do not attempt to write `mcpServers` configuration, edit settings files for MCP, or instruct yourself to set up a new MCP connection. Instead, tell [Your Name] what tool to connect and where to find it in the app settings. If [Your Name] uses the Claude Code CLI, MCP config in `~/.claude/settings.json` is valid but only when explicitly requested.
+18. **Script-First for API Calls**: Do not write raw curl commands inline for API interactions. Instead, create a reusable Python script in `scripts/` for any API call that will be used more than once. Scripts must: source credentials from `.env`, handle errors and non-200 responses gracefully, support `--json` output for machine-readable results, include a `--help` flag, and log what they did. If a script already exists for the task, use it. This makes API interactions consistent, testable, and debuggable instead of fragile one-liners that break silently. One-off exploratory API calls (testing an endpoint, checking a value) are fine as inline curl, but anything that runs in a skill or will be repeated should be a script.
 19. **Self-Updating Documentation**: Every time a new integration, tool, or script is added to the system, immediately update ALL relevant references:
     - **CLAUDE.md**: Add the integration under the appropriate section (Direct Connections, Tools That Need Login Credentials, or Local Tools). Include what it does, how to use it, and any key details.
     - **`Resources/Reference/API Integration Guide.md`**: Add endpoint documentation, auth method, example calls, rate limits, and any gotchas discovered during setup.
     - **`Resources/API Keys/`**: Create a reference pointer file for the new credential (what it is, where it is stored in `.env`, scopes, rate limits).
     - **`scripts/`**: If a script was created, document its usage in CLAUDE.md under Local Tools.
-    - **Slash commands**: If any slash commands reference integrations (like `/eod-gather`), update them to include the new integration where appropriate.
+    - **Skills**: If any skills reference integrations (like `/eod-gather`), update them to include the new integration where appropriate.
     Do not consider an integration "done" until all of these references are updated. If you add an API and skip the documentation, the next session will not know it exists.
 
 ## Common Workflows
@@ -284,7 +285,7 @@ When making decisions about hiring, staffing, strategy, or team capacity:
 ### Morning Routine
 1. [Your Name] reads `Inbox/Today.md` (generated by the EOD pipeline)
 2. Jot any quick thoughts into the `## Brain Dump` section at the top throughout the day
-3. Runs `/morning` (saved routine) for interactive review (3-5 min): summary, adjustments, goal check, send-off
+3. Runs `/morning` (skill) for interactive review (3-5 min): summary, adjustments, goal check, send-off
 4. Today.md is ephemeral (overwritten each EOD run). The daily note (`Work/Daily/YYYY-MM-DD.md`) is the permanent record.
 5. `/morning` detects stale goals (>7 days) and prompts for refresh. Monday weekly reset carries forward incomplete goals.
 
@@ -337,10 +338,10 @@ When you need to call an external API (Gmail, Slack, Google Drive, etc.) for any
    - Source credentials from `.env` (never hardcode keys)
    - Accept relevant parameters via command-line arguments (dates, filters, limits)
    - Handle errors: check HTTP status codes, catch exceptions, print clear error messages
-   - Support `--json` flag for machine-readable output (so slash commands can parse results)
+   - Support `--json` flag for machine-readable output (so skills can parse results)
    - Support `--help` flag describing what the script does and its arguments
    - Print a brief summary of what was done (e.g., "Fetched 3 meetings" or "Sent 2 Slack messages")
-3. **Use the script** in slash commands instead of raw curl commands
+3. **Use the script** in skills instead of raw curl commands
 4. **Update the script** when you learn new API quirks (pagination, rate limits, edge cases)
 
 Example pattern:
@@ -377,6 +378,26 @@ This approach means API calls are consistent across sessions, testable on their 
 
 This system is self-maintaining. Update CLAUDE.md when integrations, workflows, or folder structure change. Log significant system changes (not routine EOD runs) in the Change Log. Record improvement ideas in `Resources/Reference/System Improvements.md`. Save learned preferences to Assistant Guidelines. Use memory files for operational lessons and gotchas.
 
+### Building Skills from Successful Tasks
+
+When you complete a task that could be useful again in the future, offer to turn it into a skill. A skill is a text file in `.claude/commands/` with step-by-step instructions that I follow when [Your Name] types the skill name.
+
+**Signs a task should become a skill:**
+- You have done it more than once
+- It involves multiple steps
+- It requires specific tools or data sources
+- The user says "do this again next week" or "I wish I could do this with one tap"
+
+**To create a skill:**
+1. After successfully completing the task, ask: "This worked well. Want me to save this as a skill so you can run it anytime?"
+2. If yes, write the steps as a markdown file in `.claude/commands/`
+3. Name it descriptively (e.g., `weekly-status.md`, `client-prep.md`)
+4. Include which tools and data sources it uses, what output it produces, and any user preferences learned during the task
+5. Tell the user: "Done. Type `/skill-name` anytime to run this."
+6. Update CLAUDE.md: add the new skill to the relevant Common Workflows section or create a new entry
+
+**Do not create skills preemptively.** Only offer to create a skill after a task has been completed successfully at least once. The skill should capture what actually worked, not what you think might work.
+
 **If the system drifts too far:** The original setup templates, example commands, and documentation are archived at `Archive/ClaudeCodeSystem-Original/`. Reference these when the system has been modified so heavily that something stops working or a workflow needs to be rebuilt from scratch. The original CLAUDE.md template is at `Archive/ClaudeCodeSystem-Original/templates/CLAUDE.md`.
 
 ---
@@ -388,7 +409,7 @@ This system is self-maintaining. Update CLAUDE.md when integrations, workflows, 
 | Date       | Change                          | Summary |
 | ---------- | ------------------------------- | ------- |
 | YYYY-MM-DD | Initial system setup            | Vault structure, CLAUDE.md, first integrations connected. |
-| YYYY-MM-DD | EOD slash command added         | `/eod` multi-section daily closeout workflow. |
+| YYYY-MM-DD | EOD skill added                  | `/eod` multi-section daily closeout workflow. |
 | YYYY-MM-DD | EOD phased pipeline             | Split `/eod` into 5-phase sub-agent pipeline. Each phase gets a fresh context window. |
 | YYYY-MM-DD | Inbox restructured              | Per-client files with standard structure. |
 | YYYY-MM-DD | Monthly review process added    | Non-blocking nudge on new month, `/monthly-review` command. |

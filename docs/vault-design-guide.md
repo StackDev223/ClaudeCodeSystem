@@ -209,9 +209,9 @@ This is the most important file in the system. It's a markdown file at the vault
 
 ---
 
-## Slash Commands (Automated Routines)
+## Skills (Automated Routines)
 
-Claude Code supports custom slash commands defined as markdown files in `.claude/commands/`. Each file is a detailed prompt that runs a multi-step workflow. You type `/command-name` and the AI executes the full routine.
+Claude Code supports skills defined as markdown files in `.claude/commands/`. Each skill is a set of step-by-step instructions that runs a multi-step workflow. You type `/skill-name` and the AI executes the full routine. Skills grow naturally from your actual work: when you complete a task that could be useful again, you or Claude can save it as a skill.
 
 ### End-of-Day Pipeline (`/eod`)
 
@@ -249,12 +249,12 @@ Triggered by a non-blocking nudge at the start of a new month (not auto-triggere
 - Vault cleanup (stuck inbox items, notes to archive, misplaced files)
 - Testimonial scan (searches Slack and transcripts for positive client feedback)
 
-### Other Slash Commands
+### Other Skills
 
 - **`/debrief [Name]`** -- Post-interview candidate assessment against criteria.
 - **`/audit-research`**, **`/audit-roadmap`**, **`/audit-review`**, **`/audit-deliver`** -- A multi-stage pipeline for client technology audits.
 
-You can build a slash command for any repeatable multi-step process. The pattern is always: define the steps in markdown, specify the data sources and routing rules, and let the AI execute.
+You can build a skill for any repeatable multi-step process. The pattern is always: define the steps in markdown, specify the data sources and routing rules, and let the AI execute. The best skills come from tasks you have already completed successfully.
 
 ---
 
@@ -375,9 +375,9 @@ Pick one or two tools that would save you the most time. For most people:
 
 Store login information in a password keychain file (`.env`) at the root of your notes folder. See the [Integration Architecture](integration-architecture.md) guide for step-by-step instructions.
 
-### Step 4: Create Your First Saved Routine
+### Step 4: Create Your First Skill
 
-A saved routine (called a "slash command") is a text file that tells Claude how to run a multi-step process. Start with an end-of-day routine. Even a simple version that just checks your calendar and email is valuable. Add sections as you connect more tools.
+A skill is a successful task turned into a repeatable routine. It is a text file in `.claude/commands/` that tells Claude how to run a multi-step process. Start with an end-of-day routine. Even a simple version that just checks your calendar and email is valuable. Add sections as you connect more tools.
 
 Create the file at `.claude/commands/your-routine-name.md`. See `examples/commands/` for working examples.
 
@@ -393,7 +393,7 @@ Once your end-of-day routine is stable:
 
 The system gets better every time you use it:
 - When Claude makes a mistake, add a guideline to CLAUDE.md
-- When you repeat something manually, turn it into a saved routine
+- When you repeat something manually, turn it into a skill
 - When you learn a quirk about a tool, save it to Claude's memory files
 - Run a monthly review to clean up and improve the system
 

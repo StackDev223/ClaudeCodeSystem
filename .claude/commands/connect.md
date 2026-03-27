@@ -25,7 +25,7 @@ Options:
 Set `CLAUDE_RUNTIME` from their answer.
 
 Connection rules:
-- **Desktop**: Built-in connectors and MCP-style integrations must be configured in the app UI. Do not rely on writing local `mcpServers` config files for Desktop users.
+- **Desktop / CoWork**: Built-in connectors and MCP-style integrations must be configured by the user in the app UI. **Claude cannot create or modify MCP connections for Desktop users.** Never write `mcpServers` config or instruct yourself to set one up. If a new connection is needed, tell the user what to connect and where to find it in the app settings.
 - **CLI**: Local Claude Code config files are valid. MCP servers can be configured in `~/.claude/settings.json`.
 - **Both**: Use the app UI for Desktop connectors. Only add CLI config for tools they also need in terminal sessions. `.env` works for both.
 
@@ -591,14 +591,14 @@ Options:
 
 For tools not covered above (Asana, Trello, Todoist, Teams, Otter, Fireflies, Toggl, Harvest, etc.):
 
-**First, check if an app connector or MCP server exists for the tool.** Use WebSearch: `"[tool name] Claude connector"`, `"[tool name] MCP server" claude`, or `"[tool name] model context protocol"`.
+**First, check if a connector exists for the tool.** Use WebSearch: `"[tool name] Claude connector"`, `"[tool name] MCP server" claude`, or `"[tool name] model context protocol"`.
 
-**If a Desktop connector exists and `CLAUDE_RUNTIME` includes Desktop:**
-1. Walk the user through connecting it in the app UI
-2. Test with a lightweight tool call
+**If a Desktop/CoWork connector exists and `CLAUDE_RUNTIME` includes Desktop:**
+1. Tell the user which connector to add and walk them through finding it in the app UI. **Do not attempt to configure this yourself** -- only the user can add connectors through the Desktop/CoWork interface.
+2. Once they confirm it is connected, test with a lightweight tool call
 3. Update CLAUDE.md integrations section
 
-**If a CLI MCP server exists and `CLAUDE_RUNTIME` includes CLI:**
+**If a CLI MCP server exists and `CLAUDE_RUNTIME` is CLI only:**
 1. Search for the install command (usually `npx -y @some-org/mcp-server-toolname`)
 2. Walk the user through getting credentials (API key, OAuth token, etc.)
 3. Save credentials to `.env`

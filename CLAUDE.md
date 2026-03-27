@@ -4,7 +4,7 @@ This is the setup repository for the Claude Code Personal Assistant System. It i
 
 ## If the user opens Claude Code in this folder
 
-Guide them to type `/onboard` to begin setup. The slash commands are in `.claude/commands/` and are ready to use.
+Guide them to type `/onboard` to begin setup. The skills are in `.claude/commands/` and are ready to use.
 
 ## If this folder is inside an Obsidian vault (bootstrap mode)
 
@@ -25,7 +25,7 @@ If yes, **bootstrap automatically**:
 
 ## If the user just says "set me up" or "help me get started"
 
-Read `.claude/commands/onboard.md` from this repo and execute it directly. The user does not need to know about slash commands to get started.
+Read `.claude/commands/onboard.md` from this repo and execute it directly. The user does not need to know about skills to get started.
 
 ## After setup is complete
 

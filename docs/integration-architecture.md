@@ -2,7 +2,7 @@
 
 > **You do not need to understand every detail in this document.** Claude can walk you through setting up any connection. This is a reference for when you want to know how things work under the hood.
 
-This document explains the technical architecture behind the Brain personal assistant system. It covers how a `.env` file, MCP servers, REST/GraphQL API calls, custom scripts, and slash commands work together to turn an Obsidian vault into an automated operations hub.
+This document explains the technical architecture behind the Brain personal assistant system. It covers how a `.env` file, MCP servers, REST/GraphQL API calls, custom scripts, and skills work together to turn an Obsidian vault into an automated operations hub.
 
 ---
 
@@ -15,7 +15,7 @@ The system connects to external platforms through five layers, each serving a di
 │                  Claude Code (AI Agent)          │
 │          Reads CLAUDE.md for instructions        │
 │          Reads .env for credentials              │
-│          Executes slash commands                  │
+│          Executes skills                           │
 ├─────────────────────────────────────────────────┤
 │                                                   │
 │  Layer 1: .env File                              │
@@ -129,8 +129,8 @@ Some tools have a direct connection built for Claude. Think of them as built-in 
 ### How MCP Servers Work
 
 MCP-style direct connections are configured outside the vault. The exact path depends on how the user runs Claude:
-1. **Claude Desktop app**: use the app's connector/integration UI
-2. **Claude Code CLI**: use Claude Code's local settings/config
+1. **Claude Desktop app or CoWork**: use the app's connector/integration UI. **Only the user can add these** -- Claude cannot configure its own MCP connections through Desktop/CoWork. If a new connection is needed, tell the user what to connect and where to find it in the app settings.
+2. **Claude Code CLI**: use Claude Code's local settings/config (`~/.claude/settings.json`)
 3. **Both**: use the app UI for Desktop, and only add CLI config for tools needed in terminal sessions
 
 Each direct connection:
@@ -235,7 +235,7 @@ When an operation is too complex for a single curl command, or needs to be reusa
 
 - **State management**: Some operations need to track what's already been processed (e.g., which Slack messages have been ingested)
 - **Multi-step logic**: Pagination, deduplication, conditional branching
-- **Reusability**: The AI calls the same script from different slash commands
+- **Reusability**: The AI calls the same script from different skills
 - **Testability**: Scripts can be tested independently
 
 ### Script Catalog
@@ -328,13 +328,13 @@ For scheduled automation, a `launchd` plist can trigger this on a schedule (e.g.
 
 ---
 
-## Slash Commands: Orchestrating Everything
+## Skills: Orchestrating Everything
 
-Slash commands are the glue. They're markdown files in `.claude/commands/` that define multi-step workflows. When you type `/command-name`, the AI reads the markdown file and executes each step.
+Skills are the glue. They are markdown files in `.claude/commands/` that define multi-step workflows. When you type `/skill-name`, the AI reads the markdown file and executes each step.
 
-### Anatomy of a Slash Command
+### Anatomy of a Skill
 
-Each command file is essentially a detailed prompt with:
+Each skill file is essentially a detailed prompt with:
 
 1. **Setup**: Load credentials, verify date, check preconditions
 2. **Data gathering**: Pull from APIs, read vault files, query databases
@@ -343,7 +343,7 @@ Each command file is essentially a detailed prompt with:
 5. **Sync**: Push state to external systems (task manager, database, Slack)
 6. **Summary**: Report what was done
 
-### Command Catalog
+### Skill Catalog
 
 #### EOD Phase 1: `/eod-gather` (Data Gathering)
 
@@ -419,7 +419,7 @@ Interactive command with `AskUserQuestion` at every decision point:
 | Testimonial scan | Slack API + vault search | Find positive client feedback |
 | Apply updates | Vault writes | Route improvements to appropriate files |
 
-#### Other Commands
+#### Other Skills
 
 | Command | What It Does |
 |---|---|
@@ -626,15 +626,15 @@ This section is only relevant if you are a Google Workspace administrator (you m
 
 If you are a Workspace admin, you can also pre-approve the OAuth consent screen for your organization so other team members do not see the "unverified app" warning.
 
-### Step 2: Configure MCP Servers
+### Step 2: Configure Direct Connections
 
-Add direct connections for services you use outside the vault. Desktop users do this in the app UI. CLI users do it in Claude Code's local configuration. Your task manager and any database tools are common first choices. Each connection has its own setup process (usually an API key or OAuth flow). See the `/connect` command for step-by-step guidance.
+Add direct connections for services you use outside the vault. **Desktop and CoWork users** do this through the app's connector/integration UI -- Claude cannot configure these connections itself, only the user can add them through the app settings. **CLI users** can configure MCP servers in Claude Code's local settings files. Your task manager and any database tools are common first choices. Each connection has its own setup process (usually an API key or OAuth flow). See the `/connect` skill for step-by-step guidance.
 
 ### Step 3: Document Your Integrations
 
 Create an API Integration Guide in your vault that documents every connected service: auth method, base URL, key endpoints, gotchas learned the hard way. This is critical because the AI references this guide when making API calls. Without it, the AI has to guess at endpoint structures.
 
-### Step 4: Build Your First Slash Command
+### Step 4: Build Your First Skill
 
 Start with something simple. An end-of-day that just checks your calendar and email:
 
@@ -658,7 +658,7 @@ Then add sections as you connect more integrations: meeting transcripts, Slack, 
 
 ### Step 5: Add Scripts for Complex Operations
 
-When a slash command step gets too complex for inline curl commands (pagination, state tracking, multi-step logic), extract it into a Python script in `scripts/`. Give the script a `--json` output flag so the AI can parse results programmatically.
+When a skill step gets too complex for inline curl commands (pagination, state tracking, multi-step logic), extract it into a Python script in `scripts/`. Give the script a `--json` output flag so the AI can parse results programmatically.
 
 ### Step 6 (Advanced): Schedule Automation
 

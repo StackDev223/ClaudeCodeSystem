@@ -13,7 +13,7 @@ The setup has 4 parts:
 | Step | Command | What It Does | Time |
 |------|---------|-------------|------|
 | 1 | `/onboard` | Detect Desktop vs CLI, learn about you, build your notes folder and files | ~20 min |
-| 2 | `/train` | Walk through Obsidian, your vault, slash commands, and the daily loop | ~15 min |
+| 2 | `/train` | Walk through Obsidian, your vault, skills, and the daily loop | ~15 min |
 | 3 | `/connect` | Connect each of your tools (calendar, email, tasks, etc.) one by one | ~20 min |
 | 4 | `/finish` | Live demo with real data, improvement tips, how to maximize the system | ~10 min |
 
@@ -23,6 +23,16 @@ The steps below explain what each part sets up, so you can understand what each 
 - A Mac or PC
 - [Obsidian](https://obsidian.md) (free)
 - A [Claude Max subscription](https://claude.ai) ($100/month -- includes Claude Code)
+
+**Windows users -- do these steps before opening Claude for the first time:**
+1. Create a **Brain** folder in your Documents folder
+2. **Enable Developer Mode** -- Settings > System > For developers
+3. **Install Git Bash** -- Download from [git-scm.com](https://git-scm.com), accept all defaults
+4. **Install Claude** -- Download from [claude.ai/download](https://claude.ai/download). Open it once and let it install **Virtual Machine Platform** (a Windows component it needs)
+5. **Restart your computer** -- One restart covers Git, Developer Mode, and Virtual Machine Platform
+6. Open Claude, navigate to this folder, and type `/onboard`
+
+These must be done before `/onboard` because Claude Code cannot run properly without them.
 
 **What you are building:** A personal assistant that lives in your notes folder. It reads your calendar, processes your email, tracks your tasks, and builds tomorrow's plan while you sleep. By the end of all 4 steps, you will have a working daily system.
 
@@ -46,7 +56,7 @@ Claude asks this during `/onboard` and records it in your CLAUDE.md so later set
 
 Before Claude can do anything, it needs permission to read and write files, run commands, and connect to your tools. There are two permission files: one for global settings (applies everywhere) and one for local settings (applies only inside your notes folder).
 
-**Important:** the settings-file path below is for CLI users. If you are Desktop-only, you do not need to rely on local MCP config files for built-in connectors. Desktop users set those up later in the app UI. `.env` still works in both environments for API-based tools and scripts.
+**Important:** the settings-file path below is for CLI users only. If you are using Claude Desktop or CoWork, direct connections (MCP servers) can only be configured by you through the app's UI -- Claude cannot set these up itself. `.env` still works in both environments for API-based tools and scripts.
 
 ### Global Settings
 
@@ -210,12 +220,12 @@ See [Integration Architecture](integration-architecture.md) for the full technic
 
 ## Step 6: Learn the System (`/train`)
 
-The `/train` command gives you a guided tour of everything `/onboard` built: your folder structure, CLAUDE.md instruction manual, slash commands, and the daily loop. It takes about 15 minutes and is designed as a show-and-tell (not a lecture).
+The `/train` command gives you a guided tour of everything `/onboard` built: your folder structure, CLAUDE.md instruction manual, skills, and the daily loop. It takes about 15 minutes and is designed as a show-and-tell (not a lecture).
 
 Key things you will learn:
 - What each folder is for
 - How CLAUDE.md works and how to edit it
-- How slash commands work (they are just text files)
+- How skills work (they are just text files)
 - The daily loop: EOD processing, morning review, day, repeat
 
 ---
@@ -232,7 +242,7 @@ The `/finish` command is the payoff. Claude pulls real data from your connected 
 
 It also covers:
 - How to add rules when Claude makes a mistake
-- How to create new saved routines for repeated tasks
+- How to turn successful tasks into skills
 - The monthly review process
 - Power tips specific to your setup
 
@@ -270,7 +280,7 @@ Run `/eod` before wrapping up. Claude processes the day and generates tomorrow's
 
 The system improves as you use it:
 - When Claude makes a mistake, add a guideline to CLAUDE.md
-- When you repeat a process manually, turn it into a saved routine
+- When you repeat a process manually, turn it into a skill
 - When a tool connection would save time, add it
 - Run `/monthly-review` once a month to clean up and improve
 
@@ -284,7 +294,7 @@ Plain-language definitions for terms you will see in the documentation.
 |---|---|
 | **Vault** | Your notes folder. Obsidian calls it a "vault" but it is just a folder of text files on your computer. |
 | **CLAUDE.md** | Claude's instruction manual. A text file at the root of your notes folder that Claude reads every session. |
-| **Slash command** | A saved routine. A text file that tells Claude how to run a multi-step process. You type `/name` to run it. |
+| **Skill** | A successful task turned into a repeatable routine. A text file in `.claude/commands/` that tells Claude how to run a multi-step process. You type `/name` to run it. Your skills library grows over time from your actual work. |
 | **MCP server** | A direct connection between Claude and a tool (like ClickUp or Google Calendar). Once set up, Claude can use the tool without going through a browser. |
 | **API** | A way for software to talk to other software. When Claude "calls an API," it is asking another service for information or telling it to do something. |
 | **OAuth** | A secure login handshake. Instead of giving Claude your password, OAuth lets you approve access once and Claude gets a special key to use going forward. |
