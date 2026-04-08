@@ -437,14 +437,14 @@ Customize skill content with their specific tools, clients, and schedule.
 - `finish.md` (from this repo's `.claude/commands/finish.md`)
 
 **Always copy these Integral skills** (every user gets these):
-- `strategy.md` (from `examples/commands/strategy.md`) -- structured decision-making framework
-- `optimize.md` (from `examples/commands/optimize.md`) -- audit and improve existing tools/processes
-- `build-skill.md` (from `examples/commands/build-skill.md`) -- turn a successful task into a repeatable skill
-- `learn.md` (from `examples/commands/learn.md`) -- capture and integrate new knowledge into the vault
+- `strategy.md` (from this repo's `.claude/commands/strategy.md`) -- structured decision-making framework
+- `optimize.md` (from this repo's `.claude/commands/optimize.md`) -- audit and improve existing tools/processes
+- `build-skill.md` (from this repo's `.claude/commands/build-skill.md`) -- turn a successful task into a repeatable skill
+- `learn.md` (from this repo's `.claude/commands/learn.md`) -- capture and integrate new knowledge into the vault
 
 **Copy these graph maintenance skills:**
-- `graph-sync.md` (from `examples/commands/graph-sync.md`) -- full vault knowledge graph rebuild
-- `graph-daily.md` (from `examples/commands/graph-daily.md`) -- daily incremental graph sync
+- `graph-sync.md` (from this repo's `.claude/commands/graph-sync.md`) -- full vault knowledge graph rebuild
+- `graph-daily.md` (from this repo's `.claude/commands/graph-daily.md`) -- daily incremental graph sync
 
 If the user chose full EOD processing, the daily graph sync is already included as Phase 6 of `/eod`. The standalone `/graph-daily` is available for manual runs.
 
