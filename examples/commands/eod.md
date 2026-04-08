@@ -149,6 +149,26 @@ Report: tomorrow's date, number of meetings, number of tasks selected, any carry
 
 ---
 
+## 6. Graph Sync (Incremental)
+
+Run the daily incremental graph sync on files that changed today. This keeps the knowledge graph current without a full rebuild.
+
+Execute the process from `/graph-daily`:
+
+1. CHANGED FILES: Find markdown files modified today.
+2. FRONTMATTER: Add or complete frontmatter on changed files.
+3. WIKI-LINKS: Add wiki-links for unlinked entity mentions in changed files.
+4. TRANSCRIPT KNOWLEDGE: Extract key takeaways from any new transcripts and push to entity pages.
+5. INDEX UPDATES: Add new files to `Graph/index.md` and relevant MOCs.
+
+If the Graph folder does not exist or `/graph-sync` has never been run, skip this section and note: "Graph sync skipped -- run `/graph-sync` first to initialize."
+
+Write sync report to `/tmp/eod-graph-$TODAY.md`.
+
+Report: files synced, links added, takeaways extracted, index entries added.
+
+---
+
 ## Summary
 
 After all sections complete, print the final summary:

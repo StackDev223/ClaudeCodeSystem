@@ -107,7 +107,7 @@ Make adjustments if requested.
 ### Fixing Mistakes
 "When I get something wrong, the best fix is a rule, not just a correction:"
 - Instead of: "No, put that in the other folder" (fixes it once)
-- Say: "Always put [type of item] in [folder]. Add this to CLAUDE.md." (fixes it forever)
+- Say: "Always put [type of item] in [folder]. Add this to CLAUDE.md." (makes it far less likely to happen again)
 
 AskUserQuestion: "Makes sense? Any rules you want to add right now based on what you have seen so far?"
 Options:
