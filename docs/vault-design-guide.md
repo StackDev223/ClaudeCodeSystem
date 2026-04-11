@@ -62,6 +62,7 @@ Vault/
 ├── Resources/          # Reference material, contacts, recipes, health, learning
 │   └── Reference/      # System docs, API guides, improvement backlog
 ├── Templates/          # Note templates (meeting, client, transcript, etc.)
+├── Graph/              # Knowledge graph: index, MOCs, entity registry
 └── Archive/            # Completed weekly task snapshots
 ```
 
@@ -73,6 +74,7 @@ Vault/
 4. **Archive aggressively.** Completed tasks get moved to dated archive files weekly. This keeps active files clean and scannable.
 5. **Transcripts route per-client.** A classifier script determines which client a call belongs to and routes it to the right `Transcripts/` folder automatically. Admin/team calls go to `Work/Transcripts/`, private calls to `[YourCompany]/Transcripts/`.
 6. **Company docs at root level.** Your own company (hiring, SOPs, strategy) lives at the vault root, separate from `Work/` which is shareable with staff.
+7. **Navigate by graph, not folders.** The `Graph/` folder holds a living index, domain MOCs (Clients, People, Projects, Concepts, SOPs), and an entity registry that maps terms to wiki-link targets. Files across the vault carry YAML frontmatter and inline `[[wiki-links]]`, so Claude traverses by relationship rather than folder path. The graph is maintained incrementally by EOD Phase 6 and rebuilt on demand with `/graph-sync`.
 
 ---
 
