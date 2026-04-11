@@ -90,7 +90,7 @@ None. Full deep work block protected.
 
 ### Deep Work 2 (2:30 - 5:30)
 - [ ] **[Client C]** Reply to email re: timeline <!-- src:Inbox/ClientC.md|Reply to email re: timeline -->
-- [ ] **[Cross-Client]** Update task manager statuses <!-- src:Inbox/Incoming.md|Update task manager statuses -->
+- [ ] **[Cross-Client]** Update task manager statuses <!-- src:Inbox/[YourCompany].md|Update task manager statuses -->
 
 ### Carried Forward
 _(empty on fresh day; populated if items rolled from yesterday)_

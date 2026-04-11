@@ -217,7 +217,7 @@ Options:
 
 **If delete:** Remove the ClaudeCodeSystem folder (or move to system trash). Tell them: "Cleaned up. The originals are safe in your vault at Archive/ClaudeCodeSystem-Original/."
 
-**If remind later:** Add a task to `Inbox/Incoming.md` under Cross-Client Tasks:
+**If remind later:** Add a task to `Inbox/[YourCompany].md` under Open Tasks:
 `- [ ] Clean up the ClaudeCodeSystem download folder (originals are archived in vault)`
 
 **If keep both:** Respect the choice, no further action.

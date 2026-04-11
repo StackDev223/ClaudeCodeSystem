@@ -20,7 +20,7 @@ Data gathering phase. Triages Brain Dump first, then fetches Fathom transcripts,
   ```
 - The Write tool is acceptable for NEW files (transcripts, manifest) since there's no read-modify-write race.
 
-**Critical rule: No empty section headers.** Only create `### New from ...` headers if there are items to put under them.
+**Critical rule: Tasks are flat bullets.** Do NOT create `### New from <source>` subsection headers for tasks. Append new tasks directly under `## Open Tasks` as flat bullets. Source context lives in the italic suffix at the end of each task (e.g., `*from Fathom: [Call Name] MM/DD*`). This keeps client files scannable as history accumulates. (`### Notes from <source>` headers under `## Notes` are still fine -- meeting notes benefit from source grouping, tasks do not.)
 
 **Critical rule: EOD deduplication.** Before adding a task from a call recap, check if the same task already exists in the client file. If it does, update the source note (append "*also discussed X/X*") instead of creating a duplicate.
 
@@ -74,21 +74,21 @@ Process the Brain Dump section in `Inbox/Today.md`. This is the user's quick-cap
    - **Tool/product names**: Map tools to clients. Example:
      - Klaviyo/SamCart = [Client B]
      - Shopify = [Client A]
-   - **Internal context** (hiring, team, SOPs, strategy): route to `Inbox/Incoming.md` Cross-Client Tasks
+   - **Internal context** (hiring, team, SOPs, strategy): route to `Inbox/[YourCompany].md` Open Tasks
    - **Personal items** (health, travel, errands): leave in Brain Dump, do not route
    - **Ideas**: leave in Brain Dump, do not route
    - **Unclassifiable work items**: leave in Brain Dump, log as `ORPHAN` in manifest
 
 4. **For Notes subsections** (e.g., `### Notes from Agency Check-in 3/16`):
    - If the notes contain items for a specific client, extract those bullets and route to that client's `## Notes` section
-   - If the notes are cross-client (agency strategy, hiring, general), route to `Inbox/Incoming.md` Notes section
+   - If the notes are cross-client (agency strategy, hiring, general), route to `Inbox/[YourCompany].md` Notes section
    - Meeting notes with mixed clients: split by client, route each subset to the correct file
    - Always route as plain bullets (NOT checkboxes) under a `### Notes from <source>` header in the client file
 
 5. **Route via atomic writes** (Python read-modify-write):
    a. For each client file that needs items added:
       - Read the file
-      - Tasks (`- [ ]` items): insert under `## Open Tasks`, under a `### New from Brain Dump MM/DD` header
+      - Tasks (`- [ ]` items): append directly under `## Open Tasks` as flat bullets. Preserve source via the inline italic suffix `*from Brain Dump MM/DD*`. Do NOT create a `### New from Brain Dump MM/DD` subsection header.
       - Notes (plain bullets): insert under `## Notes` section, under a `### Notes from <source>` header
       - Dedup check: if the same task already exists in the client file, skip it (don't duplicate)
       - Write the file back
@@ -131,10 +131,10 @@ Process the Brain Dump section in `Inbox/Today.md`. This is the user's quick-cap
 
 5. **ROUTE IMMEDIATELY** (atomic writes for all Inbox file edits):
    a. Determine the client from the JSON report's `client` field (already classified by the script)
-   b. Tasks -> `Inbox/<Client>.md` under `Open Tasks`; Cross-client -> `Inbox/Incoming.md` under `Cross-Client Tasks`
+   b. Tasks -> `Inbox/<Client>.md` under `Open Tasks`; cross-client/agency/hiring/internal -> `Inbox/[YourCompany].md` under `Open Tasks`
    c. Notes/decisions -> `## Notes` section (plain bullets, NOT checkboxes)
    d. Append a row to the manifest for each item
-   e. If client is null in the report, route to `Inbox/Incoming.md` and mark `ORPHAN`
+   e. If client is null in the report, route to `Inbox/[YourCompany].md` and mark `ORPHAN`
 6. Confirm manifest item count matches extraction count
 
 ---

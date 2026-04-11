@@ -73,7 +73,7 @@ Apply approved fixes via atomic writes. For missing scripts or integrations, upd
 ## Step 3: Vault Cleanup
 
 1. Scan `Inbox/` for items older than 14 days -- these are stuck and need triage or archival
-2. Check for notes filed in wrong folders (e.g., client content in `Inbox/Incoming.md` instead of client file)
+2. Check for notes filed in wrong folders (e.g., client content in `Inbox/[YourCompany].md` instead of the correct client file)
 3. Flag files with outdated information (references to past dates, completed projects still marked active)
 4. Identify empty or unused files (no content beyond template headers)
 5. Present findings to the user; apply approved changes via atomic writes

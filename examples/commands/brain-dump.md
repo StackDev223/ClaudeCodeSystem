@@ -6,7 +6,7 @@ Manual brain dump command. The user dictates everything on their mind and the as
 - **ALWAYS use Python atomic writes** (read -> modify -> write in a single `python3` script via Bash) when editing existing files.
 - The Write tool is acceptable for NEW files since there's no read-modify-write race.
 
-**Critical rule: No empty section headers.** Only create `### New from ...` headers if there are items to put under them.
+**Critical rule: Tasks are flat bullets.** Do NOT create `### New from <source>` subsection headers for tasks. Append new tasks directly under `## Open Tasks` as flat bullets. Source context lives in the italic suffix at the end of each task (e.g., `*from Brain Dump MM/DD*`). Only `### Notes from <source>` headers under `## Notes` are allowed -- meeting notes benefit from source grouping, tasks do not.
 
 ---
 
@@ -33,9 +33,9 @@ Manual brain dump command. The user dictates everything on their mind and the as
 1. For each classified item, route via atomic write:
    - **Client tasks** -> `Inbox/<Client>.md` under `## Open Tasks` as `- [ ]` items
    - **Client notes** -> `Inbox/<Client>.md` under `## Notes` as plain bullets
-   - **Cross-client tasks/notes** -> `Inbox/Incoming.md` under `## Cross-Client Tasks` or `## Notes`
-   - **Ideas** -> `Inbox/Incoming.md` under `## Brain Dump` (keep as-is)
-   - **Personal items** -> `Inbox/Incoming.md` under `## Brain Dump` with a `(personal)` tag
+   - **Cross-client tasks/notes** -> `Inbox/[YourCompany].md` under `## Open Tasks` or `## Notes`
+   - **Ideas** -> `Inbox/[YourCompany].md` under `## Brain Dump` (keep as-is)
+   - **Personal items** -> `Inbox/Personal.md` under `## Open Tasks` (or `## Brain Dump` if it's a loose thought)
 2. Dedup check: before adding a task, verify it does not already exist in the target file
 3. If any items could not be classified, present them to the user and ask where they should go
 

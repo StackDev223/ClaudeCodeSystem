@@ -367,7 +367,6 @@ The daily workhorse. Touches nearly every integration:
 |---|---|---|
 | Deduplication | Vault files | Remove duplicate tasks across client files |
 | Completed cleanup | Vault files | Move checked items to Completed sections |
-| Client Boards | Vault files | Update overview table in Incoming.md |
 | Task sync | Task Manager MCP | Create new tasks, update statuses |
 | Vault hygiene | Vault files | Flag stale items, Monday weekly archiving |
 

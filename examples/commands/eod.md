@@ -58,7 +58,7 @@ Critical rules:
 
 Execute these steps in order:
 
-1. BRAIN DUMP TRIAGE: Read `Inbox/Incoming.md`. Extract the Brain Dump section. Classify each item by client. Route work items to the correct client inbox file via atomic writes. Mark routed items in `Incoming.md`. Leave personal items and ideas in Brain Dump. Log every routed item to the manifest.
+1. BRAIN DUMP TRIAGE: Read `Inbox/[YourCompany].md`. Extract the `## Brain Dump` section. Classify each item by client. Route work items to the correct client inbox file via atomic writes. Remove routed items from the Brain Dump. Leave personal items and ideas in place. Log every routed item to the manifest.
 2. CALL TRANSCRIPTS: If a transcript fetcher script exists (for example `scripts/fathom-fetch.py`), run it and parse the results. For each call, extract action items, decisions, and follow-ups. Route to client inbox files via atomic writes. Log to manifest. If no transcript service is configured, skip this step.
 3. TOMORROW'S CALENDAR: Get a Google OAuth access token using the refresh token. Fetch $TOMORROW's events from Google Calendar API. Format as a readable schedule. Write to `/tmp/eod-calendar-$TODAY.md`.
 4. EMAIL CHECK: Reuse the Google OAuth token. Fetch today's emails via Gmail API (first 15-20 messages). Surface emails needing response. Route actionable items to client inbox files via atomic writes. Log to manifest.
@@ -79,9 +79,8 @@ Execute these steps:
 
 1. DEDUPLICATION: Read each client inbox file in `Inbox/`. Find duplicate tasks (same or very similar text). When found, merge source notes and remove the duplicate. Count merges.
 2. COMPLETED TASK CLEANUP: Find all checked items (`- [x]`) in client files. Move them to the Completed section of the same file with today's date. Count moved items.
-3. CLIENT BOARDS UPDATE: Read all client inbox files. Update the Client Boards table in `Inbox/Incoming.md` with current counts: open tasks, pending items, next deadline per client.
-4. TASK SYNC: For new `action-owner` items in the manifest, create corresponding tasks in your task manager using MCP tools. For tasks marked done today, update their status. Count synced items.
-5. VAULT HYGIENE: Flag items in Open Tasks older than 14 days with a `(stale)` marker. If today is Monday, archive all Completed sections to `Archive/Completed Week of $TODAY.md` and clear them from client files.
+3. TASK SYNC: For new `action-owner` items in the manifest, create corresponding tasks in your task manager using MCP tools. For tasks marked done today, update their status. Count synced items.
+4. VAULT HYGIENE: Flag items in Open Tasks older than 14 days with a `(stale)` marker. If today is Monday, archive all Completed sections to `Archive/Completed Week of $TODAY.md` and clear them from client files.
 
 Report: items deduped, completed moved, tasks synced, stale items flagged.
 

@@ -510,9 +510,13 @@ Do not customize this file. It is the same for every user.
 
 ### 6I: Inbox Starter Files
 
-Create `VAULT_PATH/Inbox/Incoming.md` with client boards table using real client names.
-Create a starter file for each client: `VAULT_PATH/Inbox/ClientName.md`.
-Create `VAULT_PATH/Inbox/Today.md` with a simple first-day message.
+Create a starter task file for each client: `VAULT_PATH/Inbox/ClientName.md`. Each file should use the standard structure: Open Tasks, Pending from Others, Key Dates, Notes, Reference, Completed.
+
+Also create `VAULT_PATH/Inbox/[YourCompany].md` (use the actual company name) for cross-client, agency, hiring, and internal tasks. It uses the same structure as a client file, plus a `## Brain Dump` section near the top for loose captures.
+
+Create `VAULT_PATH/Inbox/Personal.md` with the same structure for personal tasks.
+
+Create `VAULT_PATH/Inbox/Today.md` with a simple first-day message. Today.md is the daily entry point; it gets regenerated nightly by the EOD pipeline.
 
 ---
 

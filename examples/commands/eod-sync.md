@@ -55,7 +55,7 @@ Sync task completions from today's `Inbox/Today.md` back to their source inbox f
 
 Scan all client inbox files for duplicate tasks. Two tasks are duplicates if their text matches after stripping checkbox prefix, whitespace, and trailing source notes.
 
-1. **Read each client file** (`Inbox/[Client A].md`, `Inbox/[Client B].md`, etc.) and `Inbox/Incoming.md`
+1. **Read each client file** (`Inbox/[Client A].md`, `Inbox/[Client B].md`, `Inbox/[YourCompany].md`, etc.)
 2. **Extract all `- [ ]` items** from each file's `## Open Tasks` section
 3. **Compare within each file** using fuzzy matching:
    - Normalize: lowercase, strip leading `- [ ] `, strip trailing parenthetical source notes
@@ -79,36 +79,13 @@ Find checked items (`- [x]`) in each client file and move them to that file's Co
    - Move them to `## Completed` (create the section if it does not exist, insert before `## Notes`)
    - Add a date stamp: append `(completed TODAY)` to each moved item
    - Remove the items from `## Open Tasks`
-   - Remove any empty `###` subsection headers left behind
+   - Remove any `###` subsection headers left behind (both empty headers and any legacy `### New from <source>` headers; tasks should be flat bullets under `## Open Tasks`)
    - Increment `CLEANED` for each item moved
-2. Repeat for `Inbox/Incoming.md` Cross-Client Tasks section
-
 ---
 
-## Step 4: Client Boards Update
+## Step 4: Task Manager Sync
 
-Update the Client Boards table in `Inbox/Incoming.md` with current counts.
-
-1. **For each client file**, count:
-   - **Open tasks**: number of `- [ ]` items in `## Open Tasks`
-   - **Pending items**: items containing "waiting" or "pending" (case-insensitive)
-   - **Next deadline**: earliest date mentioned in open tasks (parse `MM/DD`, `YYYY-MM-DD`, day names)
-2. **Atomic write** to `Inbox/Incoming.md`:
-   - Find the `## Client Boards` section
-   - Replace the table with updated values:
-     ```markdown
-     | Client | Open | Pending | Next Deadline |
-     |--------|------|---------|---------------|
-     | [Client A] | 5 | 2 | 03/22 |
-     | [Client B] | 3 | 0 | -- |
-     ```
-   - Use `--` for clients with no upcoming deadline
-
----
-
-## Step 5: Task Manager Sync
-
-**Skip this step if no task manager is configured.** Check CLAUDE.md for a task manager entry (e.g., ClickUp, Asana, Todoist). If none, skip to Step 6.
+**Skip this step if no task manager is configured.** Check CLAUDE.md for a task manager entry (e.g., ClickUp, Asana, Todoist). If none, skip to Step 5.
 
 Sync new and completed tasks with the configured task manager using its MCP tools or API.
 
@@ -128,9 +105,9 @@ Sync new and completed tasks with the configured task manager using its MCP tool
 
 ---
 
-## Step 6: Vault Hygiene
+## Step 5: Vault Hygiene
 
-1. **Stale item flagging**: for each client file, find `- [ ]` items in `## Open Tasks` older than 14 days (based on date in source note or `### New from` header date). Prepend a flag: `- [ ] **STALE** <original text>`
+1. **Stale item flagging**: for each client file, find `- [ ]` items in `## Open Tasks` older than 14 days based on the date in the task's italic source note (e.g., `*from Fathom: [Call Name] 4/3*`). Prepend a flag: `- [ ] **STALE** <original text>`
 2. **Monday archive** (only if `DOW` = Monday):
    - For each client file, read the `## Completed` section
    - If non-empty, append its contents to `Archive/Completed Week of YYYY-MM-DD.md` (use the Monday date). Create the archive file if it does not exist.

@@ -114,5 +114,5 @@ For approved changes:
 4. Note what was decided and why in the relevant project or client file
 
 For items saved for later:
-- Add to `Inbox/Incoming.md` or the relevant client file with a target date
+- Add to the relevant client file in `Inbox/`, or `Inbox/[YourCompany].md` if cross-client, with a target date
 - Include the analysis so you do not have to redo it
