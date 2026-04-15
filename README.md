@@ -156,7 +156,7 @@ ClaudeCodeSystem/
 │       ├── brain-dump.md               # Manual brain dump capture
 │       └── daily-note.md              # Simplified daily note (lightweight EOD)
 ├── .gitignore
-└── LICENSE                             # MIT
+└── LICENSE                             # CC BY-NC-ND 4.0
 ```
 
 ## Documentation
@@ -210,4 +210,4 @@ Yes, for power users. The `examples/scripts/` folder includes a shell orchestrat
 
 ## License
 
-MIT
+[CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/) — you may share this with attribution, but you may not sell it or distribute modified versions. See [LICENSE](LICENSE) for details.
