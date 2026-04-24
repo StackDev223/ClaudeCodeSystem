@@ -42,7 +42,7 @@ Run these in parallel and include relevant output in the handoff:
 
 ## Step 3: Write the Handoff File
 
-Write to `~/.claude/handoff.md` (absolute path, overwrites any previous handoff). This is a global location so `/resume` works from any project. Use this structure:
+Write to `~/.claude/handoff.md` (absolute path, overwrites any previous handoff). This is a global location so `/pickup` works from any project. Use this structure:
 
 ```markdown
 # Handoff -- [Topic] -- [YYYY-MM-DD HH:MM ET]
@@ -113,7 +113,7 @@ Handoff written to ~/.claude/handoff.md
   Next steps: [1-line summary of first next action]
   Context to pull: [count] files, [count] commands
 
-To resume in a new window, run: /resume
+To resume in a new window, run: /pickup
 ```
 
 Do not dump the full file content into the chat. Stephen can read it if he wants to verify. The point is the file exists and is ready for the next session.
