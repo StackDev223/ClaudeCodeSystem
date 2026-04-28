@@ -446,6 +446,17 @@ Customize skill content with their specific tools, clients, and schedule.
 - `graph-sync.md` (from this repo's `.claude/commands/graph-sync.md`) -- full vault knowledge graph rebuild
 - `graph-daily.md` (from this repo's `.claude/commands/graph-daily.md`) -- daily incremental graph sync
 
+**Install the Brainstorming community skill:**
+
+Run this command in the vault directory:
+```
+npx skills add https://github.com/obra/superpowers --skill brainstorming
+```
+
+This installs an interactive brainstorming skill that helps users think through ideas, problems, and creative challenges. It works like the strategy skills but is focused on generative thinking rather than structured decision-making.
+
+If the install fails (e.g., Node.js is not available), note it as a task in `Inbox/[YourCompany].md` for later and continue. Do not block setup on this.
+
 If the user chose full EOD processing, the daily graph sync is already included as Phase 6 of `/eod`. The standalone `/graph-daily` is available for manual runs.
 
 ### 6F: Knowledge Graph Setup

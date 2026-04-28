@@ -1,6 +1,6 @@
 # Pickup
 
-Pick up a handed-off conversation. Reads `~/.claude/handoff.md` (global, works from any project or cwd), pulls the context it lists, and reports back where we left off so Stephen can keep moving without re-explaining anything.
+Pick up a handed-off conversation. Reads `handoff.md` from the current working directory, pulls the context it lists, and reports back where we left off so Stephen can keep moving without re-explaining anything.
 
 Pair with `/handoff` (which writes the file in the previous session). Named `/pickup` (not `/resume`) to avoid shadowing Claude Code's built-in `/resume` session picker.
 
@@ -8,9 +8,9 @@ Pair with `/handoff` (which writes the file in the previous session). Named `/pi
 
 ## Step 1: Read the Handoff File
 
-Read `~/.claude/handoff.md`.
+Read `handoff.md` from the current working directory.
 
-- **If the file does not exist**: Tell Stephen `No handoff found at ~/.claude/handoff.md. Nothing to resume -- either run /handoff in a previous session first, or just tell me what you're working on.` Stop.
+- **If the file does not exist**: Tell Stephen `No handoff found in the current directory. Nothing to resume -- either run /handoff in a previous session first, or just tell me what you're working on.` Stop.
 - **If the file exists**: Continue to Step 2.
 - **Note the "Working directory" line** from the handoff header. If it doesn't match the current `pwd`, tell Stephen and ask whether to `cd` into the handoff's working dir or operate from the current one before loading any context.
 
@@ -78,6 +78,6 @@ Stop after the summary. Wait for Stephen to confirm or redirect before taking an
 
 ## Notes
 
-- **Don't delete `~/.claude/handoff.md`** after reading. Leave it in place -- if Stephen clears again mid-session, the previous handoff is still there as a fallback until `/handoff` overwrites it.
-- **If the handoff references files from a different working directory** (e.g., a DevProject), cd into that directory or use absolute paths for the context loads. The handoff should have captured the working dir; if it didn't, ask Stephen where to operate.
+- **Don't delete `handoff.md`** after reading. Leave it in place -- if Stephen clears again mid-session, the previous handoff is still there as a fallback until `/handoff` overwrites it.
+- **If the handoff's "Working directory" differs from `pwd`**, the handoff was written from a different location. Ask Stephen whether to operate from the current directory or the one recorded in the handoff.
 - **If Stephen runs `/pickup` without ever having run `/handoff`**, the file won't exist. Don't try to synthesize a pickup from thin air -- just tell him there's nothing to resume.

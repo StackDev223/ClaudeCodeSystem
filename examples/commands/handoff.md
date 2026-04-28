@@ -1,6 +1,6 @@
 # Handoff
 
-Hand off the current conversation to a fresh Claude Code session (new window, post-clear, or after context compaction). Writes a self-contained briefing to `~/.claude/handoff.md` (global, works from any project or cwd) that a new agent can read cold and continue the work without losing momentum.
+Hand off the current conversation to a fresh Claude Code session (new window, post-clear, or after context compaction). Writes a self-contained briefing to `handoff.md` in the current working directory that a new agent can read cold and continue the work without losing momentum.
 
 Optional argument: a short label for the handoff topic (e.g., `/handoff trussi workflow fix`). If omitted, infer from the conversation.
 
@@ -42,7 +42,7 @@ Run these in parallel and include relevant output in the handoff:
 
 ## Step 3: Write the Handoff File
 
-Write to `~/.claude/handoff.md` (absolute path, overwrites any previous handoff). This is a global location so `/pickup` works from any project. Use this structure:
+Write to `handoff.md` in the current working directory (overwrites any previous handoff in that directory). Use this structure:
 
 ```markdown
 # Handoff -- [Topic] -- [YYYY-MM-DD HH:MM ET]
@@ -107,7 +107,7 @@ Run these reads/commands in parallel at the start of your response, before sayin
 After writing the file, show Stephen a compact summary:
 
 ```
-Handoff written to ~/.claude/handoff.md
+Handoff written to ./handoff.md
 
   Goal: [one line]
   Next steps: [1-line summary of first next action]
@@ -123,7 +123,7 @@ Do not dump the full file content into the chat. Stephen can read it if he wants
 ## Notes on Using This
 
 - **When to run**: Before `/clear`, before closing a window mid-task, or when context is getting long and you want a checkpoint before compaction.
-- **Global, not project-specific**: `~/.claude/handoff.md` is a single global file, so handoffs work across any project. There is only ever one active handoff at a time. Running `/handoff` in a new project overwrites the previous one.
+- **Local to working directory**: `handoff.md` is written in whatever directory you're in when you run `/handoff`. Each project can have its own active handoff. Running `/handoff` again in the same directory overwrites the previous one.
 - **Ephemeral**: The file gets overwritten every run. If Stephen needs to preserve a handoff long-term, he'll rename or copy it himself.
 - **Not a replacement for EOD**: This is for mid-stream work handoffs, not end-of-day wrap-ups. EOD still routes items to client inboxes and updates ClickUp.
 - **Not a replacement for tasks**: Ongoing project state belongs in ClickUp or client inbox files. Handoff is for the immediate thread of work the current session is in the middle of.

@@ -6,11 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [2026-04-28] - Brainstorming Skill
+## [2026-04-28] - Brainstorming Skill + Local Handoff Files
 
 ### Added
 - **Brainstorming community skill** installed during onboarding via `npx skills add https://github.com/obra/superpowers --skill brainstorming`
 - Added `/brainstorming` to the strategy skills walkthrough in `train.md`
+
+### Changed
+- **Handoff/Pickup now write to the current working directory** instead of global `~/.claude/handoff.md`. Each project gets its own `handoff.md`, so multiple projects can have independent active handoffs.
 
 ---
 

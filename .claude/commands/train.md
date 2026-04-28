@@ -143,8 +143,9 @@ If "Show me an example": Open a file that has wiki-links and show how the connec
 - **`/optimize`** -- "Audit what you have. Reviews your tools, processes, or time and finds consolidation opportunities. Helps you get more out of what you are already paying for."
 - **`/build-skill`** -- "Turn a successful task into a repeatable workflow. After you do something that works, this interviews you and creates a new slash command from it."
 - **`/learn`** -- "Capture important knowledge. After a meeting, a mistake, or an insight, this helps you store it in the right place so it connects to your existing work and surfaces when relevant."
+- **`/brainstorming`** -- "Interactive brainstorming. When you need to think through ideas, explore possibilities, or work through a creative challenge, this guides you through a generative thinking process."
 
-"These are not just documentation. They are interactive tools that guide you through a process and take action. Try `/strategy` next time you are weighing a decision."
+"These are not just documentation. They are interactive tools that guide you through a process and take action. Try `/strategy` next time you are weighing a decision, or `/brainstorming` when you need fresh ideas."
 
 AskUserQuestion: "Any questions about the strategy skills?"
 Options:
