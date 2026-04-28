@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-04-28] - Brainstorming Skill
+
+### Added
+- **Brainstorming community skill** installed during onboarding via `npx skills add https://github.com/obra/superpowers --skill brainstorming`
+- Added `/brainstorming` to the strategy skills walkthrough in `train.md`
+
+---
+
 ## [2026-04-24] - Handoff and Pickup Improvements
 `d1b93a3`
 
