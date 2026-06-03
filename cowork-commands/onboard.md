@@ -455,7 +455,6 @@ Customize skill content with their specific tools, clients, and schedule.
 - `handoff.md` -- save current work state for a new session to resume
 - `pickup.md` -- resume from a previous handoff
 - `monthly-review.md` -- periodic system health check and vault cleanup
-- `resume.md` -- session resume helper
 
 Also create the handoff storage directory: `VAULT_PATH/.claude/handoffs/` (the `/handoff` command stores named handoff files here).
 

@@ -6,6 +6,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-06-03] - Remove Legacy /resume Command
+
+### Removed
+- **`/resume` deleted** (`examples/commands/resume.md` + `cowork-commands/resume.md`) and dropped from the onboard Phase 6E install lists. It drove the obsolete single global `~/.claude/handoff.md` pattern that `/pickup`'s legacy note warns against. Use `/handoff` + `/pickup` (named, per-project, multiple active handoffs) instead.
+
+---
+
 ## [2026-06-03] - Handoff/Pickup Promoted to the Standard Command Set
 
 ### Changed

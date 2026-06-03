@@ -459,7 +459,6 @@ These two are the backbone of context and task management. A single Claude sessi
 
 **Copy these other pre-built utility commands** from `examples/commands/` into `VAULT_PATH/.claude/commands/`:
 - `monthly-review.md` -- periodic system health check and vault cleanup
-- `resume.md` -- session resume helper
 
 Also create the handoff storage directory: `VAULT_PATH/.claude/handoffs/` (the `/handoff` command stores named handoff files here).
 
