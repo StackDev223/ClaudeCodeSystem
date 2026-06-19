@@ -33,7 +33,7 @@ Slash commands exist in **two formats** to support both Claude Code (CLI) and Cl
 
 | Format | Location | Frontmatter | How Users Get Them |
 |--------|----------|-------------|-------------------|
-| Claude Code | `.claude/commands/` and `examples/commands/` | None needed | Auto-discovered by Claude Code; copied to vault during `/onboard` Phase 6E |
+| Claude Code | `.claude/commands/` | None needed | Auto-discovered by Claude Code; copied to vault during `/onboard` Phase 6E |
 | Claude CoWork | `cowork-commands/` | YAML `---` block with `name:` and `description:` | Manually uploaded by user through the **Customize** section in CoWork settings |
 
 **Maintenance rule: when you create or modify a slash command, you MUST update both versions.** The CoWork version is identical to the Code version except for the YAML frontmatter block at the top of the file:
@@ -47,10 +47,13 @@ description: One-line description of what the command does.
 
 The `name` field should match the filename (without `.md`). The `description` should be a clear one-liner that helps the user understand when to use the command.
 
+**There is exactly one folder of Code commands: `.claude/commands/`.** (The old `examples/commands/` folder was removed -- it created the illusion that some commands were optional examples, which is how they kept getting dropped during onboarding. All commands are first-class and shipped.)
+
 **To add a new command:**
-1. Create the Code version in `.claude/commands/` or `examples/commands/`
+1. Create the Code version in `.claude/commands/`
 2. Copy it to `cowork-commands/` and prepend the YAML frontmatter
-3. Add it to the Phase 6E install list in `onboard.md` if every user should get it
+
+That is it. **You do NOT need to register the command anywhere in `onboard.md`.** Phase 6E installs *every* `.md` from `.claude/commands/` (and uploads every file from `cowork-commands/`) with an unconditional glob copy. Any command you add to that folder ships to every user automatically. There is deliberately no hand-maintained install list, because that list is what kept dropping commands during onboarding.
 
 **To modify an existing command:**
 1. Edit the Code version (the source of truth)

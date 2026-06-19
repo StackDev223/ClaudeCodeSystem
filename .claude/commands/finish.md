@@ -196,7 +196,7 @@ If they want a practice `/morning` run, do it right now with real data. This is 
 2. Copy the entire contents of the setup repo into it:
    - `docs/` (all reference documentation)
    - `templates/` (original CLAUDE.md template and .env.example)
-   - `examples/` (all example commands, scripts, settings)
+   - `examples/` (automation scripts and settings)
    - `README.md`
    - `LICENSE`
 3. Do NOT copy `.claude/commands/` (those are already installed at the vault root) or `.git/` (not needed).

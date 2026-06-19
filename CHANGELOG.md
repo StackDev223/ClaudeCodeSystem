@@ -6,6 +6,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-06-18] - Single Command Folder: Removed examples/commands/, Unconditional Install
+
+### Fixed
+- **Commands were silently dropped during onboarding.** `onboard.md` Phase 6E used a hand-enumerated, conditional install list: `morning.md`/`eod.md`/`daily-note.md`/`brain-dump.md` only installed if the user picked the matching Phase 5 workflow preference, and the five EOD phase commands (`eod-gather`, `eod-sync`, `eod-time`, `eod-note`, `eod-today`) were never installed at all. Because `/eod` and its phase commands reference each other, a half-installed pipeline broke mid-run after the user invoked a slash command.
+
+### Changed
+- **Phase 6E now installs every command unconditionally** via a glob copy of `.claude/commands/*.md` (minus `onboard.md`), in both the CLI and CoWork paths. Workflow preferences only affect which command is *recommended* and how tool-specific ones are *customized*, never whether a file is installed. There is no longer any hand-maintained install list to fall out of sync.
+- **Removed the `examples/commands/` folder.** Its 10 commands (`eod`, `eod-gather`, `eod-sync`, `eod-time`, `eod-note`, `eod-today`, `morning`, `monthly-review`, `brain-dump`, `daily-note`) moved into `.claude/commands/` via `git mv`. There is now exactly one source folder for Code commands. The "examples" framing was the root cause of the drift: it made shipped commands look optional. `examples/` retains only `settings*.json` and `scripts/`.
+- **Docs updated**: repo `CLAUDE.md` (Dual-Format table + maintenance rule), `README.md` (repository-structure tree), `docs/vault-design-guide.md`, and `finish.md` (both Code + CoWork copies) no longer reference `examples/commands/`.
+
+---
+
+## [2026-06-10] - Handoffs Moved Out of .claude/ to .handoffs/
+
+### Changed
+- **Handoff storage moved from `.claude/handoffs/` to `.handoffs/` at the working-directory root** (`/handoff`, `/pickup`, `/onboard` Phase 6E, README — both `.claude/commands/` and `cowork-commands/` copies). Claude Code's hardcoded sensitive-file guard prompts on EVERY Write/Edit under `.claude/` directories and cannot be suppressed by permission allow rules, PreToolUse hooks, or PermissionRequest hooks (verified empirically; known open bug anthropics/claude-code#41615, including the dialog's non-persisting "always allow" option). Moving the directory out of `.claude/` is the only way to make handoff writes prompt-free.
+- **`/pickup` legacy fallback extended**: if `.handoffs/` is missing or empty but `.claude/handoffs/` has files, read from there and suggest migrating them (covers projects not yet moved).
+
+### Migration
+- Per project: `mv .claude/handoffs .handoffs` and gitignore `.handoffs/` (keep the old `.claude/handoffs/` ignore line for stragglers).
+
+---
+
 ## [2026-06-03] - Remove Legacy /resume Command
 
 ### Removed

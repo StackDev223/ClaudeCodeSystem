@@ -386,7 +386,7 @@ Store login information in a password keychain file (`.env`) at the root of your
 
 A skill is a successful task turned into a repeatable routine. It is a text file in `.claude/commands/` that tells Claude how to run a multi-step process. Start with an end-of-day routine. Even a simple version that just checks your calendar and email is valuable. Add sections as you connect more tools.
 
-Create the file at `.claude/commands/your-routine-name.md`. See `examples/commands/` for working examples.
+Create the file at `.claude/commands/your-routine-name.md`. See the other files in `.claude/commands/` (like `eod.md` or `morning.md`) for working examples.
 
 ### Step 5: Set Up Your Daily System
 

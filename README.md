@@ -123,7 +123,7 @@ By the end of all 4 steps, you will have (see the [Onboarding Guide](docs/onboar
 ClaudeCodeSystem/
 ├── CLAUDE.md                           # Bootstrap file (tells Claude how to start setup)
 ├── README.md                           # This file
-├── .claude/commands/                   # Claude Code CLI slash commands (auto-discovered)
+├── .claude/commands/                   # ALL Claude Code CLI slash commands (auto-discovered; every one installs during /onboard)
 │   ├── onboard.md                      # Part 1: Permissions, interview, build vault
 │   ├── train.md                        # Part 2: Learn the system
 │   ├── connect.md                      # Part 3: Connect all your tools
@@ -132,7 +132,17 @@ ClaudeCodeSystem/
 │   ├── pickup.md                       # Resume from a named handoff in a fresh session
 │   ├── strategy.md / optimize.md       # Decision-making + tool/process improvement
 │   ├── build-skill.md / learn.md       # Turn tasks into skills · capture knowledge
-│   └── graph-sync.md / graph-daily.md  # Knowledge graph maintenance
+│   ├── graph-sync.md / graph-daily.md  # Knowledge graph maintenance
+│   ├── morning.md                      # Interactive morning review command
+│   ├── eod.md                          # End of day: monolithic (all phases in one)
+│   ├── eod-gather.md                   # EOD Phase 1: data gathering
+│   ├── eod-sync.md                     # EOD Phase 2: dedup, sync, hygiene
+│   ├── eod-time.md                     # EOD Phase 3: time tracking (if configured)
+│   ├── eod-note.md                     # EOD Phase 4: daily note generation
+│   ├── eod-today.md                    # EOD Phase 5: tomorrow's plan generation
+│   ├── monthly-review.md               # Monthly system review
+│   ├── brain-dump.md                   # Manual brain dump capture
+│   └── daily-note.md                   # Simplified daily note (lightweight EOD)
 ├── cowork-commands/                    # CoWork versions (YAML frontmatter, manual upload)
 │   └── *.md                            # Mirror of all commands with YAML frontmatter
 ├── docs/
@@ -143,25 +153,14 @@ ClaudeCodeSystem/
 ├── templates/
 │   ├── CLAUDE.md                       # Starting CLAUDE.md template (customized by /onboard)
 │   └── .env.example                    # All env var names with descriptions
-├── examples/
+├── examples/                           # Optional CLI settings + advanced automation (NOT commands)
 │   ├── settings.json                   # CLI example: global Claude Code settings
 │   ├── settings.local.json             # CLI example: project-level permissions
-│   ├── scripts/
-│   │   ├── md-to-gdoc.py              # Markdown to Google Doc converter
-│   │   ├── eod-runner.sh               # (Advanced) EOD phase orchestrator for cron
-│   │   ├── eod-cron.sh                 # (Advanced) Cron wrapper with version pinning
-│   │   └── com.brain.eod-runner.plist  # (Advanced) launchd config for nightly schedule
-│   └── commands/
-│       ├── eod-gather.md               # Phase 1: data gathering skill
-│       ├── eod-sync.md                 # Phase 2: dedup, sync, hygiene
-│       ├── eod-time.md                 # Phase 3: time tracking (if configured)
-│       ├── eod-note.md                 # Phase 4: daily note generation
-│       ├── eod-today.md                # Phase 5: tomorrow's plan generation
-│       ├── eod.md                      # Monolithic alternative (all phases in one)
-│       ├── morning.md                  # Interactive morning review command
-│       ├── monthly-review.md           # Monthly system review
-│       ├── brain-dump.md               # Manual brain dump capture
-│       └── daily-note.md              # Simplified daily note (lightweight EOD)
+│   └── scripts/
+│       ├── md-to-gdoc.py               # Markdown to Google Doc converter
+│       ├── eod-runner.sh               # (Advanced) EOD phase orchestrator for cron
+│       ├── eod-cron.sh                 # (Advanced) Cron wrapper with version pinning
+│       └── com.brain.eod-runner.plist  # (Advanced) launchd config for nightly schedule
 ├── .gitignore
 └── LICENSE                             # CC BY-NC-ND 4.0
 ```
@@ -190,7 +189,7 @@ Successful tasks turned into repeatable routines. Each skill is a text file that
 ### Session Continuity (`/handoff` and `/pickup`)
 Every user gets these two commands. They solve the single biggest limitation of working with an AI agent: a session's memory is finite. When the context window fills up, or you run `/clear`, close the window, or the conversation gets compacted, everything that was only "in the chat" is gone.
 
-- **`/handoff <name>`** writes a self-contained briefing to `.claude/handoffs/<name>.md`: the goal, what's been done, what was tried and rejected, the exact next steps, and which files and commands the next session should reload. Run it before `/clear`, before closing a window mid-task, or whenever a long conversation is getting unwieldy. The handoff is written *to the next Claude*, not to you, so it reads like a briefing for a colleague who just walked in.
+- **`/handoff <name>`** writes a self-contained briefing to `.handoffs/<name>.md`: the goal, what's been done, what was tried and rejected, the exact next steps, and which files and commands the next session should reload. Run it before `/clear`, before closing a window mid-task, or whenever a long conversation is getting unwieldy. The handoff is written *to the next Claude*, not to you, so it reads like a briefing for a colleague who just walked in.
 - **`/pickup [name]`** (in the next session) reads that file, reloads the listed context in parallel, sanity-checks it against the current state of the repo, and reports back where you left off, all without you re-explaining anything. With no argument it lists the available handoffs and asks which to resume.
 
 Because each handoff is a named, persistent file inside the vault, they accumulate into a **track record of in-flight workstreams**: you can keep several open across different projects, and old ones stay put until you delete them. This is better task and context management than holding everything in one long chat. Use it for mid-stream work; `/eod` still handles end-of-day wrap-up and routing items to your task inboxes.

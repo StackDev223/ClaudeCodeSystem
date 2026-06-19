@@ -1,6 +1,6 @@
 # Handoff
 
-Hand off the current conversation to a fresh Claude Code session (new window, post-clear, or after context compaction). Writes a self-contained briefing to `.claude/handoffs/<name>.md` that a new agent can read cold and continue the work without losing momentum.
+Hand off the current conversation to a fresh Claude Code session (new window, post-clear, or after context compaction). Writes a self-contained briefing to `.handoffs/<name>.md` that a new agent can read cold and continue the work without losing momentum.
 
 **Required argument:** a short name for the handoff (e.g., `/handoff trussi-workflow-fix`). This becomes the filename. Use kebab-case or short descriptive words. Spaces are converted to hyphens automatically.
 
@@ -25,9 +25,9 @@ Check that `$ARGUMENTS` is not empty.
 - **If empty:** Tell the user: `Please provide a name for this handoff. Example: /handoff trussi-workflow-fix` and stop. Do not proceed.
 - **If provided:** Sanitize the name: lowercase, replace spaces with hyphens, strip special characters except hyphens and underscores. This becomes `HANDOFF_NAME`.
 
-Set the handoff path: `.claude/handoffs/HANDOFF_NAME.md` (relative to the current working directory).
+Set the handoff path: `.handoffs/HANDOFF_NAME.md` (relative to the current working directory).
 
-Create the `.claude/handoffs/` directory if it does not exist.
+Create the `.handoffs/` directory if it does not exist.
 
 **If a file with that name already exists**, tell the user and ask:
 
@@ -65,7 +65,7 @@ Run these in parallel and include relevant output in the handoff:
 
 ## Step 3: Write the Handoff File
 
-Write to `.claude/handoffs/HANDOFF_NAME.md` in the current working directory. Use this structure:
+Write to `.handoffs/HANDOFF_NAME.md` in the current working directory. Use this structure:
 
 ```markdown
 # Handoff -- [Topic] -- [YYYY-MM-DD HH:MM ET]
@@ -130,7 +130,7 @@ Run these reads/commands in parallel at the start of your response, before sayin
 After writing the file, show a compact summary:
 
 ```
-Handoff saved: .claude/handoffs/HANDOFF_NAME.md
+Handoff saved: .handoffs/HANDOFF_NAME.md
 
   Goal: [one line]
   Next steps: [1-line summary of first next action]
@@ -147,7 +147,7 @@ Do not dump the full file content into the chat. The user can read it if they wa
 ## Notes on Using This
 
 - **When to run**: Before `/clear`, before closing a window mid-task, or when context is getting long and you want a checkpoint before compaction.
-- **Named and persistent**: Each handoff gets its own file in `.claude/handoffs/`. You can have many active handoffs across different workstreams. Old handoffs stick around until manually deleted.
+- **Named and persistent**: Each handoff gets its own file in `.handoffs/`. You can have many active handoffs across different workstreams. Old handoffs stick around until manually deleted.
 - **Not a replacement for EOD**: This is for mid-stream work handoffs, not end-of-day wrap-ups. Your `/eod` still routes items to your task inboxes and builds tomorrow's plan.
 - **Not a replacement for tasks**: Ongoing project state belongs in your task manager or client inbox files. Handoff is for the immediate thread of work the current session is in the middle of.
-- **Cleanup**: Periodically review `.claude/handoffs/` and delete stale handoffs that are no longer relevant.
+- **Cleanup**: Periodically review `.handoffs/` and delete stale handoffs that are no longer relevant.

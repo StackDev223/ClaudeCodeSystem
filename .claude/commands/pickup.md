@@ -1,6 +1,6 @@
 # Pickup
 
-Pick up a handed-off conversation. Reads a named handoff from `.claude/handoffs/` in the current working directory, pulls the context it lists, and reports back where we left off so the user can keep moving without re-explaining anything.
+Pick up a handed-off conversation. Reads a named handoff from `.handoffs/` in the current working directory, pulls the context it lists, and reports back where we left off so the user can keep moving without re-explaining anything.
 
 Pair with `/handoff` (which writes the file in the previous session). Named `/pickup` (not `/resume`) to avoid shadowing Claude Code's built-in `/resume` session picker.
 
@@ -12,21 +12,21 @@ Name: $ARGUMENTS
 
 ## Step 0: Resolve Which Handoff to Read
 
-Handoffs live in `.claude/handoffs/<name>.md` relative to the current working directory (this is where `/handoff` writes them).
+Handoffs live in `.handoffs/<name>.md` relative to the current working directory (this is where `/handoff` writes them).
 
 **If `$ARGUMENTS` is provided:**
 
-Sanitize it the same way `/handoff` does: lowercase, replace spaces with hyphens, strip special characters except hyphens and underscores. This is `HANDOFF_NAME`. The target file is `.claude/handoffs/HANDOFF_NAME.md`.
+Sanitize it the same way `/handoff` does: lowercase, replace spaces with hyphens, strip special characters except hyphens and underscores. This is `HANDOFF_NAME`. The target file is `.handoffs/HANDOFF_NAME.md`.
 
 - If that file exists, go to Step 1.
-- If it does NOT exist, list what's actually in `.claude/handoffs/` (run `ls -t .claude/handoffs/*.md 2>/dev/null`) and tell the user: `No handoff named '[HANDOFF_NAME]'. Available handoffs: [list with relative ages]. Which one?` Wait for their answer, then proceed. Do not silently fall back to a different file.
+- If it does NOT exist, list what's actually in `.handoffs/` (run `ls -t .handoffs/*.md 2>/dev/null`) and tell the user: `No handoff named '[HANDOFF_NAME]'. Available handoffs: [list with relative ages]. Which one?` Wait for their answer, then proceed. Do not silently fall back to a different file.
 
 **If `$ARGUMENTS` is empty:**
 
-List the available handoffs and ask which to resume. Run `ls -t .claude/handoffs/*.md 2>/dev/null` and, for each, read its `# Handoff -- [Topic] -- [timestamp]` header line to show topic + age. Present:
+List the available handoffs and ask which to resume. Run `ls -t .handoffs/*.md 2>/dev/null` and, for each, read its `# Handoff -- [Topic] -- [timestamp]` header line to show topic + age. Present:
 
 ```
-Available handoffs in .claude/handoffs/:
+Available handoffs in .handoffs/:
 
   1. [name] -- [topic] -- [relative age, e.g. "5 min ago"]
   2. [name] -- [topic] -- [relative age]
@@ -34,14 +34,14 @@ Available handoffs in .claude/handoffs/:
 Which one? (or tell me what you're working on and I'll skip the handoff)
 ```
 
-- If `.claude/handoffs/` is empty or missing, tell the user: `No handoffs found in .claude/handoffs/. Nothing to resume -- either run /handoff in a previous session first, or just tell me what you're working on.` Stop.
+- If `.handoffs/` is empty or missing, tell the user: `No handoffs found in .handoffs/. Nothing to resume -- either run /handoff in a previous session first, or just tell me what you're working on.` Stop.
 - If there is exactly **one** handoff, you may name it and proceed straight to Step 1 (still report which one you picked), rather than making them choose from a list of one.
 
-> **Legacy note:** Older sessions may have written a single `handoff.md` at the working-directory root (and, older still, `~/.claude/handoff.md`). The current system is the named `.claude/handoffs/<name>.md` directory. Do NOT read a root `handoff.md` unless the user explicitly points you at it -- a stale root file is almost certainly an orphan from the old system and will hijack the resume.
+> **Legacy note:** Older sessions may have written a single `handoff.md` at the working-directory root (and, older still, `~/.claude/handoff.md`). The system then used `.claude/handoffs/<name>.md` (moved out 2026-06-10 because Claude Code's sensitive-file guard prompts on every `.claude/` write); if `.handoffs/` is missing or empty but `.claude/handoffs/` has files, read from there and suggest moving them. The current system is the named `.handoffs/<name>.md` directory. Do NOT read a root `handoff.md` unless the user explicitly points you at it -- a stale root file is almost certainly an orphan from the old system and will hijack the resume.
 
 ## Step 1: Read the Handoff File
 
-Read the resolved `.claude/handoffs/HANDOFF_NAME.md`.
+Read the resolved `.handoffs/HANDOFF_NAME.md`.
 
 - **Note the "Working directory" line** from the handoff header. If it doesn't match the current `pwd`, tell the user and ask whether to `cd` into the handoff's working dir or operate from the current one before loading any context.
 
@@ -110,6 +110,6 @@ Stop after the summary. Wait for the user to confirm or redirect before taking a
 ## Notes
 
 - **Don't delete the handoff file** after reading. Leave it in place -- if the user clears again mid-session, it's still there as a fallback until they run `/handoff` with the same name (which overwrites) or delete it.
-- **Handoffs are named and persistent.** `.claude/handoffs/` can hold many handoffs across different workstreams. `/pickup <name>` targets one; `/pickup` with no args lists them.
+- **Handoffs are named and persistent.** `.handoffs/` can hold many handoffs across different workstreams. `/pickup <name>` targets one; `/pickup` with no args lists them.
 - **If the handoff's "Working directory" differs from `pwd`**, the handoff was written from a different location. Ask the user whether to operate from the current directory or the one recorded in the handoff.
-- **If `.claude/handoffs/` is empty**, don't try to synthesize a pickup from thin air -- just tell them there's nothing to resume.
+- **If `.handoffs/` is empty**, don't try to synthesize a pickup from thin air -- just tell them there's nothing to resume.

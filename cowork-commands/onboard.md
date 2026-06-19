@@ -427,86 +427,76 @@ If `CLAUDE_RUNTIME` is Desktop only, skip CLI-specific settings files and note i
 
 ### 6E: Skills
 
-**The skill installation path depends on `CLAUDE_RUNTIME`:**
+**Golden rule: install EVERY command, no exceptions.** Every `.md` command in this repo's `.claude/commands/` is a skill we want every user to have. They are NOT optional. Do not pick a subset, do not gate installation on the user's workflow answers, and do not skip a command because it "looks unused." A user who never picked "full EOD" still gets `/eod`; a user who picked "quick check" still gets `/morning`. Workflow preferences (Phase 5) only decide which command you *recommend as their daily driver* and how you *customize* the tool-specific ones -- they never decide what gets installed.
 
-#### If CLI or Both: Auto-Install Skills
+This is the historical failure mode of this setup: commands kept getting dropped during onboarding because the install list was hand-enumerated and conditional. The fix is to copy the whole folder, not a list.
 
-Create skills in `VAULT_PATH/.claude/commands/`:
+**The installation path depends on `CLAUDE_RUNTIME`:**
 
-Based on workflow preferences:
-- If they chose morning review -> `morning.md` based on `examples/commands/morning.md`
-- If they chose full EOD processing -> `eod.md` based on `examples/commands/eod.md` (customize sections to their tools; skip time tracking if they do not use a time tracker)
-- If they chose simple daily note -> `daily-note.md`
-- If they chose manual brain dump -> `brain-dump.md`
+#### If CLI or Both: Auto-Install ALL Commands
 
-Customize skill content with their specific tools, clients, and schedule.
+1. **Copy every command file, unconditionally.** Create `VAULT_PATH/.claude/commands/` and copy the complete contents of the repo's command folder into it:
+   ```
+   mkdir -p VAULT_PATH/.claude/commands
+   cp REPO_PATH/.claude/commands/*.md VAULT_PATH/.claude/commands/
+   rm -f VAULT_PATH/.claude/commands/onboard.md   # setup is done; the rest stay
+   ```
+   This is a glob copy on purpose: any command added to the repo later is installed automatically, with no list to keep in sync. After copying, verify the count -- the vault should contain every `.md` from the repo's `.claude/commands/` (minus `onboard.md`). If any are missing, copy them; never leave a command behind.
 
-**Also copy these setup skills** into `VAULT_PATH/.claude/commands/`:
-- `train.md` (from this repo's `.claude/commands/train.md`)
-- `connect.md` (from this repo's `.claude/commands/connect.md`)
-- `finish.md` (from this repo's `.claude/commands/finish.md`)
+   The full set this installs, for reference (not a checklist to enumerate manually -- the copy above already covers it):
+   - **Setup:** `train.md`, `connect.md`, `finish.md`
+   - **Session continuity (the backbone of context/task management):** `handoff.md`, `pickup.md`. A single Claude session has a finite context window; once it fills (or the user runs `/clear`, closes the window, or hits compaction), everything not written down is lost. `/handoff` checkpoints the live thread of work into `VAULT_PATH/.handoffs/<name>.md`; `/pickup` reloads it in the next session. They double as a track record of in-flight workstreams.
+   - **Decision-making + improvement:** `strategy.md`, `optimize.md`, `build-skill.md`, `learn.md`
+   - **Knowledge graph:** `graph-sync.md`, `graph-daily.md`
+   - **Daily drivers + EOD pipeline:** `morning.md`, `eod.md`, and the phase-split EOD commands `eod-gather.md`, `eod-sync.md`, `eod-time.md`, `eod-note.md`, `eod-today.md` (`/eod` and the phase commands reference each other -- shipping only some of them breaks the pipeline mid-run, which is exactly how commands "disappear after the user runs a slash command")
+   - **Other utilities:** `daily-note.md`, `brain-dump.md`, `monthly-review.md`
 
-**Always copy these Integral skills** (every user gets these):
-- `strategy.md` (from this repo's `.claude/commands/strategy.md`) -- structured decision-making framework
-- `optimize.md` (from this repo's `.claude/commands/optimize.md`) -- audit and improve existing tools/processes
-- `build-skill.md` (from this repo's `.claude/commands/build-skill.md`) -- turn a successful task into a repeatable skill
-- `learn.md` (from this repo's `.claude/commands/learn.md`) -- capture and integrate new knowledge into the vault
+2. **Then customize the tool-specific ones in place** with their specific tools, clients, and schedule. Customization happens *after* installation and never affects whether a file is installed:
+   - `eod.md` and the `eod-*` phase commands -- wire to their actual tools; if they do not use a time tracker, soften `eod-time.md` to a no-op note rather than deleting it.
+   - `morning.md` -- their schedule, meeting window, clients.
+   - Use actual client names and their real toolset throughout.
 
-**Copy these graph maintenance skills:**
-- `graph-sync.md` (from this repo's `.claude/commands/graph-sync.md`) -- full vault knowledge graph rebuild
-- `graph-daily.md` (from this repo's `.claude/commands/graph-daily.md`) -- daily incremental graph sync
+3. **Create the handoff storage directory:** `VAULT_PATH/.handoffs/` (where `/handoff` stores named handoff files).
 
-**Always copy these session-continuity skills** (every user gets these -- they are core, not optional):
-- `handoff.md` (from this repo's `.claude/commands/handoff.md`) -- save the current work state to a named briefing file so a fresh session can pick it up cold
-- `pickup.md` (from this repo's `.claude/commands/pickup.md`) -- resume from a named handoff: load the listed context and report where we left off
+4. **Install the Brainstorming community skill.** Run in the vault directory:
+   ```
+   npx skills add https://github.com/obra/superpowers --skill brainstorming
+   ```
+   This installs an interactive brainstorming skill for thinking through ideas and problems. If the install fails (e.g., Node.js is not available), note it as a task in `Inbox/[YourCompany].md` and continue. Do not block setup on this.
 
-These two are the backbone of context and task management. A single Claude session has a finite context window; once it fills up (or the user runs `/clear`, closes the window, or hits compaction), everything not written down is lost. `/handoff` checkpoints the live thread of work into `VAULT_PATH/.claude/handoffs/<name>.md` -- the goal, what's been done, what was tried and rejected, the exact next steps, and which files/commands to reload. `/pickup` reads that file in the next session and re-establishes shared context in seconds instead of the user re-explaining everything. Because each handoff is a named, persistent file in the vault, they also double as a track record of in-flight workstreams. **Install both for every user**, exactly like the setup and Integral skills above.
+The daily graph sync is already included as Phase 6 of `/eod`; the standalone `/graph-daily` is available for manual runs.
 
-**Copy these other pre-built utility commands** from `examples/commands/` into `VAULT_PATH/.claude/commands/`:
-- `monthly-review.md` -- periodic system health check and vault cleanup
+#### If Desktop Only (CoWork): Install ALL, Then Upload
 
-Also create the handoff storage directory: `VAULT_PATH/.claude/handoffs/` (the `/handoff` command stores named handoff files here).
+Claude CoWork does not auto-discover `.claude/commands/` files. Skills must be uploaded manually by the user through the **Customize** section in the CoWork app settings, and each needs YAML frontmatter to be recognized. The same golden rule applies: **every command gets copied locally, no subset.**
 
-**Install the Brainstorming community skill:**
+1. **Copy the CLI versions** (source of truth, and they work if the user later adopts the CLI): same unconditional glob copy as the CLI path above -- `REPO_PATH/.claude/commands/*.md` into `VAULT_PATH/.claude/commands/` (drop `onboard.md`).
 
-Run this command in the vault directory:
-```
-npx skills add https://github.com/obra/superpowers --skill brainstorming
-```
+2. **Copy the CoWork-formatted versions** so the user has every upload-ready file locally:
+   ```
+   mkdir -p VAULT_PATH/cowork-commands
+   cp REPO_PATH/cowork-commands/*.md VAULT_PATH/cowork-commands/
+   ```
+   `cowork-commands/` already mirrors the complete command set with YAML frontmatter -- copy all of it, never a selection.
 
-This installs an interactive brainstorming skill that helps users think through ideas, problems, and creative challenges. It works like the strategy skills but is focused on generative thinking rather than structured decision-making.
+3. Tell the user: "Skills in CoWork work a little differently than in the CLI. You upload each one through the app. I will walk you through it, and you have every command saved locally in `cowork-commands/` so nothing gets lost."
 
-If the install fails (e.g., Node.js is not available), note it as a task in `Inbox/[YourCompany].md` for later and continue. Do not block setup on this.
-
-If the user chose full EOD processing, the daily graph sync is already included as Phase 6 of `/eod`. The standalone `/graph-daily` is available for manual runs.
-
-#### If Desktop Only (CoWork): Manual Skill Upload
-
-Claude CoWork does not auto-discover `.claude/commands/` files. Skills must be uploaded manually by the user through the **Customize** section in the CoWork app settings. Each skill file needs YAML frontmatter to be recognized.
-
-**Still copy skills to `VAULT_PATH/.claude/commands/`** (the CLI versions serve as the source of truth and work if the user later adopts the CLI). But also walk the user through uploading their core skills to CoWork:
-
-1. Tell the user: "Skills in CoWork work a little differently than in the CLI. You need to upload each one through the app. I will walk you through it."
-
-2. Copy the CoWork-formatted skill files from `cowork-commands/` in this repo to `VAULT_PATH/cowork-commands/` so the user has them locally:
-   - Copy all `.md` files from `REPO_PATH/cowork-commands/` to `VAULT_PATH/cowork-commands/`
-
-3. Walk through uploading the essential skills first. Use AskUserQuestion at each step:
+4. Walk through uploading, using AskUserQuestion at each step:
    - "Open the CoWork app settings. Look for the **Customize** section."
    - "Find the option to add a custom skill or instruction. Click it."
-   - "Upload the file from your vault at `cowork-commands/morning.md` (or paste its contents)."
+   - "Upload the file from your vault at `cowork-commands/<file>.md` (or paste its contents)."
    - Confirm: "Does it show up as an available skill?"
 
-4. Prioritize these skills for initial upload (the user can add more later):
-   - `morning.md` -- daily driver
-   - `eod.md` -- daily driver
-   - `strategy.md` -- most useful on-demand skill
-   - `handoff.md` + `pickup.md` -- session continuity
+5. Upload in this **order** (this is sequencing, not a subset -- the goal is still to get all of them in). Start with the ones needed to keep going, then daily drivers, then the rest:
    - `train.md`, `connect.md`, `finish.md` -- needed to continue setup
+   - `morning.md`, `eod.md` -- daily drivers
+   - `handoff.md`, `pickup.md` -- session continuity
+   - `strategy.md` -- most useful on-demand skill
+   - then everything else in `cowork-commands/` (the EOD phase commands, `optimize`, `build-skill`, `learn`, `graph-*`, `daily-note`, `brain-dump`, `monthly-review`)
 
-5. Note remaining skills as a task: "You have [N] more skills available in `cowork-commands/`. Upload them through **Customize** whenever you want to add more."
+6. If the user does not want to upload all of them in this sitting, that is fine -- but frame it as "the rest are ready in `cowork-commands/` whenever you want them," and add a task in `Inbox/[YourCompany].md` listing the not-yet-uploaded commands so none are forgotten. Do not silently leave commands out.
 
-6. Add a note in CLAUDE.md under Available Integrations or a new Skills section: "CoWork skills are uploaded through the **Customize** section. Source files with YAML frontmatter are in `cowork-commands/`. To add a new skill, upload the file from that folder."
+7. Add a note in CLAUDE.md under a Skills section: "CoWork skills are uploaded through the **Customize** section. Every command is saved with YAML frontmatter in `cowork-commands/`. To add a new one, upload its file from that folder."
 
 ### 6F: Knowledge Graph Setup
 
