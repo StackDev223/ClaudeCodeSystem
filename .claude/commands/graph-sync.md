@@ -175,3 +175,16 @@ Graph Sync Complete -- YYYY-MM-DD
   Orphans: N
   Duration: Xm
 ```
+
+---
+
+## Phase 6: Record Sync Point and Save (Cloud Edition)
+
+A full sync is also a valid baseline for the incremental daily sync. Commit everything, then record the sync point so `/graph-daily` diffs from here:
+
+```bash
+git add -A && git commit -m "Graph sync: full rebuild"
+git rev-parse HEAD > System/state/graph-last-sync
+git add System/state/graph-last-sync && git commit --amend --no-edit
+git push
+```

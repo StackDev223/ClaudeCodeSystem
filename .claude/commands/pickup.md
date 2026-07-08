@@ -14,6 +14,8 @@ Name: $ARGUMENTS
 
 Handoffs live in `.handoffs/<name>.md` relative to the current working directory (this is where `/handoff` writes them).
 
+**First, sync:** run `git pull --ff-only` so this session sees handoffs pushed from other sessions or devices.
+
 **If `$ARGUMENTS` is provided:**
 
 Sanitize it the same way `/handoff` does: lowercase, replace spaces with hyphens, strip special characters except hyphens and underscores. This is `HANDOFF_NAME`. The target file is `.handoffs/HANDOFF_NAME.md`.
@@ -37,17 +39,15 @@ Which one? (or tell me what you're working on and I'll skip the handoff)
 - If `.handoffs/` is empty or missing, tell the user: `No handoffs found in .handoffs/. Nothing to resume -- either run /handoff in a previous session first, or just tell me what you're working on.` Stop.
 - If there is exactly **one** handoff, you may name it and proceed straight to Step 1 (still report which one you picked), rather than making them choose from a list of one.
 
-> **Legacy note:** Older sessions may have written a single `handoff.md` at the working-directory root (and, older still, `~/.claude/handoff.md`). The system then used `.claude/handoffs/<name>.md` (moved out 2026-06-10 because Claude Code's sensitive-file guard prompts on every `.claude/` write); if `.handoffs/` is missing or empty but `.claude/handoffs/` has files, read from there and suggest moving them. The current system is the named `.handoffs/<name>.md` directory. Do NOT read a root `handoff.md` unless the user explicitly points you at it -- a stale root file is almost certainly an orphan from the old system and will hijack the resume.
-
 ## Step 1: Read the Handoff File
 
 Read the resolved `.handoffs/HANDOFF_NAME.md`.
 
-- **Note the "Working directory" line** from the handoff header. If it doesn't match the current `pwd`, tell the user and ask whether to `cd` into the handoff's working dir or operate from the current one before loading any context.
+- **Note the "Working directory" line** from the handoff header. Container paths differ between cloud sessions and local clones — what matters is being in the same *repository*, not the same absolute path. If the handoff was clearly written from this vault, proceed; only flag it if the handoff appears to be from a different project entirely.
 
 ## Step 2: Freshness Check
 
-Run `date` and compare to the timestamp in the handoff's `# Handoff -- [Topic] -- [YYYY-MM-DD HH:MM ET]` header.
+Run `TZ="[IANA-Timezone]" date` and compare to the timestamp in the handoff's `# Handoff -- [Topic] -- [YYYY-MM-DD HH:MM ET]` header.
 
 - **Under 6 hours old**: Fresh. Proceed.
 - **6-24 hours old**: Note this to the user in the summary (`Handoff is [N] hours old -- state may have drifted`) but proceed.
@@ -59,7 +59,7 @@ Parse the `## Load This Context Before Responding` section of the handoff file. 
 
 - **Read:** entries -- use the Read tool on the exact path (and line range if given)
 - **Bash:** entries -- run via Bash tool
-- **Check memory:** entries -- Read the file from the memory directory for the project named in the handoff's "Working directory" line. The path follows the pattern `~/.claude/projects/<escaped-cwd>/memory/[filename]`, where `<escaped-cwd>` is the working directory with slashes and dots replaced by hyphens.
+- **Check memory:** entries -- Read the named file from `System/memory/` in the vault. (Vault-based memory travels with the repository; per-machine `~/.claude` memory directories do not exist in cloud sessions.)
 - **Grep/Glob:** entries -- use the appropriate tool
 
 Run all independent reads/commands **in parallel** in a single tool-call block. Do not serialize them.

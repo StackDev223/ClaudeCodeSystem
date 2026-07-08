@@ -1,19 +1,23 @@
-# Daily Note
+# Daily Note (Cloud Edition)
 
-Lightweight daily capture. Just record what happened today and move on.
+Lightweight daily capture. Just record what happened today and move on. (This is the simple alternative to the full `/eod` for light days or light users.)
 
 ---
 
-## Step 1: Date Check
+## Step 1: Sync and Date
 
-1. Run `date` to get today's date and set `TODAY` in `YYYY-MM-DD` format
+1. `git pull --ff-only`
+2. Get today's date **in the user's timezone** and set `TODAY`:
+   ```bash
+   TZ="[IANA-Timezone]" date "+%Y-%m-%d"
+   ```
 
 ---
 
 ## Step 2: What Happened Today
 
 1. **AskUserQuestion**: "What did you work on today? Just talk -- bullets, sentences, whatever comes to mind."
-2. Save the raw response as `USER_INPUT` for use in Step 4
+2. Save the raw response as `USER_INPUT` for Step 4
 
 ---
 
@@ -21,18 +25,16 @@ Lightweight daily capture. Just record what happened today and move on.
 
 Gather what you can. Skip anything that is not available.
 
-1. **Calendar**: Fetch today's meetings (Google Calendar MCP or API)
-   - List meeting titles and times
+1. **Calendar**: fetch today's meetings via the Calendar connector tools
+   - List meeting titles and times (in [Your Timezone])
    - If unavailable, skip and note "No calendar data"
-2. **Client inboxes**: Scan `Inbox/*.md` for tasks marked `[x]` with today's date
-   - Collect completed items per client
-   - If no inbox files exist, skip
+2. **Client inboxes**: scan `Inbox/*.md` for tasks marked `[x]` with today's date
 
 ---
 
 ## Step 4: Write the Daily Note
 
-Create the file at `Work/Daily/TODAY.md`:
+Create `Work/Daily/TODAY.md`:
 
 ```markdown
 # TODAY
@@ -50,15 +52,19 @@ Create the file at `Work/Daily/TODAY.md`:
 (2-3 sentence recap of the day)
 ```
 
-Use the Write tool (new file, no read-modify-write race).
-
 ---
 
 ## Step 5: Tomorrow's Plan (Optional)
 
 1. **AskUserQuestion**: "Want me to draft a quick plan for tomorrow?"
-2. If yes:
-   - Check tomorrow's calendar for scheduled meetings
-   - Pull any open tasks with upcoming deadlines from inbox files
-   - Append a `## Tomorrow` section to the daily note with a short bullet list
+2. If yes: check tomorrow's calendar, pull open tasks with upcoming deadlines from inbox files, append a `## Tomorrow` section with a short bullet list
 3. If no: done
+
+---
+
+## Step 6: Save
+
+```bash
+git add -A && git commit -m "Daily note $TODAY" && git push
+```
+(If rejected: `git pull --rebase && git push`.) The note is saved only when this succeeds.

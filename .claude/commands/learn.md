@@ -102,3 +102,13 @@ Set up retrieval triggers so this knowledge comes back when it is relevant:
 - If it is a guideline, CLAUDE.md ensures it is applied every session
 - If it is a concept, the knowledge graph links will surface it when related topics come up
 - If it is time-sensitive (expires, needs follow-up), add a task to the inbox with a date
+
+---
+
+## Persistence
+
+This workflow writes knowledge into the vault. Finish by saving (Runtime & Persistence Protocol in CLAUDE.md):
+
+```bash
+git add -A && git commit -m "Learn: <topic>" && git push
+```

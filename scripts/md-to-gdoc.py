@@ -10,11 +10,15 @@ Usage:
   python3 md-to-gdoc.py <markdown_file> [--title "Doc Title"] [--folder-id ID] [--json]
 
 Requires:
-  pip3 install markdown requests
+  pip3 install markdown requests  (installed automatically by the SessionStart hook)
 
 Credentials:
   Reads GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN from
-  environment variables or from .env file at the vault root.
+  environment variables — set them in the Claude Code environment configuration
+  (claude.ai/code -> environment -> Environment variables). Requires the
+  "full control" Google OAuth setup (see setup/docs/environment-setup.md);
+  the Google Drive connector alone cannot create Docs.
+  A --env .env file fallback exists for legacy local setups only.
 """
 
 import argparse
@@ -51,7 +55,7 @@ def get_access_token():
     refresh_token = os.environ.get('GOOGLE_REFRESH_TOKEN')
 
     if not all([client_id, client_secret, refresh_token]):
-        print("Error: Missing Google OAuth credentials. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN in .env or environment.", file=sys.stderr)
+        print("Error: Missing Google OAuth credentials. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REFRESH_TOKEN as environment variables in the Claude Code environment configuration (claude.ai/code -> environment -> Environment variables), then start a fresh session.", file=sys.stderr)
         sys.exit(1)
 
     response = requests.post(

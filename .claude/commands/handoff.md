@@ -57,7 +57,7 @@ If any of these are unclear, **ask the user before writing the handoff**. A vagu
 
 Run these in parallel and include relevant output in the handoff:
 
-- `date` -- timestamp the handoff
+- `TZ="[IANA-Timezone]" date` -- timestamp the handoff in the user's timezone (container clock is UTC)
 - `pwd` -- capture the current working directory so the next session knows where to operate
 - `git status` and `git log --oneline -5` -- if relevant files are in a git repo, capture uncommitted state and recent commits
 - Check for any running background processes the next agent will inherit (builds, dev servers, long-running tasks)
@@ -125,9 +125,16 @@ Run these reads/commands in parallel at the start of your response, before sayin
 *Handoff written [timestamp]. Session topic: [topic]. If this file is older than a few hours when you read it, verify it's still current before acting on it; state may have changed.*
 ```
 
-## Step 4: Confirm With the User
+## Step 4: Save and Confirm
 
-After writing the file, show a compact summary:
+**Commit and push the handoff first — in a cloud session, an unpushed handoff dies with the container:**
+
+```bash
+git add .handoffs/ && git commit -m "Handoff: HANDOFF_NAME" && git push
+```
+(If rejected: `git pull --rebase && git push`.)
+
+Then show a compact summary:
 
 ```
 Handoff saved: .handoffs/HANDOFF_NAME.md
@@ -147,6 +154,7 @@ Do not dump the full file content into the chat. The user can read it if they wa
 ## Notes on Using This
 
 - **When to run**: Before `/clear`, before closing a window mid-task, or when context is getting long and you want a checkpoint before compaction.
+- **Cloud note**: Claude Code on the web can also resume a session from claude.ai/code with its conversation intact. Handoffs matter for crossing between sessions, devices, and workstreams — and they only exist in the next session if pushed.
 - **Named and persistent**: Each handoff gets its own file in `.handoffs/`. You can have many active handoffs across different workstreams. Old handoffs stick around until manually deleted.
 - **Not a replacement for EOD**: This is for mid-stream work handoffs, not end-of-day wrap-ups. Your `/eod` still routes items to your task inboxes and builds tomorrow's plan.
 - **Not a replacement for tasks**: Ongoing project state belongs in your task manager or client inbox files. Handoff is for the immediate thread of work the current session is in the middle of.

@@ -1,20 +1,20 @@
-# Morning Review
+# Morning Review (Cloud Edition)
 
-Interactive morning review command. Reviews Today.md client-by-client, interviews the user for gaps, then creates calendar time blocks.
+Interactive morning review command. Reviews Today.md client-by-client, interviews the user for gaps, then creates calendar time blocks. Works the same from the web, the phone app, or a local CLI session.
 
 ---
 
 ## Step 1: Load
 
-1. Run `date` to get today's date and day of week ([Your Timezone])
-2. Read `Inbox/Today.md`
-3. **Stale check**: Compare today's actual date to the date in the `# Today --` header
+1. **Sync:** `git pull --ff-only` (the nightly Routine pushed Today.md while you were asleep — make sure this session has it)
+2. Get today's date **in the user's timezone**: `TZ="[IANA-Timezone]" date "+%Y-%m-%d %A %H:%M"` (never bare `date` — the container clock is UTC)
+3. Read `Inbox/Today.md`
+4. **Stale check**: Compare today's actual date to the date in the `# Today --` header
    - If the file is missing: offer to generate it inline (run the eod-today logic with live data)
-   - If the date doesn't match today: warn "Today.md is stale (shows [file date], today is [actual date]). Want me to regenerate?"
+   - If the date doesn't match today: warn "Today.md is stale (shows [file date], today is [actual date]). The nightly run may have failed — want me to regenerate?" (Check `git log --oneline -3` — if there is no EOD commit from last night, say so; the Routine may need attention via `/automate`.)
    - If it matches: proceed
-4. **Carried-forward detection**: Check the `### Carried Forward` section in `## Tasks`
-   - Count how many items are there and extract their `<!-- carried:N -->` values
-   - Note which clients have carried items and for how many days
+5. **EOD error catch-up**: Read yesterday's daily note (`Work/Daily/[yesterday].md`). If it has an `## EOD Errors` section (e.g., email or calendar was unreachable in the unattended run), do the catch-up NOW: fetch what was missed via the connector tools, route anything actionable, and update Today.md before presenting it. Tell the user what was caught up in one line.
+6. **Carried-forward detection**: Check the `### Carried Forward` section in `## Tasks` — count items and extract their `<!-- carried:N -->` values
 
 ---
 
@@ -64,9 +64,6 @@ Show every client with items in Today.md's Top Priorities, Meeting Prep, or Dead
 - Meeting: 2:00 PM [Contact Name] check-in
 - Looks clean.
 - Deep work needed: ~20 min
-
-### [Client C]
-...
 ```
 
 **What to flag:**
@@ -87,7 +84,7 @@ Available deep work: ~[A] hrs (DW1: [B] hrs, DW2: [C] hrs)
 
 ### 3b: Collect feedback via AskUserQuestion
 
-Use `AskUserQuestion` with **multiSelect: true** to ask which clients need changes:
+Use `AskUserQuestion` with **multiSelect: true**:
 
 ```
 Question: "Any clients need adjustments?"
@@ -99,37 +96,17 @@ Options:
   - "[Client3]" / "[Brief flag summary]"
 ```
 
-Build the options dynamically from the clients that have items. Include up to 4 options (prioritize clients with flags). If more than 3 clients have items, group the clean ones and only list flagged clients as individual options. "Other" is always available for free-text input.
+Build the options dynamically from the clients that have items. Include up to 4 options (prioritize clients with flags). If more than 3 clients have items, group the clean ones and only list flagged clients individually.
 
 ### 3c: Handle adjustments
 
-- If "All good" is selected: proceed to Step 4 immediately.
-- If specific clients are selected: for each flagged client, use another `AskUserQuestion` with common actions:
-  ```
-  Question: "What's the change for [Client]?"
-  Header: "[Client]"
-  Options:
-    - "Drop a task" / "Remove lowest priority item"
-    - "Push to tomorrow" / "Move a task to tomorrow's plan"
-    - "Adjust time" / "Change time estimates"
-    - "Add a task" / "Something's missing"
-  ```
-  Then apply the change. Use "Other" for anything that doesn't fit the presets.
-- If "Other" is used for free-text: parse the response, apply changes, route any brain dump items to appropriate client inbox files.
+- "All good" → proceed to Step 4 immediately.
+- Specific clients selected → for each, use another `AskUserQuestion` with common actions (Drop a task / Push to tomorrow / Adjust time / Add a task), then apply the change.
+- Free-text via "Other": parse, apply changes, route any brain dump items to the appropriate client inbox files.
 
 ### 3d: Confirm if changes were made
 
-If any adjustments were made, show a brief diff:
-
-```
-Changes applied:
-- [Client A]: dropped [task], saves ~30 min
-- [Client C]: pushed [task] to tomorrow
-
-Updated totals: ~[X] hrs needed, ~[A] hrs available.
-```
-
-No confirmation needed here, just proceed to Step 4.
+If any adjustments were made, show a brief diff (client, change, time saved) and updated totals. No confirmation needed; proceed.
 
 ---
 
@@ -137,12 +114,9 @@ No confirmation needed here, just proceed to Step 4.
 
 Read each client's Company Profile `## Strategic Goals` section.
 
-Check for staleness:
-- If `*Last updated: YYYY-MM-DD*` still has the placeholder text, it's empty
-- If the date is >7 days ago, it's stale
-- If goals still contain placeholder text ("Goal 1", "Goal A"), it's empty
+Staleness: placeholder text = empty; `*Last updated:*` more than 7 days ago = stale.
 
-If any are empty or stale, mention which clients inline and use `AskUserQuestion`:
+If any are empty or stale, use `AskUserQuestion`:
 
 ```
 Question: "Strategic goals are stale for [Client1, Client2] (last updated [date]). Refresh now?"
@@ -152,65 +126,44 @@ Options:
   - "Quick refresh" / "I'll dictate updated goals for each"
 ```
 
-- If "Skip": proceed immediately to Step 5 (don't nag)
-- If "Quick refresh": for each stale client, use `AskUserQuestion` to collect the goal, then update the Company Profile files
-- If all goals are current: skip this step entirely, no output needed
+If all goals are current: skip this step entirely, no output.
 
 ---
 
 ## Step 5: Create Calendar Time Blocks
 
-Now that the plan is confirmed, create time blocks on Google Calendar for the deep work sessions.
-
-1. **Fetch today's calendar** to see what's already there (meetings, existing blocks, etc.)
-2. **Identify open windows** between fixed events (meetings, lunch, breaks). Example skeleton:
-   - Deep Work 1: 8:05 AM to first interruption
-   - Deep Work 2: After last afternoon meeting to 5:30 PM wind-down
-   - Buffer slots: 15 min after meeting gauntlets
-3. **Assign tasks to time blocks** based on the review results:
-   - Highest priority items go in Deep Work 1 (freshest energy)
-   - Meeting follow-ups and async work go in Deep Work 2
-   - Respect the time estimates from the review
-4. **Present the proposed blocks and ask for approval via `AskUserQuestion`:**
-
-Show the table first:
-
-```
-Proposed time blocks:
-
-| Time | Block | Tasks |
-|------|-------|-------|
-| 8:05-8:20 | LinkedIn | Posts and engagement |
-| 8:20-8:35 | Team priorities | Send daily priorities |
-| 8:35-10:30 | Deep Work 1 | [Client A] task (~45 min), [Client C] prep (~30 min) |
-| 10:30-11:45 | Deep Work 1 (cont) | [Client D] roadmap (~45 min), [Client B] prep (~15 min) |
-| ... | ... | ... |
-```
-
-Then immediately use `AskUserQuestion`:
+1. **Fetch today's calendar** via the Calendar connector tools to see what's already there
+2. **Identify open windows** between fixed events (meetings, lunch, breaks)
+3. **Assign tasks to time blocks**: highest priority in Deep Work 1 (freshest energy), meeting follow-ups and async work in Deep Work 2, respecting the review's time estimates
+4. **Present the proposed blocks** as a table, then `AskUserQuestion`:
 
 ```
 Question: "Create these time blocks on the calendar?"
 Header: "Schedule"
 Options:
-  - "Create all (Recommended)" / "Add all blocks to Google Calendar as shown"
+  - "Create all (Recommended)" / "Add all blocks to the calendar as shown"
   - "Adjust first" / "I want to move or change some blocks"
   - "Skip blocks" / "Don't create calendar events today"
 ```
 
-5. **Create calendar events** for each approved block.
-6. **Update Today.md** with the finalized schedule table using Python read-modify-write (iCloud safety).
+5. **Create the calendar events** for each approved block via the connector tools
+6. **Update Today.md** with the finalized schedule table
 
 ---
 
-## Step 6: Send-off
+## Step 6: Send-off and Save
+
+```bash
+git add -A && git commit -m "Morning $TODAY: plan locked, [N] blocks created" && git push
+```
+(If push is rejected: `git pull --rebase && git push`.)
 
 Confirm the plan is locked:
 
 ```
-Plan locked. [N] time blocks created.
+Plan locked. [N] time blocks created. Saved.
 First meeting at [time] ([title]).
-[Top priority] starts now in Deep Work 1 (8:05-[first interruption]).
+[Top priority] starts now in Deep Work 1.
 Have a good one.
 ```
 
@@ -220,10 +173,9 @@ If no meetings: "No meetings today. Full deep work runway. [Top priority] starts
 
 ## Notes
 
-- Use `AskUserQuestion` for ALL interaction points. Never just ask a question in text and wait for the user to type. Every decision point must use selectable options.
-- If the plan looks clean and "All good" is selected in Step 3, the entire review can complete with just 3 taps: "All good" -> "Skip"/"Create all" -> done. Minimize friction.
-- Today.md is ephemeral (overwritten each EOD run). The daily note (`Work/Daily/YYYY-MM-DD.md`) is the permanent record.
-- For iCloud-safe writes to Inbox files, always use Python read-modify-write (same pattern as EOD).
-- **Time block granularity**: Don't create 15-minute blocks for everything. Group related small tasks into blocks of 30-90 minutes.
-- **Overcommitment guard**: If total estimated work exceeds available deep work time, force a prioritization conversation in Step 3 before creating blocks.
-- **Calendar cleanup**: If the user ran /morning earlier today and wants to re-run, check for existing time blocks from this morning and offer to replace them rather than duplicating.
+- Use `AskUserQuestion` for ALL interaction points. Every decision point must use selectable options — this is what makes `/morning` three taps from a phone.
+- If the plan is clean, the entire review is: "All good" → "Create all" → done.
+- Today.md is ephemeral (overwritten each EOD run). The daily note (`Work/Daily/YYYY-MM-DD.md`) is the permanent record. Git history keeps every version of both.
+- **Time block granularity**: group related small tasks into blocks of 30-90 minutes; no 15-minute confetti.
+- **Overcommitment guard**: if estimated work exceeds available deep work time, force a prioritization conversation in Step 3 before creating blocks.
+- **Calendar cleanup**: if `/morning` already ran today, offer to replace this morning's existing blocks rather than duplicating them.

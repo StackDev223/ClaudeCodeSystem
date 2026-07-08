@@ -1,19 +1,17 @@
-# Brain Dump
+# Brain Dump (Cloud Edition)
 
-Manual brain dump command. The user dictates everything on their mind and the assistant parses, classifies, and routes each item to the correct location in the vault.
+Manual brain dump command. The user dictates everything on their mind and the assistant parses, classifies, and routes each item to the correct location in the vault. Great from the phone — dictate, and it all gets filed.
 
-**Critical rule: Atomic writes.** The vault lives on iCloud. Background sync WILL modify files between reads and writes.
-- **ALWAYS use Python atomic writes** (read -> modify -> write in a single `python3` script via Bash) when editing existing files.
-- The Write tool is acceptable for NEW files since there's no read-modify-write race.
-
-**Critical rule: Tasks are flat bullets.** Do NOT create `### New from <source>` subsection headers for tasks. Append new tasks directly under `## Open Tasks` as flat bullets. Source context lives in the italic suffix at the end of each task (e.g., `*from Brain Dump MM/DD*`). Only `### Notes from <source>` headers under `## Notes` are allowed -- meeting notes benefit from source grouping, tasks do not.
+**Critical rule: Tasks are flat bullets.** Do NOT create `### New from <source>` subsection headers for tasks. Append new tasks directly under `## Open Tasks` as flat bullets. Source context lives in the italic suffix at the end of each task (e.g., `*from Brain Dump MM/DD*`). Only `### Notes from <source>` headers under `## Notes` are allowed.
 
 ---
 
-## Step 1: Collect Brain Dump
+## Step 1: Sync and Collect
 
-1. Use AskUserQuestion: "Go ahead -- dump everything on your mind. Tasks, notes, ideas, reminders, personal stuff, anything. I'll sort it all out."
-2. Wait for the full response. If the user seems to have more, ask: "Anything else, or is that everything?"
+1. `git pull --ff-only` (another session or the nightly Routine may have pushed since this session started)
+2. Get today's date in the user's timezone: `TZ="[IANA-Timezone]" date "+%Y-%m-%d"`
+3. Use AskUserQuestion: "Go ahead -- dump everything on your mind. Tasks, notes, ideas, reminders, personal stuff, anything. I'll sort it all out."
+4. Wait for the full response. If the user seems to have more, ask: "Anything else, or is that everything?"
 
 ---
 
@@ -30,12 +28,12 @@ Manual brain dump command. The user dictates everything on their mind and the as
 
 ## Step 3: Route Items
 
-1. For each classified item, route via atomic write:
-   - **Client tasks** -> `Inbox/<Client>.md` under `## Open Tasks` as `- [ ]` items
-   - **Client notes** -> `Inbox/<Client>.md` under `## Notes` as plain bullets
-   - **Cross-client tasks/notes** -> `Inbox/[YourCompany].md` under `## Open Tasks` or `## Notes`
-   - **Ideas** -> `Inbox/[YourCompany].md` under `## Brain Dump` (keep as-is)
-   - **Personal items** -> `Inbox/Personal.md` under `## Open Tasks` (or `## Brain Dump` if it's a loose thought)
+1. For each classified item:
+   - **Client tasks** → `Inbox/<Client>.md` under `## Open Tasks` as `- [ ]` items
+   - **Client notes** → `Inbox/<Client>.md` under `## Notes` as plain bullets
+   - **Cross-client tasks/notes** → `Inbox/[YourCompany].md` under `## Open Tasks` or `## Notes`
+   - **Ideas** → `Inbox/[YourCompany].md` under `## Brain Dump` (keep as-is)
+   - **Personal items** → `Inbox/Personal.md` under `## Open Tasks` (or `## Brain Dump` if it's a loose thought)
 2. Dedup check: before adding a task, verify it does not already exist in the target file
 3. If any items could not be classified, present them to the user and ask where they should go
 
@@ -43,14 +41,18 @@ Manual brain dump command. The user dictates everything on their mind and the as
 
 ## Step 4: Log to Manifest
 
-1. If an EOD manifest exists at `/tmp/eod-manifest-TODAY.md`, append rows for each routed item with Source = "Brain Dump"
-2. If no manifest exists, skip this step (brain dump can run standalone)
+1. If today's EOD manifest exists at `System/state/eod-manifest-$TODAY.md`, append rows for each routed item with Source = "Brain Dump"
+2. If no manifest exists, skip this step (brain dump runs standalone; tonight's EOD will pick the items up from the inbox files)
 
 ---
 
-## Step 5: Summary
+## Step 5: Summary and Save
 
-1. Print a table of what was routed and where:
-   - Item description | Client | Type | Routed To
+1. Print a table of what was routed and where: Item | Client | Type | Routed To
 2. Call out any items left unrouted or flagged for user decision
 3. Print totals: tasks created, notes filed, ideas saved, personal items parked
+4. **Save:**
+   ```bash
+   git add -A && git commit -m "Brain dump $TODAY: [N] items routed" && git push
+   ```
+   (If rejected: `git pull --rebase && git push`.) In a cloud session, this push is what makes the capture real — say "Saved" only after it succeeds.

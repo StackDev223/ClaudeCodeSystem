@@ -128,3 +128,15 @@ Options:
 - Yes, let us run it
 - No, I will try it later
 - I want to tweak something first
+
+---
+
+## Persistence
+
+A skill only exists in future sessions once it is pushed. Finish by saving:
+
+```bash
+git add -A && git commit -m "Build skill: /<skill-name>" && git push
+```
+
+Once pushed, the new skill is available in every future session — cloud, phone, and local.

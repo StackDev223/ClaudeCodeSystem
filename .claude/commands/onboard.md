@@ -1,141 +1,62 @@
-# Onboard: Set Up Your Personal Assistant
+# Onboard: Set Up Your Personal Assistant (Cloud Edition)
 
-You are setting up the Claude Code Personal Assistant system for a new user. This is Part 1 of a 4-part setup process:
+You are setting up the Claude Code Personal Assistant system for a new user. **This repository IS their vault** — it was created from Integral's template ("Use this template" on GitHub) and you personalize it in place. This is Part 1 of a 4-part setup:
 
-1. **`/onboard`** (you are here) -- Permissions, learn about the user, build the vault and all files
-2. **`/train`** -- Learn how the system works (Obsidian, vault, skills, daily loop)
-3. **`/connect`** -- Connect all your tools (calendar, email, task manager, etc.)
-4. **`/finish`** -- Take it for a spin, learn how to improve it over time
+1. **`/onboard`** (you are here) — Learn about the user, personalize the vault, configure the cloud environment
+2. **`/train`** — Learn how the system works (the vault, git, skills, the daily loop)
+3. **`/connect`** — Connect their tools (calendar, email, tasks, transcripts)
+4. **`/finish`** — Live demo with real data, set up the nightly Routine, wrap up
 
 **Voice:** Friendly, patient, non-technical. Explain everything in plain language. Use technical terms only in parentheses after the plain version.
 
-**Important:** Use `AskUserQuestion` for EVERY question. Present 2-4 options with descriptions. Allow free-text input only when truly necessary (like entering a name). Never dump a wall of text -- keep each step short and focused.
+**Important:** Use `AskUserQuestion` for EVERY question. Present 2-4 options with descriptions. Allow free-text input only when truly necessary (like entering a name). Never dump a wall of text — keep each step short and focused.
+
+**Persistence rule for this command:** commit and push at the end of every build phase (6A-6G and 7), not just once at the end. If the session dies mid-setup, the next session picks up where this one left off instead of starting over. Check `git log` at the start: if you see "Onboard:" commits already, tell the user setup partially ran and resume from the first missing piece.
 
 ---
 
 ## Phase 0: Detect Environment
 
-Before doing anything, figure out where you are running.
+1. **Runtime mode.** Check the `CLAUDE_CODE_REMOTE` environment variable (`printenv CLAUDE_CODE_REMOTE`):
+   - `true` → **Cloud mode** (Claude Code on the web). This is the primary path.
+   - unset → **Local mode** (Claude Code CLI on the user's machine, working on a clone of this repo). Same personalization flow; skip the cloud-environment phases (1B, 6G) and note local specifics where flagged.
+   Record this as `RUNTIME`.
 
-1. **Check if this is the repo folder or a vault.** Look for `templates/CLAUDE.md` and `docs/` in the current directory or its children.
-   - If found in the current directory: you are inside the setup repo. Note the repo path. **But before assuming the vault needs to be created elsewhere, check parent directories** (up to 3 levels) for `.obsidian/` or other vault indicators (like an existing `CLAUDE.md` with vault content, `Inbox/`, `Work/`). If a parent vault is found, set `VAULT_PATH` to that parent directory and treat this like the subfolder case below (the user opened Claude inside the repo folder instead of the vault root). Only if no parent vault is found should you defer to Phase 6A.
-   - If found in a subfolder (e.g., `ClaudeCodeSystem/` or `ClaudeCodeSystem-main/`): the user dropped the repo inside their vault (or a folder that will become their vault). Note the repo subfolder path. The current directory is the vault root. Set `VAULT_PATH` to the current directory immediately.
+2. **Template state.** Confirm `setup/templates/CLAUDE.md` exists and the root `CLAUDE.md` still says "Not Yet Personalized". If the root CLAUDE.md is already personalized, this vault has been set up before — ask the user whether they want to re-run setup (destructive: overwrites personalization) or just adjust something specific.
 
-2. **Locate the reference files.** Set `REPO_PATH` to wherever `templates/CLAUDE.md` lives. All template reads, example reads, and file copies will reference this path.
-
-3. **If the setup commands aren't at the project root yet** (i.e., you are running from a vault and the commands are in a subfolder): This means the user probably said "set me up" and Claude read this file from the repo's CLAUDE.md. The commands are already loaded. Proceed normally.
-
-Proceed to Phase 0B.
+3. **Git state.** Run `git status -sb` and `git log --oneline -5`. Confirm you are on `main` (or the repo's default branch). If not, check out `main` before doing anything: setup builds the vault's foundation and it belongs on the default branch.
 
 ---
 
-## Phase 0B: Verify Windows Prerequisites (Windows only)
-
-**Skip this phase entirely if the user is on macOS or Linux.** Detect the platform by running `uname -s` or checking for Windows-specific paths.
-
-Windows users should have completed the prerequisite steps from the README before opening Claude (Git Bash, Developer Mode, Virtual Machine Platform, and a restart). This phase does a quick verification. Run checks silently and only surface issues.
-
-### Verify Git
-Run: `git --version 2>&1`
-
-If Git is not found: "It looks like Git is not installed yet. The README has Windows setup steps that need to be done before we can continue. Here is the quick version:"
-1. "Go to **git-scm.com** and click **Download for Windows**."
-2. "Run the installer and accept all defaults."
-3. "After installing, you will need to **restart your computer**, then open Claude again and type `/onboard`."
-
-Stop here if Git is missing -- the restart is required.
-
-### Note Windows vault default
-On Windows, default the vault location to `Documents\Brain` (i.e., `C:\Users\<username>\Documents\Brain`). This will be used later in Phase 6A if the user does not specify a custom location.
-
-**If Git is present**, proceed to Phase 1.
-
----
-
-## Phase 1: Permissions
-
-**Before permissions, determine how they use Claude.** The setup path is different in Claude Desktop vs the Claude Code CLI.
-
-AskUserQuestion: "How are you using Claude right now?"
-Options:
-- Claude Desktop app (most likely if you downloaded Claude from the web)
-- Claude Code in the terminal / command line
-- Both
-
-Record this as `CLAUDE_RUNTIME`.
-
-**If Claude Desktop app:**
-- Tell the user: "You are using the Desktop app, so direct tool connections (like Google Calendar or your task manager) will be set up later through the app's settings by you. I cannot configure those connections myself. I will still create your `.env` file for API-based tools and scripts."
-- Skip `~/.claude/settings.json` edits unless they explicitly say they also use the CLI.
-
-**If Claude Code CLI or Both:**
-Tell the user:
-"Before we get started, I need to set up permissions so I can work without asking you to approve every little thing. I am going to update your Claude Code settings file now."
-
-**Action:** Read `~/.claude/settings.json` (it may not exist yet).
-
-- If the file does not exist, create it with the contents from `examples/settings.json` in this repository.
-- If it exists, **merge** permissions: add any missing entries from `examples/settings.json` to the existing `allow` array and `additionalDirectories` array without removing anything. Preserve any other settings (like `mcpServers`).
-
-After writing: "Done. Permissions are set. You will not see approval prompts during setup."
-
----
+## Phase 1: Welcome
 
 Give a brief welcome:
-- What this system does (2-3 sentences, plain language: "I am going to build you a personal assistant that lives in a notes folder on your computer. It connects to your calendar, email, and task manager, and runs daily routines to keep you organized.")
-- That setup has 4 parts and the first part takes about 20 minutes
-- They can stop at any point and come back
+- What this system does (2-3 sentences, plain language: "I am going to turn this repository into your personal assistant's brain. It connects to your calendar, email, and task manager, runs daily routines to keep you organized, and works from the cloud — so it runs even when your computer is off.")
+- Setup has 4 parts and the first part takes about 20 minutes
+- They can stop at any point and come back — progress is saved to the repo as we go
+
+**If cloud mode**, add one sentence of orientation: "One thing that makes the cloud version special: I save everything by committing it to this private GitHub repository. You'll see me do that as we go — every save is permanent and undoable."
 
 ---
 
-## Phase 1B: Install Wispr Flow
+## Phase 1B: Cloud Environment Check (cloud mode only)
 
-Now that they know what the system is, check if they have Wispr Flow (voice-to-text dictation). This makes the rest of setup easier because they can speak their answers instead of typing.
+**Skip entirely in local mode.**
 
-AskUserQuestion: "One quick thing before we dive in. Do you have Wispr Flow installed? It is a voice dictation tool that lets you speak instead of type. It makes this setup easier and it is great for working with Claude day-to-day."
+Before building anything, make sure the session environment is set up. Run silently:
+
+1. `printenv TZ` — is a timezone set?
+2. `git push --dry-run` — can we push? (If this fails or warns about branch restrictions, note it for Phase 6G.)
+
+**Do not walk the user through fixing these yet.** Environment configuration happens in Phase 6G after the interview, when you know their timezone and tools. Just record what's missing. If pushing fails entirely, pause and resolve it now (setup cannot save otherwise):
+
+AskUserQuestion: "Quick technical check: I can't save to your repository yet. Did you create this repo from the template under your own GitHub account?"
 Options:
-- Yes, I already have it
-- No, what is it?
-- No, and I do not want it
+- Yes, it is my repo
+- Someone else created it for me
+- I am not sure
 
-**If "No, what is it?":**
-"Wispr Flow is a small app that turns your voice into text anywhere on your computer. Instead of typing answers to my questions, you just talk. It also works great during your day -- dictate emails, notes, task descriptions, anything. It is like having a stenographer built into your computer."
-
-AskUserQuestion: "Want to install it now? It takes about 2 minutes."
-Options:
-- Yes, let us do it
-- I will install it later
-- No thanks, I prefer typing
-
-**If they want to install:**
-1. "Open your browser and go to **wispr.com** (or search 'Wispr Flow download')."
-
-AskUserQuestion: "Are you on the Wispr Flow website?"
-Options:
-- Yes
-- I cannot find it
-
-2. "Click **Download** and install the app. It is a small download."
-
-AskUserQuestion: "Is it installed?"
-Options:
-- Yes, I see it in my menu bar
-- Still downloading / installing
-- I ran into an issue
-
-3. "Open Wispr Flow and go through the quick setup. It will ask for microphone permission -- click **Allow**."
-
-4. "Try it out: click on this text input area and press the Wispr hotkey (usually Option+Space on Mac or Ctrl+Space on Windows) and say something."
-
-AskUserQuestion: "Did it work? Did your spoken words appear as text?"
-Options:
-- Yes, it is working!
-- The hotkey did not do anything
-- It picked up my voice but the text was wrong
-
-If working: "Great! From now on, you can speak your answers to any of my questions instead of typing. Just press the Wispr hotkey and talk."
-
-If issues: Help troubleshoot (microphone permissions, hotkey conflicts), or let them skip and come back to it.
+Walk through the fix based on the error (usually: the Claude GitHub app needs access to this repo, granted at github.com/apps/claude → Configure).
 
 ---
 
@@ -156,6 +77,8 @@ Ask: "What is the name of your company or business?"
 - The person's name + company (LinkedIn, role, bio)
 - Relevant context: what the company sells/does, who their clients are, team size
 
+(If WebSearch is blocked by the environment's network policy, skip research gracefully and interview instead.)
+
 **Present findings for verification:**
 
 "Here is what I found about you and [Company Name]:
@@ -169,7 +92,7 @@ Options:
 - Mostly right, let me correct a few things
 - Pretty far off, let me explain
 
-Use corrections and research to inform the rest of the interview. If you found their actual clients, services, or team members, reference them by name later.
+Use corrections and research to inform the rest of the interview.
 
 ### 2D: Timezone
 Ask: "What timezone are you in?"
@@ -181,8 +104,10 @@ Options:
 
 Note: "Type your timezone if it is not listed."
 
+Map the answer to an IANA timezone name (e.g., `America/New_York`, `America/Chicago`). Record both the display name and the IANA name — the IANA name gets personalized into commands and set as the `TZ` environment variable in Phase 6G.
+
 ### 2E: Work Type
-If research already reveals this, confirm instead of asking from scratch.
+If research already revealed this, confirm instead of asking from scratch.
 
 Otherwise ask: "What best describes your work?"
 Options:
@@ -195,7 +120,7 @@ Options:
 
 ## Phase 3: Your Tools
 
-Collect which tools they use. We are NOT connecting them yet -- just finding out what they have. Connections happen in `/connect`.
+Collect which tools they use. We are NOT connecting them yet — just finding out what they have. Connections happen in `/connect`.
 
 ### 3A: Calendar
 Ask: "What calendar do you use?"
@@ -307,12 +232,25 @@ Options:
 ### 5B: End-of-Day Routine
 Ask: "How do you want to end your workday?"
 Options:
-- Full processing: Run one command before wrapping up. Claude processes calls, emails, messages, and builds tomorrow's plan while you walk away. (recommended)
+- Automatic: a scheduled Routine runs every night, processes calls, emails, and messages, and builds tomorrow's plan while you sleep (recommended — this is the cloud edition's superpower)
+- Manual: I run one command before wrapping up and walk away while it works
 - Simple daily note: Claude writes a summary of what happened today
-- Manual brain dump: I tell Claude what to capture
 - No end-of-day routine
 
-### 5C: Client Structure
+If they chose Automatic, note it — `/finish` will set up the Routine via `/automate`.
+
+### 5C: Where You'll Read Your Plan
+The nightly routine writes `Inbox/Today.md`. Ask where they want to read it each morning:
+
+AskUserQuestion: "Every morning there will be a fresh plan waiting in your vault. Where would you like to read it?"
+Options:
+- In a Claude session: open Claude Code (web or phone), type /morning, and I present it (simplest — nothing to install)
+- In Obsidian on my computer: your vault syncs to your machine and opens as a beautiful notes app (I will help set up syncing in /train)
+- On GitHub: read it in the GitHub app or website (works, but plainest)
+
+Record as `READING_SURFACE`. This changes what `/train` teaches.
+
+### 5D: Client Structure
 If your research revealed clients, pre-populate: "It looks like you work with clients like [Client A] and [Client B]. Are these your current active clients?"
 
 Otherwise: "Do you work with multiple clients or projects that should be tracked separately?"
@@ -321,9 +259,9 @@ Options:
 - Yes, I have multiple projects but they are all internal
 - No, I mainly do one type of work
 
-If they have clients, confirm the list (free text, comma-separated). Pre-fill with any names from research.
+If they have clients, confirm the list (free text, comma-separated).
 
-### 5D: Client Tiers (if applicable)
+### 5E: Client Tiers (if applicable)
 If they listed clients: "Are some clients higher priority than others?"
 Options:
 - Yes, let me rank them (then ask Tier 1 vs Tier 2)
@@ -334,31 +272,13 @@ Options:
 
 ## Phase 6: Build Everything
 
-Tell the user what you are about to create before creating it.
+Tell the user what you are about to create before creating it. **Commit and push after each lettered step** with messages like `Onboard: folder structure`, `Onboard: personalized CLAUDE.md`.
 
 ### 6A: Vault Folder Structure
 
-**If Phase 0 detected the user is already inside a vault** (repo is a subfolder of the current directory):
-- The current directory IS the vault. Do not ask where to create it.
-- Set `VAULT_PATH` to the current directory if it is not already set.
-- Tell the user: "I see you are already in a notes folder. I will build the system right here."
-- Skip the location question.
+The vault root is this repository's root. Create the structure:
 
-**If running from the repo folder** (no vault detected):
-AskUserQuestion: "Where should I create your notes folder?"
-Options:
-- In my Documents folder (~/Documents/Brain on Mac/Linux, Documents\Brain on Windows)
-- On my Desktop (~/Desktop/Brain)
-- Next to this repo (../Brain)
-- Somewhere else (let me specify)
-
-On Windows, default to `C:\Users\<username>\Documents\Brain` if they choose Documents.
-
-Set `VAULT_PATH` based on their answer.
-
-Create the structure at `VAULT_PATH`:
 ```
-<vault root>/
 ├── Inbox/
 ├── [CompanyName]/  (if provided)
 │   ├── Hiring/
@@ -382,122 +302,38 @@ Create the structure at `VAULT_PATH`:
 │   └── Health/
 ├── Graph/
 ├── Templates/
-├── Archive/
-└── Attachments/
+└── Archive/
 ```
 
-Skip folders that do not apply based on their answers.
+Skip folders that do not apply based on their answers. Since git does not track empty folders, drop a short `README.md` in each folder explaining what belongs there (one or two sentences — these double as documentation for the user). Do NOT create an `Attachments/` folder — explain: "Files like images and PDFs stay in your Google Drive; we link to them from notes. That keeps your vault fast."
 
 ### 6B: CLAUDE.md
 
-Read `templates/CLAUDE.md` from this repo as the base. Customize with everything from the interview and web research:
+Read `setup/templates/CLAUDE.md` as the base. Customize with everything from the interview and research:
 
-- Replace all placeholders (`[Your Name]`, `[Your Timezone]`, `[YourCompany]`) with real values
-- Replace `[Claude Runtime]` with `Claude Desktop`, `Claude Code CLI`, or `Both`
+- Replace all placeholders: `[Your Name]`, `[Your Timezone]` (display name), `[IANA-Timezone]` (e.g. `America/Chicago`), `[YourCompany]`, `[Your Task Manager]`
 - Fill in company context from research
-- Update daily schedule skeleton with their hours, lunch, meeting window
-- Update integrations section: remove unused tools, add tools they mentioned
+- Update the daily schedule skeleton with their hours, lunch, meeting window
+- Update the integrations sections: uncomment the connectors and API-key rows for tools they use, remove the rest
 - Use actual client names (not `[Client A]`) in priority tiers and examples
 - Adjust meeting window and protected time based on preferences
 
-Write to `VAULT_PATH/CLAUDE.md`.
+Write to the repo root `CLAUDE.md`, replacing the bootstrap version.
 
-### 6C: .env Template
+### 6C: Personalize the Commands
 
-Create `VAULT_PATH/.env` with only the services they selected, commented with instructions:
-```bash
-# Password keychain file for Claude
-# These will be filled in during /connect
+Customize the tool-specific commands in `.claude/commands/` in place. Customization never deletes a command — every command ships to every user:
 
-# (only include sections for tools they selected)
-```
+- Replace `[IANA-Timezone]` / `[Your Timezone]` placeholders in `morning.md`, `eod.md`, all `eod-*.md`, `daily-note.md` with their real timezone
+- Replace `[Client A]`-style placeholders with their real client names in `eod-gather.md`, `eod-today.md`, `morning.md`, `brain-dump.md`
+- Wire their actual tools: if they do not use a time tracker, leave `eod-time.md` in place but note in `eod.md` that the time phase is skipped
+- Replace `[YourCompany]` everywhere with the real company name
 
-### 6D: Local Settings
+### 6D: Knowledge Graph Setup
 
-If `CLAUDE_RUNTIME` includes CLI, write `VAULT_PATH/.claude/settings.local.json` using `examples/settings.local.json` as the base.
+Create starter files at `Graph/`:
 
-If `CLAUDE_RUNTIME` includes CLI, update `~/.claude/settings.json` to add any MCP permissions for tools they selected that are not already in the allow list.
-
-If `CLAUDE_RUNTIME` is Desktop only, skip CLI-specific settings files and note in the summary that integrations will be configured later in the app's **Customize** section instead.
-
-### 6E: Skills
-
-**Golden rule: install EVERY command, no exceptions.** Every `.md` command in this repo's `.claude/commands/` is a skill we want every user to have. They are NOT optional. Do not pick a subset, do not gate installation on the user's workflow answers, and do not skip a command because it "looks unused." A user who never picked "full EOD" still gets `/eod`; a user who picked "quick check" still gets `/morning`. Workflow preferences (Phase 5) only decide which command you *recommend as their daily driver* and how you *customize* the tool-specific ones -- they never decide what gets installed.
-
-This is the historical failure mode of this setup: commands kept getting dropped during onboarding because the install list was hand-enumerated and conditional. The fix is to copy the whole folder, not a list.
-
-**The installation path depends on `CLAUDE_RUNTIME`:**
-
-#### If CLI or Both: Auto-Install ALL Commands
-
-1. **Copy every command file, unconditionally.** Create `VAULT_PATH/.claude/commands/` and copy the complete contents of the repo's command folder into it:
-   ```
-   mkdir -p VAULT_PATH/.claude/commands
-   cp REPO_PATH/.claude/commands/*.md VAULT_PATH/.claude/commands/
-   rm -f VAULT_PATH/.claude/commands/onboard.md   # setup is done; the rest stay
-   ```
-   This is a glob copy on purpose: any command added to the repo later is installed automatically, with no list to keep in sync. After copying, verify the count -- the vault should contain every `.md` from the repo's `.claude/commands/` (minus `onboard.md`). If any are missing, copy them; never leave a command behind.
-
-   The full set this installs, for reference (not a checklist to enumerate manually -- the copy above already covers it):
-   - **Setup:** `train.md`, `connect.md`, `finish.md`
-   - **Session continuity (the backbone of context/task management):** `handoff.md`, `pickup.md`. A single Claude session has a finite context window; once it fills (or the user runs `/clear`, closes the window, or hits compaction), everything not written down is lost. `/handoff` checkpoints the live thread of work into `VAULT_PATH/.handoffs/<name>.md`; `/pickup` reloads it in the next session. They double as a track record of in-flight workstreams.
-   - **Decision-making + improvement:** `strategy.md`, `optimize.md`, `build-skill.md`, `learn.md`
-   - **Knowledge graph:** `graph-sync.md`, `graph-daily.md`
-   - **Daily drivers + EOD pipeline:** `morning.md`, `eod.md`, and the phase-split EOD commands `eod-gather.md`, `eod-sync.md`, `eod-time.md`, `eod-note.md`, `eod-today.md` (`/eod` and the phase commands reference each other -- shipping only some of them breaks the pipeline mid-run, which is exactly how commands "disappear after the user runs a slash command")
-   - **Other utilities:** `daily-note.md`, `brain-dump.md`, `monthly-review.md`
-
-2. **Then customize the tool-specific ones in place** with their specific tools, clients, and schedule. Customization happens *after* installation and never affects whether a file is installed:
-   - `eod.md` and the `eod-*` phase commands -- wire to their actual tools; if they do not use a time tracker, soften `eod-time.md` to a no-op note rather than deleting it.
-   - `morning.md` -- their schedule, meeting window, clients.
-   - Use actual client names and their real toolset throughout.
-
-3. **Create the handoff storage directory:** `VAULT_PATH/.handoffs/` (where `/handoff` stores named handoff files).
-
-4. **Install the Brainstorming community skill.** Run in the vault directory:
-   ```
-   npx skills add https://github.com/obra/superpowers --skill brainstorming
-   ```
-   This installs an interactive brainstorming skill for thinking through ideas and problems. If the install fails (e.g., Node.js is not available), note it as a task in `Inbox/[YourCompany].md` and continue. Do not block setup on this.
-
-The daily graph sync is already included as Phase 6 of `/eod`; the standalone `/graph-daily` is available for manual runs.
-
-#### If Desktop Only (CoWork): Install ALL, Then Upload
-
-Claude CoWork does not auto-discover `.claude/commands/` files. Skills must be uploaded manually by the user through the **Customize** section in the CoWork app settings, and each needs YAML frontmatter to be recognized. The same golden rule applies: **every command gets copied locally, no subset.**
-
-1. **Copy the CLI versions** (source of truth, and they work if the user later adopts the CLI): same unconditional glob copy as the CLI path above -- `REPO_PATH/.claude/commands/*.md` into `VAULT_PATH/.claude/commands/` (drop `onboard.md`).
-
-2. **Copy the CoWork-formatted versions** so the user has every upload-ready file locally:
-   ```
-   mkdir -p VAULT_PATH/cowork-commands
-   cp REPO_PATH/cowork-commands/*.md VAULT_PATH/cowork-commands/
-   ```
-   `cowork-commands/` already mirrors the complete command set with YAML frontmatter -- copy all of it, never a selection.
-
-3. Tell the user: "Skills in CoWork work a little differently than in the CLI. You upload each one through the app. I will walk you through it, and you have every command saved locally in `cowork-commands/` so nothing gets lost."
-
-4. Walk through uploading, using AskUserQuestion at each step:
-   - "Open the CoWork app settings. Look for the **Customize** section."
-   - "Find the option to add a custom skill or instruction. Click it."
-   - "Upload the file from your vault at `cowork-commands/<file>.md` (or paste its contents)."
-   - Confirm: "Does it show up as an available skill?"
-
-5. Upload in this **order** (this is sequencing, not a subset -- the goal is still to get all of them in). Start with the ones needed to keep going, then daily drivers, then the rest:
-   - `train.md`, `connect.md`, `finish.md` -- needed to continue setup
-   - `morning.md`, `eod.md` -- daily drivers
-   - `handoff.md`, `pickup.md` -- session continuity
-   - `strategy.md` -- most useful on-demand skill
-   - then everything else in `cowork-commands/` (the EOD phase commands, `optimize`, `build-skill`, `learn`, `graph-*`, `daily-note`, `brain-dump`, `monthly-review`)
-
-6. If the user does not want to upload all of them in this sitting, that is fine -- but frame it as "the rest are ready in `cowork-commands/` whenever you want them," and add a task in `Inbox/[YourCompany].md` listing the not-yet-uploaded commands so none are forgotten. Do not silently leave commands out.
-
-7. Add a note in CLAUDE.md under a Skills section: "CoWork skills are uploaded through the **Customize** section. Every command is saved with YAML frontmatter in `cowork-commands/`. To add a new one, upload its file from that folder."
-
-### 6F: Knowledge Graph Setup
-
-Create the Graph folder and starter files at `VAULT_PATH/Graph/`:
-
-1. **entity-registry.md** -- Pre-populate with entries for each client from Phase 5C and the user's company:
+1. **entity-registry.md** — Pre-populate with entries for each client and the user's company:
 
 ```markdown
 # Entity Registry
@@ -506,8 +342,6 @@ Master lookup table for the knowledge graph. Maps searchable terms to wiki-link 
 
 ## How This Works
 When the graph sync runs, it searches vault files for these terms and automatically creates wiki-links on first mention. Aliases are alternative terms that resolve to the same target.
-
-Add new entries as you create entity pages (people, concepts, clients, projects).
 
 ## Clients
 
@@ -531,96 +365,102 @@ Add new entries as you create entity pages (people, concepts, clients, projects)
 |------|------|---------|
 ```
 
-2. **index.md** -- Empty starter with header:
+2. **index.md** — Empty starter: "*Run `/graph-sync` to populate this index.*"
 
-```markdown
-# Vault Index
+Do not create MOC files yet — `/graph-sync` generates those from actual content.
 
-Alphabetical directory of all pages in the vault.
+### 6E: Methodology Document
 
-*Run `/graph-sync` to populate this index.*
+Copy `setup/templates/integral-methodology.md` to `Resources/Reference/How We Think About AI Agents.md`. Do not customize it — it is the same for every user.
 
-*Last updated: [today's date]*
+### 6F: Inbox Starter Files
+
+- One starter task file per client: `Inbox/<ClientName>.md` with the standard structure: Open Tasks, Pending from Others, Key Dates, Notes, Reference, Completed
+- `Inbox/[YourCompany].md` (actual name) for cross-client/agency/internal tasks — same structure plus a `## Brain Dump` section near the top
+- `Inbox/Personal.md` with the same structure
+- `Inbox/Today.md` with a simple first-day message (it gets regenerated nightly once the EOD routine runs)
+
+### 6G: Configure the Cloud Environment (cloud mode only)
+
+**In local mode:** skip; just remind them to set `TZ` in their shell profile if their system timezone differs from their work timezone (rare), and move on.
+
+This is the one part you cannot do for them — environment settings live in the claude.ai interface. Walk through each item with AskUserQuestion confirmations. Reference `setup/docs/environment-setup.md` for the details.
+
+1. **Open environment settings:** "Go to **claude.ai/code**, find this repository's environment (usually named after the repo), and open its **settings**. Look for **Environment variables** and **Network access**."
+
+2. **Timezone:** "Add an environment variable: name `TZ`, value `[their IANA timezone]`. This makes every session compute dates in your timezone instead of UTC — without it, anything I do late in the evening would think it is tomorrow."
+
+AskUserQuestion: "Is the TZ variable saved?"
+Options:
+- Yes, saved
+- I cannot find where to add variables
+- I will do it later
+
+(If "later": add a task to `Inbox/[YourCompany].md` — this one bites silently, so flag it as important.)
+
+3. **Network access:** Based on their tools from Phase 3, tell them exactly which setting to choose:
+   - If everything they use has a claude.ai connector (Google, Slack, ClickUp, etc.): "The default **Trusted** network setting is fine — connectors do not need special network access."
+   - If they use API-key tools (Fathom, Rize, or similar): "Choose **Custom** network access and add these domains: [list from setup/docs/environment-setup.md, e.g. api.fathom.ai]. This lets me call those services directly."
+
+4. **Branch pushes:** "Find the setting called **Allow unrestricted branch pushes** (in the repository/routine options) and enable it for this repo. Your vault is personal — I save directly to the main branch, and this setting allows that. Without it, my scheduled nightly runs would strand your daily plans on side branches you would have to merge by hand."
+
+AskUserQuestion: "Were you able to enable unrestricted branch pushes?"
+Options:
+- Yes, enabled
+- I cannot find that setting
+- I will do it later
+
+(If they cannot find it: it may be surfaced when creating a Routine — note it for `/automate`, which needs it anyway.)
+
+5. **Setup script:** "You can leave the environment's Setup script empty. This vault ships with a session-start hook (in the repo itself) that handles the small installs automatically." (Only if this vault later gains heavyweight dependencies would a setup script be worth adding — see setup/docs/environment-setup.md.)
+
+### 6H: Final Commit
+
+Commit anything not yet committed and push:
+```bash
+git add -A && git commit -m "Onboard: vault personalized for [Name]" && git push
 ```
-
-Do not create MOC files yet. Those are generated by `/graph-sync` based on actual vault content.
-
-### 6H: Integral Methodology Document
-
-Copy `templates/integral-methodology.md` from the setup repo into the vault at `VAULT_PATH/Resources/Reference/How We Think About AI Agents.md`.
-
-This document contains Integral's philosophy on context engineering, progressive trust, skills, the daily loop, and how to get the most out of the system. It ships with every vault and gives the user a reference they can revisit as they learn the system.
-
-Do not customize this file. It is the same for every user.
-
-### 6I: Inbox Starter Files
-
-Create a starter task file for each client: `VAULT_PATH/Inbox/ClientName.md`. Each file should use the standard structure: Open Tasks, Pending from Others, Key Dates, Notes, Reference, Completed.
-
-Also create `VAULT_PATH/Inbox/[YourCompany].md` (use the actual company name) for cross-client, agency, hiring, and internal tasks. It uses the same structure as a client file, plus a `## Brain Dump` section near the top for loose captures.
-
-Create `VAULT_PATH/Inbox/Personal.md` with the same structure for personal tasks.
-
-Create `VAULT_PATH/Inbox/Today.md` with a simple first-day message. Today.md is the daily entry point; it gets regenerated nightly by the EOD pipeline.
+Confirm the push succeeded. If it fails, resolve before continuing — nothing is saved until this works.
 
 ---
 
-## Phase 7: Wrap Up and Restart
+## Phase 7: Wrap Up and Hand Off
 
-Tell the user what was created (list every folder and file).
+Tell the user what was created (list every folder and key file).
 
 Then explain what happens next:
 
-"Your notes folder is built and your instruction manual is customized. Before we continue, open a fresh Claude session in your vault so it picks up your new files. If you are using the CLI, restarting also picks up your new permissions."
+"Your vault is built and your instruction manual is customized — and it is all saved to your private GitHub repository. Next, start a **fresh session** so I load your new instruction manual from the start."
 
-Walk them through it step by step:
+Walk them through it, adapted to `RUNTIME`:
 
-1. "Open Obsidian. If you have not installed it yet, download it from obsidian.md."
-2. "In Obsidian, make sure your vault is the folder at [vault_path]. If this is a brand new setup, choose **Open folder as vault** and pick that folder. If you were already in an existing vault, you can stay right where you are."
-3. "You should see your folder structure in the left sidebar. Take a moment to click around -- these are all just text files."
+**Cloud mode:**
+- "Step 1: End this session (you can just close this tab, everything is saved)."
+- "Step 2: Go to **claude.ai/code** and start a **new session** on this same repository."
+- "Step 3: In the new session, type exactly this: `/train`"
+- "That is it. `/train` walks you through how your new system works."
 
-AskUserQuestion: "Can you see your folders in Obsidian?"
+**Local mode:**
+- "Step 1: Close this session (`/exit` or Ctrl+C)."
+- "Step 2: In your terminal: `cd [repo path] && claude`"
+- "Step 3: Type `/train`"
+
+AskUserQuestion: "Do you know what to do next?"
 Options:
-- Yes, I can see Inbox, Work, Resources, etc.
-- I need help installing Obsidian first
-- Something does not look right
+- Yes: new session on this repo, then type /train
+- Can you repeat that?
+- I am confused
 
-4. Walk through the session handoff explicitly. This is a common sticking point, so be very literal:
+If confused: re-explain in simpler language. Offer to stay in this conversation until they confirm.
 
-   If `CLAUDE_RUNTIME` is Desktop:
-   - "Here is exactly what to do next. I will walk you through it one step at a time."
-   - "Step 1: Close this conversation. Click the X or use the menu to close it."
-   - "Step 2: In Claude Desktop, start a brand new conversation."
-   - "Step 3: In the new conversation, click the paperclip or attachment icon and add your vault folder: **[vault_path]**"
-   - "Step 4: Once your vault is attached, type exactly this into the chat: `/train`"
-   - "That is it. `/train` is the next step and it will walk you through how the system works."
-
-   If `CLAUDE_RUNTIME` includes CLI:
-   - "Here is exactly what to do next. I will walk you through it one step at a time."
-   - "Step 1: Close this session. You can type `/exit` or press Ctrl+C."
-   - "Step 2: In your terminal, copy and paste this exact command:"
-     ```
-     cd [vault_path] && claude
-     ```
-   - "Step 3: Once the new session opens, type exactly this: `/train`"
-   - "That is it. `/train` is the next step and it will walk you through how the system works."
-
-   AskUserQuestion: "Do you know what to do next?"
-   Options:
-   - Yes, close this and open a new session in my vault, then type /train
-   - Can you repeat that?
-   - I am confused
-
-   If confused or repeat: Re-explain with even simpler language. Offer to stay in the conversation until they confirm they have the new session open.
-
-**Important final note:** "When you start the new session, Claude will automatically read your CLAUDE.md file. That is the instruction manual we just built together. It has everything about you, your tools, your schedule, and how you like things done. You do not need to explain anything again. `/train` will walk you through it."
+**Important final note:** "When the new session starts, I will automatically read your CLAUDE.md — the instruction manual we just built. It knows your name, your clients, your schedule, and how you like things done. You will not need to explain anything again."
 
 ---
 
 ## Error Handling
 
 - If the user seems confused, back up and explain in simpler terms
-- If they want to skip a section, let them and note what was skipped
-- If a file already exists (ran `/onboard` before), ask before overwriting
-- If running from the repo directory, create the vault in a separate location (ask where)
-- Never hardcode `Brain/` when `VAULT_PATH` is known. All generated files should be written relative to `VAULT_PATH`.
+- If they want to skip a section, let them and note what was skipped in `Inbox/[YourCompany].md`
+- If a push fails mid-setup: `git pull --rebase && git push`. If it still fails, stop and fix access before building more — unpushed setup is unsaved setup
+- If the session dies mid-setup, the next `/onboard` run detects existing "Onboard:" commits and resumes rather than starting over
+- Never hardcode a vault path — the vault root is always this repository's root

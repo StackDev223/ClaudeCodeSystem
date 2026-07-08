@@ -1,12 +1,12 @@
-# Train: Learn How Your System Works
+# Train: Learn How Your System Works (Cloud Edition)
 
-This is Part 2 of 4 in the setup process. The user just ran `/onboard`, which built their vault and customized their files. Now they are in a fresh Claude Code session inside their vault.
+This is Part 2 of 4 in the setup process. The user just ran `/onboard`, which personalized their vault. They are now in a fresh session on their repository.
 
-**Prerequisites:** `/onboard` has been completed. CLAUDE.md exists. Vault folder structure exists.
+**Prerequisites:** `/onboard` completed. CLAUDE.md personalized. Vault folder structure exists.
 
-**Voice:** Friendly, patient teacher. Explain everything in plain language. Use everyday analogies. Never assume they know what a file path, terminal, or markdown file is.
+**Voice:** Friendly, patient teacher. Explain everything in plain language. Use everyday analogies. Never assume they know what a repository, commit, or markdown file is.
 
-**Important:** Use `AskUserQuestion` for EVERY check-in. Do not lecture -- show, then ask if it makes sense. Keep each explanation to 3-4 sentences max before checking in.
+**Important:** Use `AskUserQuestion` for EVERY check-in. Do not lecture — show, then ask if it makes sense. Keep each explanation to 3-4 sentences max before checking in.
 
 ---
 
@@ -16,6 +16,7 @@ Before starting, confirm everything from `/onboard` is in place:
 - Read CLAUDE.md and confirm it has the user's name and details
 - Check that Inbox/, Work/, and other folders exist
 - Check that `.claude/commands/` has their skills
+- Run `git log --oneline -5` and confirm the "Onboard:" commits are there
 
 If anything is missing, tell the user and offer to fix it or re-run `/onboard`.
 
@@ -23,21 +24,46 @@ If everything looks good: "Everything from the onboard step is here. Let me show
 
 ---
 
-## Step 2: What Is This Folder?
+## Step 2: Where Your Vault Lives
 
-"You are looking at your notes folder (Obsidian calls it a 'vault'). It is just a folder of text files on your computer. Nothing is in the cloud, nothing is on someone else's server. Claude can read and write these files instantly because they are right here on your machine."
+"Your vault is a collection of plain text files — your tasks, your notes, your plans. It lives in a **private GitHub repository** that only you (and the people you invite) can access. Think of it as a filing cabinet in a vault with your name on the door."
 
-Open Obsidian and walk them through the key folders:
+"When we work together, I get a fresh copy of it, do the work, and **save everything back with a commit** — a save point with a description. You will see me say things like 'Saved' at the end of routines. Every save is permanent history: nothing I do can be truly lost, and anything can be undone."
 
-"Let me give you a quick tour. You should be able to see these folders in Obsidian's sidebar:"
+Show them, live:
 
-- **Inbox/** -- "This is your command center. New tasks, today's plan, and per-client task lists all live here. Think of it as your desk where active work sits."
-- **Work/** -- "Professional projects. Each client gets their own subfolder with call transcripts, archives, and notes."
-- **[CompanyName]/** -- "Your company's private docs. Hiring, SOPs, internal strategy. Separate from Work/ so it is never accidentally shared."
-- **Resources/** -- "Reference material. Contacts, health notes, learning notes, recipes. Stuff you look up, not stuff you do."
-- **Archive/** -- "Where completed work goes. Every week, done tasks get moved here so your active files stay clean."
+```bash
+git log --oneline -5
+```
 
-AskUserQuestion: "Does the folder structure make sense? Any questions about where things go?"
+"See those lines? That is your vault's history so far — each line is one save, newest first. This history is yours forever."
+
+AskUserQuestion: "Does that make sense — your notes live in a private repository, and every change is a save point?"
+Options:
+- Makes sense, keep going
+- What happens if something goes wrong mid-save?
+- Who can see my data?
+- What is GitHub exactly?
+
+If "who can see my data": "The repository is private — only your GitHub account has access. When I work on it, the work happens in an isolated, temporary workspace tied to your Claude account. You can also invite a person you trust (like whoever set this system up for you) to help maintain it."
+
+If "what if something goes wrong": "Unsaved work in a closed session can be lost — which is why every routine ends by saving. If a save ever fails, I will tell you loudly rather than pretend it worked."
+
+---
+
+## Step 2B: The Folder Tour
+
+Walk through the key folders (list them from the actual repo):
+
+- **Inbox/** — "Your command center. Today's plan and per-client task lists live here. Think of it as your desk where active work sits."
+- **Work/** — "Professional projects. Each client gets their own subfolder with call transcripts, archives, and notes."
+- **[CompanyName]/** — "Your company's private docs. Hiring, SOPs, internal strategy."
+- **Resources/** — "Reference material. Contacts, concepts, learning notes. Stuff you look up, not stuff you do."
+- **Graph/** — "The map. An index and registry that connects everything (more on this in a minute)."
+- **Archive/** — "Where completed work goes each week so active files stay clean."
+- **System/** — "My machinery — state files and memory. You will rarely open this one."
+
+AskUserQuestion: "Does the folder structure make sense?"
 Options:
 - Makes sense, keep going
 - Why is [folder] separate from [folder]?
@@ -46,28 +72,45 @@ Options:
 
 ---
 
-## Step 3: Your Instruction Manual (CLAUDE.md)
+## Step 3: Your Reading Surface
 
-"Now let me show you the most important file in the system."
+Check `READING_SURFACE` from the onboard interview (it is reflected in CLAUDE.md's Morning Routine section). Teach the one they chose:
 
-Open CLAUDE.md and walk through it section by section. Do NOT read the whole thing out loud. Highlight the key parts:
+**If "In a Claude session" (default):**
+"Every morning, open Claude Code — on your computer or the Claude app on your phone — start a session on your vault, and type `/morning`. I will have your plan ready and walk you through it in about 3 minutes. Your phone is enough: the whole review works with taps."
+
+**If "Obsidian on my computer":**
+"Obsidian is a free app that turns your vault into a beautiful notes app. Because your vault lives on GitHub, we connect them with a small plugin that syncs automatically."
+1. "Download Obsidian from **obsidian.md** and install it."
+2. "You will also need your vault on your computer: install **GitHub Desktop** (desktop.github.com), sign in, and clone your repository to your Documents folder."
+3. "Open Obsidian → **Open folder as vault** → pick the cloned folder."
+4. "In Obsidian, enable **Community plugins** and install **Git** (the obsidian-git plugin). Set it to pull automatically every few minutes and push after you edit."
+5. "Now: what I do in the cloud shows up in Obsidian, and notes you jot in Obsidian show up for me. Two-way sync, powered by the same save-point system."
+
+AskUserQuestion at each numbered step to confirm before moving on.
+
+**If "On GitHub":**
+"Install the GitHub app on your phone or bookmark your repository. Your plan is at `Inbox/Today.md` — GitHub renders it nicely. Reading is easy there; for changes, talk to me."
+
+---
+
+## Step 4: Your Instruction Manual (CLAUDE.md)
+
+"Now the most important file in the system."
+
+Open CLAUDE.md and highlight the key parts (do NOT read the whole thing out loud):
+
+### The Runtime & Persistence Protocol
+"The rules I follow every session: save everything with commits, compute dates in your timezone, keep secrets out of your files. You never have to think about this — but it is why the system is trustworthy."
 
 ### The Startup Checklist
-"Every time we start a conversation, I read this file first. The checklist at the top tells me to check the date, look for pending items, and see if a monthly review is due."
-
-### About This System
-"This section explains what I am and how I work. If you ever forget how the system works, this is where to look."
-
-### The Quick Reference Table
-"This is my cheat sheet. It tells me where to find things -- your inbox, your credentials, client profiles, today's plan."
+"Every time we start a conversation, I read this file first — the date check, your pending items, whether a monthly review is due."
 
 ### Your Schedule and Preferences
-"This is where your daily schedule, meeting preferences, and work style are defined. I follow these rules every session."
-
-Point out their specific customizations: "See how it says [their actual schedule]? And your clients are listed as [actual client names]? That all came from our conversation during onboard."
+"Your daily schedule, meeting preferences, and work style. See how it says [their actual schedule]? And your clients are listed as [actual client names]? That came from our onboarding conversation."
 
 ### Available Integrations
-"This section lists every tool I can connect to. Right now some of these are placeholders -- we will actually connect them in the next step (`/connect`)."
+"Every tool I can connect to. Right now some are placeholders — we connect them for real in the next step (`/connect`)."
 
 AskUserQuestion: "Any questions about CLAUDE.md? This file is yours to change anytime. If I ever do something wrong, you can add a rule here and I will follow it."
 Options:
@@ -76,49 +119,34 @@ Options:
 - What if I want to add something later?
 - Show me how to edit it
 
-If they want to see how to edit: walk them through opening CLAUDE.md in Obsidian and making a small change (like adjusting lunch time). Show them that it is just a text file they can type in.
+If they want to see editing: make a small change together (like adjusting lunch time), commit it, and point out the save: "That preference is now permanent — every future session follows it."
 
 ---
 
-## Step 4: How Skills Work
+## Step 5: How Skills Work
 
-"A skill is a successful task that has been turned into a repeatable routine. When you complete something that could be useful again, you or I can save it as a skill. Over time, your system gets smarter because your skills library grows from your actual work."
+"A skill is a successful task turned into a repeatable routine. Every skill is just a text file in a specific folder. You type a short name and I run the whole thing."
 
-"Every skill is just a text file in a specific folder. You type a short name and I run the whole thing."
+Show them what is in their `.claude/commands/` folder — list each skill with a one-sentence description.
 
-Show them what is in their `.claude/commands/` folder:
-
-"Here are the skills we set up for you:"
-- List each skill file and explain what it does in one sentence
-- For example: "`/morning` -- reviews your day, shows your schedule, helps you adjust priorities"
-
-"These are just text files. You can open them, read them, change them. And here is the important part: you can create new skills anytime. If we do something together that works well and you might want to do it again, I can save it as a skill for you."
+"These are just text files. You can read them, change them, and create new ones. When we do something together that works well, I will offer to save it as a skill. Because skills live in your repository, a skill created once is available in every future session — web, phone, or desktop."
 
 AskUserQuestion: "Want to look inside one of these to see how they work?"
 Options:
-- Yes, show me what is inside /morning (or whichever they have)
+- Yes, show me what is inside /morning
 - No, I trust it, keep going
 - How do I create a new one?
 
-If yes: open the skill file and walk through it briefly. "See how it is just instructions written in plain English? I read these instructions and follow them step by step."
-
-If "How do I create a new one?": "Any time we complete a task together that seems like something you would do again, I will offer to save it as a skill. Or you can just tell me: 'turn this into a skill.' I will write the steps into a file and you can run it anytime with one tap."
-
 ---
 
-## Step 5: The Knowledge Graph
+## Step 6: The Knowledge Graph
 
-"Your vault is not just a folder of files. It is a connected knowledge graph. Files link to each other using wiki-links, and there is an index that maps everything."
+"Your vault is not just folders. Files link to each other with wiki-links, and there is an index that maps everything."
 
-Show them the Graph folder:
-- **Graph/index.md** -- "This is your master directory. Every important file in the vault is listed here alphabetically."
-- **Graph/entity-registry.md** -- "This is the lookup table. It maps names and terms to their pages. When the graph syncs, it reads this registry and automatically creates links in your files."
+- **Graph/index.md** — "Master directory of every important file."
+- **Graph/entity-registry.md** — "The lookup table: names and terms mapped to their pages. When the graph syncs, it auto-links mentions of your clients, contacts, and concepts."
 
-"The graph has two maintenance modes:"
-- **`/graph-sync`** -- "Full rebuild. Run this once to set everything up, then occasionally for a deep sweep."
-- **Daily sync** -- "Built into your end-of-day routine. Files you changed today get their links and metadata updated automatically."
-
-"You do not need to manage the graph manually. It maintains itself. But you can add entries to the entity registry if you want a new term to be auto-linked."
+"Maintenance is automatic: your nightly routine updates links and metadata for anything that changed that day. `/graph-sync` does a full rebuild when needed."
 
 AskUserQuestion: "Make sense?"
 Options:
@@ -127,25 +155,16 @@ Options:
 - How do I add to the entity registry?
 - Show me an example
 
-If "What are wiki-links?": "A wiki-link looks like this: `[[Path/To/File|Display Name]]`. In Obsidian, it becomes a clickable link. Your agent creates these automatically when it recognizes a name, client, or concept from the entity registry."
-
-If "How do I add?": Show them the entity registry and walk through adding one entry.
-
-If "Show me an example": Open a file that has wiki-links and show how the connections work in Obsidian's graph view.
-
 ---
 
-## Step 5B: Integral Strategy Skills
+## Step 6B: Integral Strategy Skills
 
-"You also have a set of strategy skills from Integral. These are thinking frameworks you can use anytime:"
+"You also have a set of strategy skills from Integral — thinking frameworks you can use anytime:"
 
-- **`/strategy`** -- "Structured decision-making. When you are stuck on a business or tech decision, this walks you through it: evaluate what you already have, assess reversibility, plan in stages, and reach a clear recommendation."
-- **`/optimize`** -- "Audit what you have. Reviews your tools, processes, or time and finds consolidation opportunities. Helps you get more out of what you are already paying for."
-- **`/build-skill`** -- "Turn a successful task into a repeatable workflow. After you do something that works, this interviews you and creates a new slash command from it."
-- **`/learn`** -- "Capture important knowledge. After a meeting, a mistake, or an insight, this helps you store it in the right place so it connects to your existing work and surfaces when relevant."
-- **`/brainstorming`** -- "Interactive brainstorming. When you need to think through ideas, explore possibilities, or work through a creative challenge, this guides you through a generative thinking process."
-
-"These are not just documentation. They are interactive tools that guide you through a process and take action. Try `/strategy` next time you are weighing a decision, or `/brainstorming` when you need fresh ideas."
+- **`/strategy`** — "Structured decision-making: evaluate what you have, assess reversibility, plan in stages, reach a clear recommendation."
+- **`/optimize`** — "Audit your tools, processes, or time; find consolidation opportunities."
+- **`/build-skill`** — "Turn a successful task into a repeatable workflow."
+- **`/learn`** — "Capture important knowledge so it connects to your existing work and resurfaces when relevant."
 
 AskUserQuestion: "Any questions about the strategy skills?"
 Options:
@@ -154,75 +173,46 @@ Options:
 - When would I use /optimize vs /strategy?
 - Can I modify these?
 
-If they want to see one: walk through the first two steps of `/strategy` as a quick demo, then exit it.
-
-If optimize vs strategy: "/strategy is for making a specific decision. /optimize is for reviewing what you already have and finding waste or opportunities. Use /strategy when you are choosing between options. Use /optimize when you want to audit and improve."
-
-If modify: "Yes, these are just text files in your commands folder. You can open them, read them, and change anything. They are yours."
-
 ---
 
-## Step 6: The Daily Loop
+## Step 7: The Daily Loop
 
-"Here is how a typical day works with this system. This is the big picture."
+"Here is how a typical day works. This is the big picture."
 
-Explain the daily loop in 4 simple beats:
-
-1. **End of day:** "Before you wrap up, type `/eod`. I process your calls, emails, and messages, organize everything, and build tomorrow's plan. You can walk away while it runs."
-
-2. **Morning (5 minutes):** "You open Obsidian, look at `Inbox/Today.md` which I built during the EOD run, then type `/morning`. I walk you through the plan and help you adjust if needed."
-
-3. **During the day (as needed):** "Ask me to do things: draft an email, look up a client, create a task, prep for a meeting. I work from the notes in your vault."
-
-4. **Evening (automatic):** "The cycle repeats. I process the day and build tomorrow's plan."
+1. **Overnight (automatic):** "While you sleep, a scheduled routine processes your calls, emails, and messages, organizes everything, and builds tomorrow's plan. Your computer plays no part — it runs in the cloud. (We switch this on in `/finish`.)"
+2. **Morning (5 minutes):** "Open your plan ([their reading surface]), then type `/morning` in a Claude session. I walk you through the day and lock in your schedule — it works great from your phone."
+3. **During the day (as needed):** "Ask me for anything: draft an email, look up a client, prep for a meeting, `/brain-dump` whatever is on your mind. I work from your vault and save as I go."
+4. **Evening:** "The cycle repeats on its own. If you prefer to watch it run, type `/eod` before wrapping up — same process."
 
 AskUserQuestion: "Does the daily loop make sense?"
 Options:
 - Yes, that is clear
-- What if I forget to run /eod?
+- What if the overnight run misses something?
 - What happens on weekends?
-- What if I miss the morning review?
+- What if I skip the morning review?
 
-Address their question, then continue.
+(If "misses something": "Every overnight run writes an errors section into your daily note when a tool was unreachable, and `/morning` automatically catches up on anything that was missed. Nothing silently disappears.")
 
 ---
 
-## Step 7: How to Work with an AI Assistant
-
-"Before we connect your tools, I want to share a few things about how to get the most out of working with me. This is different from using a search engine or a simple chatbot."
+## Step 8: How to Work with an AI Assistant
 
 ### Think of me as a new hire
-
-"I am like a very capable employee who just started. I can do a lot, but I need you to show me how you like things done. The first few weeks, you will correct me. That is normal and expected. Each correction gets added to your instruction manual, which raises the floor. I will still make mistakes sometimes, but the frequency drops as the system learns your preferences."
+"I am like a very capable employee who just started. The first few weeks, you will correct me. Each correction becomes a rule in your instruction manual, which raises the floor. The frequency of mistakes drops as the system learns your preferences."
 
 ### Tell me what to do, not how to do it
-
-"You do not need to write detailed instructions. Just say what you want:"
 - Instead of: "Open the Gmail API and search for emails from John with is:unread"
 - Say: "Check if John sent me anything today"
 
-"I know how to use your tools. You just need to tell me the goal."
-
 ### Let successful tasks become skills
-
-"When we complete a task together that works well, I will ask if you want to save it as a skill. If you say yes, I create a reusable routine you can run with one tap. The goal is that your system gets smarter over time because it learns from the actual work you do."
-
-"You can also tell me directly: 'turn this into a skill' or 'I want to do this every week.' I will build it."
+"When we complete a task that works well, I will ask if you want it saved as a skill. You can also say: 'turn this into a skill.'"
 
 ### Correct me with rules, not just fixes
-
-"When I get something wrong, the best response is a rule:"
 - Instead of: "No, put that in the other folder" (fixes it once)
-- Say: "Always put [type of item] in [folder]. Add this to CLAUDE.md." (makes it far less likely to happen again)
+- Say: "Always put [type of item] in [folder]. Add this to CLAUDE.md." (fixes it permanently — and I commit it, so it sticks)
 
-### The daily rhythm
-
-"The system works best when you build a rhythm:"
-- **End of day**: Run `/eod` before wrapping up. I process everything and build tomorrow's plan. You can walk away.
-- **Morning**: Read `Today.md`, run `/morning`. Confirm the plan in 3-5 minutes.
-- **During the day**: Ask me for anything. The more you use me, the more context I have.
-
-"This is not about adding more work to your day. It is about replacing the 30-60 minutes you already spend organizing, planning, and chasing loose ends."
+### Anywhere, anytime
+"Because everything lives in the cloud: start a session from your phone in a waiting room, dictate a brain dump from the car (your phone's microphone button works great for this), check your plan from any computer. Nothing depends on your machine being on."
 
 AskUserQuestion: "Does this make sense? Any questions about how to work with me?"
 Options:
@@ -231,20 +221,11 @@ Options:
 - What can you NOT do?
 - I have other questions
 
-Address their question, then continue.
-
 ---
 
-## Step 8: How to Give Claude Feedback
+## Step 9: Ready for Connections
 
-"One more important thing: **you can teach me**. If I do something wrong, or you want me to do something differently, just tell me. I will add it to your instruction manual so the same issue is less likely to come up again. It is not perfect, but the system gets meaningfully better with each correction."
-
-Give examples:
-- "If I send an email that sounds too formal, say 'write more casually' and I will add that as a preference."
-- "If I keep putting tasks in the wrong place, say 'always put [Client] tasks in [location]' and I will update the routing rules."
-- "If you discover a new workflow you like, say 'turn this into a skill' and I will build one."
-
-"The system is not static. It gets better every week because you refine it as you use it."
+"Next we connect your actual tools — calendar, email, and the rest — so the daily loop runs on real data."
 
 AskUserQuestion: "Ready to move on to connecting your tools?"
 Options:
@@ -252,6 +233,6 @@ Options:
 - I have more questions about the system
 - I want to take a break and come back later
 
-If ready: "Type `/connect` and I will walk you through connecting each of your tools one by one."
+If ready: "Type `/connect` and I will walk you through each tool one by one."
 
-If break: "No problem. When you come back, open Claude Code in this folder and type `/connect`. I will pick up right where we left off."
+If break: "No problem. When you come back, start a session on this repository and type `/connect`. Everything we did today is saved."

@@ -1,669 +1,189 @@
-# Connect: Set Up Your Tool Connections
+# Connect: Set Up Your Tool Connections (Cloud Edition)
 
-This is Part 3 of 4 in the setup process. The user has already run `/onboard` (built their vault) and `/train` (learned how the system works). Now we connect their actual tools.
+This is Part 3 of 4 in the setup process. The user has already run `/onboard` (personalized their vault) and `/train` (learned how the system works). Now we connect their actual tools.
 
-**Prerequisites:** CLAUDE.md exists with tool preferences from `/onboard`. `.env` file exists with placeholder comments.
+**Prerequisites:** CLAUDE.md exists with tool preferences from `/onboard`.
 
 **Voice:** Patient, step-by-step guide. Never assume they know what an API key is or where to find settings in an app. Every instruction should be "click this, then click that."
 
 **Important:** Use `AskUserQuestion` at EVERY step to confirm before moving on. Test EVERY connection with real data before moving to the next tool. Do not leave any tool half-connected.
 
----
+**The three connection paths (cloud edition):**
 
-## Step 0: Check Prerequisites
+1. **claude.ai Connectors** (preferred) — the user connects the tool at claude.ai → Settings → Connectors; it shows up in sessions as ready-to-use tools. Auth is held by Anthropic, nothing to store. Google Calendar, Gmail, Google Drive, Slack, and many task managers work this way.
+2. **Environment variables** — for API-key tools (Fathom, Rize, etc.). The user adds the key in the Claude Code environment configuration; scripts and curl read it from the environment. Requires the tool's API domain on the environment's network allowlist.
+3. **`.mcp.json`** — for tools with an MCP server but no connector. You (Claude) add the server entry to `.mcp.json` at the vault root, referencing env vars for secrets, commit, and it loads next session.
 
-### Runtime Mode
+**Never store any credential in a repo file.** If the user pastes a key into the chat, put it in the environment configuration flow below — never into a committed file.
 
-Before anything else, determine which Claude interface the user is using for connections.
-
-AskUserQuestion: "Which Claude interface are you using for this setup?"
-Options:
-- Claude Desktop app (most likely if you downloaded Claude from the web)
-- Claude Code in the terminal / command line
-- Both
-
-Set `CLAUDE_RUNTIME` from their answer.
-
-Connection rules:
-- **Desktop / CoWork**: Built-in integrations must be configured by the user through the **Customize** section in the app settings. **Claude cannot create or modify MCP connections for Desktop users.** Never write `mcpServers` config or instruct yourself to set one up. If a new integration is needed, tell the user what to connect and where to find it in the **Customize** section.
-- **CLI**: Local Claude Code config files are valid. MCP servers can be configured in `~/.claude/settings.json`.
-- **Both**: Use the **Customize** section for Desktop integrations. Only add CLI config for tools they also need in terminal sessions. `.env` works for both.
-
-Before connecting any tools, verify the user's machine has what we need. Run these checks silently and only surface issues.
-
-### Python packages
-
-Run: `python3 -c "import markdown, requests" 2>&1`
-
-If it fails (ModuleNotFoundError), tell the user:
-"I need to install two small Python packages that the system uses for creating Google Docs and calling APIs. This is a one-time setup."
-
-Run: `pip3 install markdown requests`
-
-If pip3 is not found, try `python3 -m pip install markdown requests`.
-
-If that also fails: "Python's package installer (pip) is not set up. Let me fix that."
-Run: `python3 -m ensurepip --upgrade` then retry.
-
-AskUserQuestion: "Python packages installed. Ready to continue?"
-Options:
-- Yes
-- I got an error
-
-### Node.js and npx
-
-Only relevant if `CLAUDE_RUNTIME` includes CLI, or if a local script explicitly needs Node.js. Some CLI MCP servers need Node.js. Check: `npx --version 2>&1`
-
-If npx is not found:
-
-AskUserQuestion: "Some tools need Node.js installed. It is a free runtime -- like a behind-the-scenes engine. Want me to help install it?"
-Options:
-- Yes
-- I already have it, something is wrong with my PATH
-- Skip tools that need it
-
-**If yes (macOS):** Check for Homebrew (`brew --version`). If available: `brew install node`. If no Homebrew: "Go to **nodejs.org** and download the LTS installer. Run it and follow the prompts."
-
-**If yes (Linux):** `curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - && sudo apt-get install -y nodejs` (or guide them to nodejs.org).
-
-After install, verify: `npx --version`
-
-AskUserQuestion: "Node.js is ready. Continuing to tool connections."
-Options:
-- Sounds good
-
-**If everything passes**, skip this step entirely -- no output needed.
+**Two rules about restarts:** new connectors and new environment variables generally attach when a **new session** starts. Plan the flow so all claude.ai-side changes happen in a batch, then the user starts one fresh session and you verify everything at once (Step 3).
 
 ---
 
-## Step 1: Figure Out What to Connect
+## Step 0: Figure Out What to Connect
 
-Read CLAUDE.md to find which tools the user selected during `/onboard`. Also read `.env` to see which credentials are still blank.
+1. Run `git pull --ff-only` (protocol).
+2. Read CLAUDE.md to find which tools the user selected during `/onboard`.
+3. Check what is already live in this session:
+   - Which connector tools are available to you right now (Calendar, Gmail, Slack tools present?)
+   - `printenv FATHOM_API_KEY RIZE_API_KEY` etc. for expected env vars
+   - Read `.mcp.json` for configured servers
 
 Present the list:
 
 "During setup, you said you use these tools:"
-- [List each tool with a one-line description]
-
-"We are going to connect each one now. I will walk you through every step and test each connection before moving on."
+- [Each tool, with status: already connected / not yet connected, and which path it uses]
 
 AskUserQuestion: "Which one should we start with?"
 Options:
-- [List their tools as options, recommending the most impactful one first]
+- [Their tools as options, recommending the most impactful one first — usually Calendar]
 - Just go in order
 
 ---
 
-## Step 2: Connect Each Tool
+## Step 1: Connector-Based Tools (Google, Slack, task managers)
 
-Go through each tool the user selected. After completing each one, say: "[Tool] is connected! [N] more to go. Ready for the next one ([next tool name])?"
+For each tool that has a claude.ai connector, walk through:
 
-**If the user wants to pause**, note which tools are done and which remain. Tell them: "When you come back, type `/connect` and I will pick up with [next tool]."
+1. "Open **claude.ai** in another tab and sign in."
+2. "Click your **profile icon**, then **Settings**."
+3. "Find **Connectors** in the settings menu."
+4. "Find **[Tool]** in the list and click **Connect**."
+5. "[Tool] will ask you to sign in and approve access. Use your **work account** and click **Allow** on each screen."
 
-### Google Calendar and Gmail
-
-**First, determine the connection method:**
-
-AskUserQuestion: "There are two ways to connect Google. Which sounds better to you?"
+AskUserQuestion: "Does [Tool] show as connected on claude.ai?"
 Options:
-- **Easy way (recommended):** Sign in through Claude.ai's settings page. Takes 2 minutes, no technical setup.
-- **Full control way:** Use the `gws` CLI to set up your own Google access. This is the preferred custom path if you also want Google Drive and Docs. Cloud Console is the fallback if the CLI is unavailable.
-- I am not sure, help me decide
-
-**If they are not sure:** "The easy way is best for most people. It gives Claude access to your calendar and email in about 2 minutes. The only reason to choose the full control way is if you also want Claude to create Google Docs or manage files in Google Drive. If you do, prefer the `gws` CLI. You can always add the full control way later."
-
----
-
-#### Easy Way: Claude.ai Managed Connections
-
-Walk through step by step with AskUserQuestion confirmations:
-
-1. "Open your browser and go to **claude.ai**. Sign in to your account."
-
-AskUserQuestion: "Are you on the Claude.ai dashboard?"
-Options:
-- Yes
-- I need to create an account first
-- I am having trouble signing in
-
-2. "Click your **profile icon** in the bottom-left corner, then click **Settings**."
-
-AskUserQuestion: "Are you on the Settings page?"
-Options:
-- Yes
-- I cannot find the profile icon
-- I see something different
-
-3. "In the left sidebar, look for **Integrations** or **Connected Apps**. Click on it."
-
-4. "Find **Google Calendar** and click **Connect**."
-
-5. "Google will ask you to sign in and approve access. Sign in with your work email and click **Allow** on each permissions screen."
-
-AskUserQuestion: "Did Google Calendar connect?"
-Options:
-- Yes, it shows as connected
+- Yes, it shows connected
 - I got an error
-- My work account was blocked -- Google says my organization does not allow this
+- My work account was blocked — it says my organization does not allow this
 
-If blocked:
-AskUserQuestion: "Your work Google account restricts this. What would you like to do?"
+**If blocked by their organization:**
+AskUserQuestion: "Your work account restricts this. What would you like to do?"
 Options:
-- Try with my personal Gmail instead
-- Switch to the full control way (`gws` CLI / Cloud Console fallback)
-- Skip Google for now
+- Try with my personal account instead
+- Ask IT to allow the Claude connector (I will do this later)
+- Skip this tool for now
 
-6. Repeat for **Gmail** if they want email connected.
+**Slack note:** if they have multiple workspaces, connect each one through the connector flow. Note which workspaces are connected in CLAUDE.md.
 
-7. If `CLAUDE_RUNTIME` includes CLI, update CLI permissions in `~/.claude/settings.json`, adding `"mcp__claude_ai_Google_Calendar__*"` and/or `"mcp__claude_ai_Gmail__*"` to the allow list.
-   - If Desktop only: do not write local config here. The integration lives in the app's **Customize** section.
-
-8. Test the connection:
-- "Let me pull up your calendar to make sure it is working..."
-- Use the Google Calendar MCP tools to list upcoming events
-- Show 3-5 upcoming events
-
-AskUserQuestion: "I found these events on your calendar: [list]. Does that look right?"
-Options:
-- Yes, that is my calendar!
-- Those do not look right
-- It returned an error
-
-If successful: "Google Calendar is connected! Claude can now see your schedule, create time blocks, and prep you for meetings."
-
-Repeat test for Gmail if connected.
-
-**Move to the next tool.**
+**Repeat for every connector-based tool before moving on** — batching them means one restart covers all of them (Step 3 verifies).
 
 ---
 
-#### Full Control Way: `gws` CLI (Cloud Console fallback)
+## Step 2: API-Key Tools (Fathom, Rize, and similar)
 
-Prefer the `gws` CLI if it is available on the machine. It is the recommended full-control path because it automates most of the Google setup. If `gws` is unavailable or fails, use the Cloud Console fallback below.
+For each API-key tool:
 
-This fallback walkthrough assumes the user has never seen Cloud Console and has no existing project.
+### 2a: Get the key
 
-##### Check Access
-"Open your browser and go to **console.cloud.google.com**. Sign in with the Google account you want to use."
+Walk them through the tool's own UI, one step at a time (example for Fathom):
+1. "Open **fathom.video** and sign in."
+2. "Go to **Settings**, look for **API** or **Integrations**."
+3. "Generate or copy your API key."
 
-AskUserQuestion: "What do you see?"
-Options:
-- A dashboard or welcome page
-- A page asking me to agree to terms of service
-- "This service is not available" or a blocked page
-- Something else / I am confused
-
-If terms of service: "Click **Agree and Continue**. Let me know when you are through."
-
-If blocked:
-AskUserQuestion: "Your organization blocks Cloud Console. What would you like to do?"
-Options:
-- Switch to the easy way (Claude.ai managed connections) instead
-- Try with my personal Gmail account
-- Ask IT for access (I will do this later)
-- Skip Google for now
-
-##### Create a Project
-1. "At the top of the page, click the **project selector dropdown** (it might say 'Select a project' or show a project name)."
-2. "Click **New Project** in the top-right corner of the popup."
-
-AskUserQuestion: "Do you see the New Project form?"
-Options:
-- Yes, I see fields for Project name and Location
-- I do not see a New Project button
-- I already have a project I want to use
-
-3. "For **Project name**, type **Claude Assistant**. Leave Location as-is. Click **Create**."
-4. "Wait a few seconds, then select your new project from the dropdown at the top."
-
-AskUserQuestion: "Are you inside the project? You should see 'Claude Assistant' in the top-left."
+AskUserQuestion: "Got the API key copied?"
 Options:
 - Yes
-- Not sure
+- I cannot find it (may require a specific plan)
+- My plan does not include API access
 
-##### Enable APIs
-"Now we flip the switches to allow access to your Google services."
+(If plan issue: "We can skip this and process transcripts manually, or check the pricing page for which plan includes API access.")
 
-For each API, one at a time:
+### 2b: Store it in the environment (NOT the repo)
 
-**Google Calendar API:**
-- "Type **Google Calendar API** in the search bar at the top. Press Enter."
-- "Click **Google Calendar API** in the results."
-- "Click the blue **Enable** button."
+1. "Go to **claude.ai/code**, open this repository's **environment settings**, and find **Environment variables**."
+2. "Add a variable: name **[VAR_NAME]** (e.g. `FATHOM_API_KEY`), value: paste the key."
+3. "Save."
 
-AskUserQuestion: "Does it say enabled?"
+AskUserQuestion: "Is the variable saved?"
 Options:
 - Yes
-- I see an error
-- I cannot find it
-
-**Gmail API:**
-- "Search bar again: type **Gmail API**. Click it, click **Enable**."
-
-AskUserQuestion: "Gmail API enabled?"
-Options:
-- Yes
-- No / error
-
-**Google Drive API** (only if they want Drive/Docs):
-- Same process.
-
-##### OAuth Consent Screen
-"Now Google needs to know what app is asking for access. Just a few form fields."
-
-1. "In the left sidebar: **APIs & Services** > **OAuth consent screen**."
-   - If no sidebar: "Click the hamburger menu (three lines) top-left, scroll to APIs & Services."
-
-AskUserQuestion: "What do you see?"
-Options:
-- Choosing between Internal and External
-- A consent screen already configured
-- Something else
-
-2. If choosing: "Pick **Internal** if available (company account). Otherwise pick **External**. Click **Create**."
-
-3. Fill in the form:
-   - "**App name:** Claude Assistant"
-   - "**User support email:** Select your email"
-   - "**Developer contact:** Your email again at the bottom"
-   - "Skip logo and domain fields"
-   - "Click **Save and Continue**"
-
-4. Scopes page:
-   - "Click **Add or Remove Scopes**"
-   - "Search for and check:"
-     - `https://www.googleapis.com/auth/calendar`
-     - `https://www.googleapis.com/auth/gmail.modify`
-     - `https://www.googleapis.com/auth/drive` (if applicable)
-   - "Click **Update**, then **Save and Continue**"
-
-5. Test Users (External only):
-   - "Click **Add Users**, enter your email, click **Add**, then **Save and Continue**"
-
-6. Summary: "Click **Back to Dashboard**"
-
-AskUserQuestion: "Did you get through the consent screen?"
-Options:
-- Yes, I am back at the dashboard
-- I got stuck
-- Error about organization policies
-
-##### Create Credentials
-1. "Left sidebar: **APIs & Services** > **Credentials**"
-2. "Click **+ Create Credentials** > **OAuth client ID**"
-
-AskUserQuestion: "Do you see the form?"
-Options:
-- Yes, asking for Application type
-- Error about consent screen
-- Something else
-
-3. "**Application type:** Desktop app. **Name:** Claude Assistant. Click **Create**."
-
-4. "A popup shows your **Client ID** and **Client Secret**. Copy both now. You can also click **Download JSON**."
-
-AskUserQuestion: "Did you copy both values?"
-Options:
-- Yes, I have them
-- I closed the popup (walk them to Credentials page to find it)
+- I cannot find environment settings
 - Something went wrong
 
-##### Get Refresh Token
-"Last step. One-time sign-in to get a long-lasting key."
+### 2c: Network access for the tool's API
 
-1. "New tab: **developers.google.com/oauthplayground**"
-2. "Click the **gear icon** (top-right). Check **Use your own OAuth credentials**. Paste your Client ID and Secret. Click **Close**."
-3. "On the left, find and check:"
-   - Google Calendar API v3: `https://www.googleapis.com/auth/calendar`
-   - Gmail API v1: `https://www.googleapis.com/auth/gmail.modify`
-   - (Drive if applicable)
-4. "Click **Authorize APIs**."
-5. "Sign in and click **Allow**."
-   - "If you see 'Google hasn't verified this app': click **Advanced** > **Go to Claude Assistant (unsafe)**. This is normal for personal projects."
-6. "Click **Exchange authorization code for tokens**."
-7. "Copy the **Refresh token** (long string starting with `1//`)."
+"One more setting in the same place: **Network access**. If it is not already on **Custom** with extra domains, set it to **Custom** and add: **[the tool's API domain]**." Common domains:
+- Fathom: `api.fathom.ai`
+- Rize: `api.rize.io`
+- (For other tools, find the API base URL in their docs and add that domain.)
 
-AskUserQuestion: "Did you get the refresh token?"
-Options:
-- Yes
-- Error during authorization
-- No refresh token showing
-- I got lost
+### 2d: Create the reference pointer
 
-##### Save and Test
-Save all three values to their `.env` file:
+Write `Resources/API Keys/[Tool].md` (pointer only, never the value):
+```markdown
+# [Tool] API Key
+- **Stored as**: environment variable `[VAR_NAME]` (Claude Code environment config)
+- **Type**: [API key header / Bearer token]
+- **Scopes**: [what it can access]
+- **Network**: requires `[domain]` on the environment allowlist
 ```
-GOOGLE_CLIENT_ID=<value>
-GOOGLE_CLIENT_SECRET=<value>
-GOOGLE_REFRESH_TOKEN=<value>
-```
-
-Ask the user to paste each value.
-
-Test:
-```bash
-source "<vault_path>/.env"
-ACCESS_TOKEN=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
-  --data "grant_type=refresh_token&client_id=${GOOGLE_CLIENT_ID}&client_secret=${GOOGLE_CLIENT_SECRET}&refresh_token=${GOOGLE_REFRESH_TOKEN}" \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
-curl -s "https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=3&timeMin=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-  -H "Authorization: Bearer $ACCESS_TOKEN" \
-  | python3 -c "import sys,json; events=json.load(sys.stdin).get('items',[]); [print(f'  {e.get(\"summary\",\"(no title)\")}') for e in events[:3]]" 2>/dev/null
-```
-
-AskUserQuestion: "I found these events: [list]. Look right?"
-Options:
-- Yes!
-- Not right
-- Error
-
-If successful: "Google is connected!"
-
-**Move to the next tool.**
 
 ---
 
-### ClickUp
+## Step 3: Restart and Verify Everything
 
-Walk through every step:
+Once all claude.ai-side changes are done:
 
-1. "Open **ClickUp** in your browser and sign in."
+1. Commit and push any repo changes made so far (`git add -A && git commit -m "Connect: integration docs" && git push`).
+2. Tell the user: "Now the moment of truth. Environment changes load when a fresh session starts. Close this session, start a **new session** on this repo at claude.ai/code, and type `/connect` — I will pick up right here and test everything." (The command detects already-documented tools in Step 0 and jumps to verification.)
 
-2. "Click your **avatar** (bottom-left), then **Settings**."
+**In the fresh session, verify each tool with real data:**
 
-AskUserQuestion: "Are you in ClickUp Settings?"
-Options:
-- Yes
-- Cannot find settings
+- **Calendar**: list the next 3-5 upcoming events. AskUserQuestion: "I found these events: [list]. Does that look right?"
+- **Gmail**: fetch today's most recent 3 subjects (read-only). Confirm.
+- **Slack**: list a few channels from each workspace. Confirm.
+- **Task manager**: list their spaces/projects. Confirm.
+- **API-key tools**: `printenv [VAR]` to confirm presence, then one lightweight API call (e.g., Fathom: list last 3 meetings). Confirm. If the call fails with a network error, the domain is missing from the allowlist — walk them back to network settings.
 
-3. "In the left sidebar, click **Apps** (or **Integrations**). Look for **API Token**. Click **Generate** if needed. Copy the token."
+After each: "[Tool] is connected! [N] more to go."
 
-AskUserQuestion: "Got the API token?"
-Options:
-- Yes
-- Cannot find the API Token section
-- Error
-
-4. Save to `.env`:
-```
-CLICKUP_API_KEY=<token>
-```
-
-5. **Choose the connection path based on `CLAUDE_RUNTIME`.**
-
-**If Desktop or Both:**
-- Check whether ClickUp is available in the app's **Customize** section.
-- If yes, walk the user through connecting it there. Do not rely on a local `mcpServers` file for Desktop.
-- If no Desktop integration exists, keep the API token in `.env` and treat ClickUp as an API-based integration for now.
-
-**If CLI or Both and they want terminal support too:**
-- Read `~/.claude/settings.json`. Add a `mcpServers` block for ClickUp (merge with existing mcpServers if any):
-
-```json
-{
-  "mcpServers": {
-    "clickup": {
-      "command": "npx",
-      "args": ["-y", "@anthropic/mcp-remote", "https://mcp.clickup.com/s/mc_live_XXX"],
-      "env": {}
-    }
-  }
-}
-```
-
-**Important:** The exact server URL or package depends on the ClickUp MCP server version available at setup time. Use WebSearch to find the current ClickUp MCP server setup command if the above does not work. Common alternatives:
-- `npx -y @anthropic/mcp-remote https://mcp.clickup.com/s/<connection_id>` (ClickUp's hosted MCP)
-- `npx -y clickup-mcp-server` (community package with `CLICKUP_API_KEY` env var)
-
-If using an API-key-based server, pass the key via the env block:
-```json
-{
-  "clickup": {
-    "command": "npx",
-    "args": ["-y", "clickup-mcp-server"],
-    "env": {
-      "CLICKUP_API_KEY": "<their token>"
-    }
-  }
-}
-```
-
-After writing the CLI config, tell the user: "I have added the ClickUp connection to your CLI settings. Let me test it."
-
-6. **Test the connection.**
-- If they connected ClickUp through the Desktop **Customize** section or CLI MCP server, use the ClickUp tools to list their workspaces or spaces. Show results.
-- If they are using the API-token fallback, test with a lightweight ClickUp API call using the token saved in `.env`.
-
-AskUserQuestion: "I found these ClickUp spaces: [list]. Right?"
-Options:
-- Yes!
-- Something is off
-- Error / no results
-
-**If error:** Read the error message. Common fixes:
-- "command not found" → Node.js/npx is not installed (go back to Step 0)
-- "unauthorized" → API key is wrong, ask them to regenerate
-- "ENOTFOUND" → server URL is wrong, search for the current package name
-
-If successful: "ClickUp is connected! I can now create tasks, update statuses, and sync your vault with ClickUp."
-
-**Move to next tool.**
+**If a connector's tools are not available in the session**, the connector is not attached: check it shows "Connected" on claude.ai, then start one more fresh session. If it still does not appear, note it and move on — tell the user to check the connector's status later; do not fabricate access.
 
 ---
 
-### Fathom (Meeting Transcripts)
+## Step 4: MCP Servers (only if needed)
 
-1. "Open **fathom.video** and sign in."
+If a selected tool has no connector and no simple REST API, check for an MCP server (WebSearch: `"[tool name] MCP server"`).
 
-2. "Go to your **Settings** (profile icon or menu)."
-
-AskUserQuestion: "In Fathom settings?"
-Options:
-- Yes
-- Cannot find settings
-
-3. "Look for **API**, **Integrations**, or **Developer**. Find your API key or generate one."
-
-AskUserQuestion: "Got the API key?"
-Options:
-- Yes
-- Cannot find it (may require a specific Fathom plan)
-- My plan does not seem to include this
-
-If plan issue: "Fathom API access may require a paid plan. We can skip this for now and use manual transcript processing. Or check fathom.video/pricing to see which plan includes API."
-
-4. Save to `.env`:
-```
-FATHOM_API_KEY=<key>
-```
-
-5. Test:
-```bash
-source "<vault_path>/.env"
-curl -s -H "X-Api-Key: ${FATHOM_API_KEY}" \
-  "https://api.fathom.ai/external/v1/meetings?limit=3" \
-  | python3 -c "import sys,json; meetings=json.load(sys.stdin).get('meetings',[]); [print(f'  {m.get(\"title\",\"(no title)\")} -- {m.get(\"date\",\"\")}') for m in meetings[:3]]" 2>/dev/null
-```
-
-AskUserQuestion: "Found these meetings: [list]. Look right?"
-Options:
-- Yes!
-- No meetings (might be new)
-- Error
-
-If successful: "Fathom is connected! Your call transcripts will be pulled automatically during end-of-day."
-
-**Move to next tool.**
-
----
-
-### Slack
-
-"Slack takes a few more steps than the others, but we will go through each one."
-
-1. "Open **api.slack.com/apps** in your browser."
-
-AskUserQuestion: "What do you see?"
-Options:
-- Your Apps page
-- Slack login
-- Something else
-
-2. "Click **Create New App** > **From scratch**."
-3. "**App Name:** Claude Assistant. **Workspace:** [their workspace]. Click **Create App**."
-
-AskUserQuestion: "On the app settings page?"
-Options:
-- Yes
-- Error about workspace permissions (admin may need to approve)
-- Something else
-
-4. "Left sidebar: **OAuth & Permissions**."
-5. "Scroll to **Scopes** > **User Token Scopes**. Add these one at a time:"
-   - `channels:history`
-   - `channels:read`
-   - `chat:write`
-   - `im:history`
-   - `im:read`
-   - `mpim:history`
-   - `mpim:read`
-   - `users:read`
-
-AskUserQuestion: "All 8 scopes added?"
-Options:
-- Yes
-- Cannot find where to add scopes
-- Some are not available
-
-6. "Scroll up: **Install to Workspace** > **Allow**."
-7. "Copy the **User OAuth Token** (starts with `xoxp-`)."
-
-AskUserQuestion: "Got the token?"
-Options:
-- Yes
-- No token showing
-- Error during install
-
-8. Save to `.env`:
-```
-SLACK_TOKEN_WORKSPACE_A=<token>
-```
-
-9. Test:
-```bash
-source "<vault_path>/.env"
-curl -s "https://slack.com/api/conversations.list?types=public_channel&limit=5" \
-  -H "Authorization: Bearer ${SLACK_TOKEN_WORKSPACE_A}" \
-  | python3 -c "import sys,json; chs=json.load(sys.stdin).get('channels',[]); [print(f'  #{c[\"name\"]}') for c in chs[:5]]" 2>/dev/null
-```
-
-AskUserQuestion: "Found these channels: [list]. Your workspace?"
-Options:
-- Yes!
-- Not right
-- Error
-
-If they have multiple workspaces: "Want to connect the next workspace now?" Repeat for each.
-
-**Move to next tool.**
-
----
-
-### Rize (Time Tracking)
-
-1. "Open **rize.io** and sign in."
-2. "Go to account settings."
-3. "Find API key and copy it."
-
-AskUserQuestion: "Got it?"
-Options:
-- Yes
-- Cannot find it
-- My plan might not include API
-
-4. Save to `.env` and test.
-
-**Move to next tool.**
-
----
-
-### Other Tools
-
-For tools not covered above (Asana, Trello, Todoist, Teams, Otter, Fireflies, Toggl, Harvest, etc.):
-
-**First, check if an integration exists for the tool.** Use WebSearch: `"[tool name] Claude integration"`, `"[tool name] MCP server" claude`, or `"[tool name] model context protocol"`.
-
-**If a Desktop/CoWork integration exists and `CLAUDE_RUNTIME` includes Desktop:**
-1. Tell the user which integration to add and walk them through finding it in the **Customize** section. **Do not attempt to configure this yourself** -- only the user can add integrations through the Desktop/CoWork **Customize** section.
-2. Once they confirm it is connected, test with a lightweight tool call
-3. Update CLAUDE.md integrations section
-
-**If a CLI MCP server exists and `CLAUDE_RUNTIME` is CLI only:**
-1. Search for the install command (usually `npx -y @some-org/mcp-server-toolname`)
-2. Walk the user through getting credentials (API key, OAuth token, etc.)
-3. Save credentials to `.env`
-4. Add the `mcpServers` entry to `~/.claude/settings.json`:
+If a maintained server exists:
+1. Add it to `.mcp.json` at the vault root. Reference env vars for secrets — never paste values:
    ```json
    {
      "mcpServers": {
        "toolname": {
          "command": "npx",
-         "args": ["-y", "@some-org/mcp-server-toolname"],
-         "env": {
-           "TOOL_API_KEY": "<value from .env>"
-         }
+         "args": ["-y", "some-mcp-server-package"],
+         "env": { "TOOL_API_KEY": "${TOOL_API_KEY}" }
        }
      }
    }
    ```
-5. Add `"mcp__toolname__*"` to the `permissions.allow` array in `~/.claude/settings.json`
-6. Test with a lightweight MCP tool call
-7. Update CLAUDE.md integrations section (add to "Direct Connections")
-
-**If no usable Desktop integration or CLI MCP server exists:**
-1. Search for the tool's REST API documentation
-2. Walk the user through getting an API key or personal access token
-3. Save to `.env`
-4. Test with a curl call
-5. Update CLAUDE.md integrations section (add to "Tools That Need Login Credentials")
-
-**For Python-based tools** (scripts that need pip packages):
-1. Check if the required packages are installed: `python3 -c "import packagename" 2>&1`
-2. If missing: `pip3 install packagename`
-3. Document the dependency in the script's docstring and in CLAUDE.md under Local Tools
+2. Have the user add `TOOL_API_KEY` to the environment variables (Step 2b pattern), plus any domains the server calls to the network allowlist.
+3. Commit `.mcp.json`, push, fresh session, verify with a lightweight tool call.
 
 ---
 
-## Step 3: Final Check
+## Step 5: Final Check
 
 When all tools are connected (or explicitly skipped):
 
-### Verify integration setup
+### Verify documentation
 
-If `CLAUDE_RUNTIME` includes CLI, read `~/.claude/settings.json` and confirm:
-1. Every connected CLI MCP server has an entry in `mcpServers`
-2. Every CLI MCP server has a matching `"mcp__servername__*"` entry in `permissions.allow`
-3. No placeholder values remain (no `your_...` or `<token>` strings in env blocks)
-
-If anything is missing, fix it now.
-
-### Verify .env
-
-Read the vault's `.env` and confirm:
-1. Every API-based tool has its credential filled in (not placeholder)
-2. No commented-out credentials for tools that were successfully connected
-
-### Verify CLAUDE.md
-
-Read CLAUDE.md and confirm:
-1. Connected tools are listed under the correct section (Direct Connections or Tools That Need Login Credentials)
-2. Skipped tools are removed or commented out
-3. Any new Local Tools scripts are documented
+1. CLAUDE.md lists every connected tool under the right section (Connectors / API-Key Tools / MCP Servers), and skipped tools are removed
+2. Every API-key tool has a pointer file in `Resources/API Keys/`
+3. `Resources/Reference/API Integration Guide.md` documents endpoints and gotchas for any tool you called via REST
 
 ### Present the summary
 
 "Here is where we stand:"
-- List each tool with ✓ (connected and tested) or ○ (skipped, with reason)
-- Note which tools were connected in the Desktop app UI, which were configured for CLI, and which credentials were saved in `.env`
+- Each tool with ✓ (connected and tested) or ○ (skipped, with reason)
+- Which path each uses (connector / env var / MCP)
 
-Then: "All your tools are connected and tested. The last step is `/finish` -- I will show you the system in action with your real data and teach you how to get the most out of it over time. Type `/finish` when you are ready."
+### Save
+
+```bash
+git add -A && git commit -m "Connect: [N] tools connected and documented" && git push
+```
+
+Then: "All your tools are connected and tested. The last step is `/finish` — I will show you the system in action with your real data, set up your nightly automation, and teach you how to get the most out of it. Type `/finish` when you are ready."

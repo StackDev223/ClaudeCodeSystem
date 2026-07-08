@@ -1,64 +1,28 @@
-# ClaudeCodeSystem Setup Repo
+# ClaudeCodeSystem Cloud Vault (Not Yet Personalized)
 
-This is the setup repository for the Claude Code Personal Assistant System. It is NOT a vault -- it contains the templates, examples, and setup commands used to build a vault.
+This repository is a **fresh Claude Code System vault** — the cloud edition. It was created from Integral's template and has not been set up yet. Once setup runs, this file is replaced by the owner's personalized instruction manual.
 
-## If the user opens Claude Code in this folder
+## If you are reading this, setup has not run
 
-Guide them to type `/onboard` to begin setup. The skills are in `.claude/commands/` and are ready to use.
+Guide the user to type `/onboard` to begin. The setup interview takes about 20 minutes and personalizes everything in place: folder structure, this CLAUDE.md, the commands, and the knowledge graph starters.
 
-## If this folder is inside an Obsidian vault (bootstrap mode)
+If the user says anything like "set me up", "help me get started", or "what is this?", explain in one or two friendly sentences ("This repo becomes your personal assistant's brain — I'll interview you and build it around your work") and start `/onboard` for them.
 
-The user may have downloaded this repo and dropped it inside their existing notes folder. Detect this by checking:
-1. Does a parent directory contain `.obsidian/` or other vault files?
-2. Is this folder nested (e.g., `Brain/ClaudeCodeSystem-main/` or `Brain/ClaudeCodeSystem/`)?
+## Runtime facts (apply even during setup)
 
-If yes, **bootstrap automatically**:
+1. **This vault is a git repository and git is the storage layer.** In Claude Code on the web, the container is temporary — anything not committed and pushed is lost when the session's environment is reclaimed. Commit and push after every phase that creates or changes files. Work directly on `main` unless the user has told you otherwise.
+2. **Detect where you are running.** If the environment variable `CLAUDE_CODE_REMOTE` is `true` (or your system prompt says you are in a managed remote/cloud environment), you are in Claude Code on the web. Otherwise you are in a local CLI session. `/onboard` branches on this.
+3. **The container clock is UTC.** Never trust bare `date` for the user's calendar day. Until the user's timezone is configured (a `TZ` environment variable plus a rule in the personalized CLAUDE.md), ask the user what day it is for them if it matters.
+4. **Never write secrets into this repository.** No API keys, tokens, or passwords in any file, ever — this repo lives on GitHub. Credentials belong in claude.ai connectors or in the Claude Code environment configuration (environment variables). There is deliberately no `.env` file in this system.
 
-1. Identify the vault root (the directory containing `.obsidian/` or the nearest parent that looks like a vault root).
-2. Copy all files from this repo's `.claude/commands/` to the vault root's `.claude/commands/`:
-   ```
-   mkdir -p <vault_root>/.claude/commands/
-   cp .claude/commands/*.md <vault_root>/.claude/commands/
-   ```
-3. Tell the user: "I found the setup files and copied the commands to your vault. You can now type `/onboard` to begin, or I can start it for you."
-4. Offer to start `/onboard` immediately.
+## What ships in this template
 
-## If the user just says "set me up" or "help me get started"
+- `.claude/commands/` — every skill, ready to use (`/onboard`, `/train`, `/connect`, `/automate`, `/finish`, `/morning`, `/eod` and its phases, `/handoff`, `/pickup`, and more)
+- `.claude/settings.json` + `.claude/hooks/session-start.sh` — session bootstrap (dependency install, date/timezone orientation)
+- `setup/` — the CLAUDE.md template, methodology doc, and cloud setup guides used by `/onboard` (archived by `/finish` when setup completes)
+- `System/state/` and `System/memory/` — durable machine state and memory (committed, unlike `/tmp`)
+- `scripts/` — reusable API helpers (credentials come from environment variables)
 
-Read `.claude/commands/onboard.md` from this repo and execute it directly. The user does not need to know about skills to get started.
+## For maintainers of the template itself
 
-## Dual-Format Slash Commands (Code vs CoWork)
-
-Slash commands exist in **two formats** to support both Claude Code (CLI) and Claude CoWork (web app):
-
-| Format | Location | Frontmatter | How Users Get Them |
-|--------|----------|-------------|-------------------|
-| Claude Code | `.claude/commands/` | None needed | Auto-discovered by Claude Code; copied to vault during `/onboard` Phase 6E |
-| Claude CoWork | `cowork-commands/` | YAML `---` block with `name:` and `description:` | Manually uploaded by user through the **Customize** section in CoWork settings |
-
-**Maintenance rule: when you create or modify a slash command, you MUST update both versions.** The CoWork version is identical to the Code version except for the YAML frontmatter block at the top of the file:
-
-```yaml
----
-name: command-name
-description: One-line description of what the command does.
----
-```
-
-The `name` field should match the filename (without `.md`). The `description` should be a clear one-liner that helps the user understand when to use the command.
-
-**There is exactly one folder of Code commands: `.claude/commands/`.** (The old `examples/commands/` folder was removed -- it created the illusion that some commands were optional examples, which is how they kept getting dropped during onboarding. All commands are first-class and shipped.)
-
-**To add a new command:**
-1. Create the Code version in `.claude/commands/`
-2. Copy it to `cowork-commands/` and prepend the YAML frontmatter
-
-That is it. **You do NOT need to register the command anywhere in `onboard.md`.** Phase 6E installs *every* `.md` from `.claude/commands/` (and uploads every file from `cowork-commands/`) with an unconditional glob copy. Any command you add to that folder ships to every user automatically. There is deliberately no hand-maintained install list, because that list is what kept dropping commands during onboarding.
-
-**To modify an existing command:**
-1. Edit the Code version (the source of truth)
-2. Copy the changes to the matching file in `cowork-commands/` (preserve the YAML frontmatter)
-
-## After setup is complete
-
-This repo is no longer needed. Everything gets copied into the user's vault during `/onboard`. The `/finish` command offers to archive this folder.
+If this repo is the template (Integral's master copy, not a client vault): commands live only in `.claude/commands/`, there is no CoWork mirror in this edition, and every command must follow the Runtime & Persistence Protocol defined in `setup/templates/CLAUDE.md`. Test changes by instantiating a scratch vault from the template and running `/onboard` in a web session.

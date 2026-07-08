@@ -99,3 +99,13 @@ After a decision is made, log it:
 3. If it changed a tool or process, update CLAUDE.md
 
 Decisions that are not recorded get re-litigated. Write it down.
+
+---
+
+## Persistence
+
+If the decision or analysis was recorded in the vault, finish by saving (Runtime & Persistence Protocol in CLAUDE.md):
+
+```bash
+git add -A && git commit -m "Strategy: <decision topic>" && git push
+```

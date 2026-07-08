@@ -1,10 +1,10 @@
-# EOD Phase 5: Generate Tomorrow's Today.md
+# EOD Phase 5: Generate Tomorrow's Today.md (Cloud Edition)
 
 Reads the manifest, inbox files, today's plan, and tomorrow's calendar. Produces a fresh `Inbox/Today.md` with schedule, prioritized tasks, meeting prep, and deadline radar.
 
-**This phase is the last in the pipeline.** It reads everything earlier phases wrote to disk and produces one output file.
+**This phase is the last content phase in the pipeline.** It reads everything earlier phases wrote to disk and produces one output file.
 
-**Critical rule: Full overwrite.** `Inbox/Today.md` is ephemeral. Write the entire file from scratch every run using the Write tool.
+**Critical rule: Full overwrite.** `Inbox/Today.md` is ephemeral. Write the entire file from scratch every run using the Write tool. (Git history preserves every prior version automatically.)
 
 **Critical rule: Source every task.** Every work task must include a `<!-- src:Inbox/ClientA.md|fingerprint -->` tag. Fingerprint is a 30-40 char substring unique enough to locate the task via substring match.
 
@@ -14,17 +14,19 @@ Reads the manifest, inbox files, today's plan, and tomorrow's calendar. Produces
 
 ## Step 1: Setup
 
-1. Run `date` to get today's date and current time
-2. Compute `TOMORROW` (format: `YYYY-MM-DD` and display name like `Wednesday, March 18, 2026`)
-3. Source `.env` at vault root for API credentials
-4. Confirm manifest exists at `/tmp/eod-manifest-TODAY.md` (warn if missing, continue)
+1. Get the date **in the user's timezone**: `TZ="[IANA-Timezone]" date "+%Y-%m-%d %A %H:%M"`
+2. Compute `TOMORROW` (format: `YYYY-MM-DD` and display name like `Wednesday, March 18, 2026`):
+   ```bash
+   TZ="[IANA-Timezone]" date -d "tomorrow" "+%Y-%m-%d %A, %B %d, %Y"
+   ```
+3. Confirm the manifest exists at `System/state/eod-manifest-$TODAY.md` (warn if missing, continue)
 
 ---
 
-## Step 2: Calendar Fetch
+## Step 2: Calendar
 
-1. Read cached calendar at `/tmp/eod-calendar-TODAY.md` (from Phase 1). If missing, fetch via Google Calendar API with OAuth refresh token for TOMORROW's date range.
-2. Build schedule table with daily skeleton, slotting meetings into their times:
+1. Read the cached calendar at `System/state/eod-calendar-$TODAY.md` (from Phase 1). If missing, fetch tomorrow's events now via the Calendar connector tools; convert times to [Your Timezone].
+2. Build the schedule table from the daily skeleton in CLAUDE.md, slotting meetings into their times:
 
    | Time | Block | Notes |
    |------|-------|-------|
@@ -39,7 +41,7 @@ Reads the manifest, inbox files, today's plan, and tomorrow's calendar. Produces
 
 ## Step 3: Morning Exceptions
 
-1. Scan tomorrow's events for anything before the meeting window (before 1:00 PM)
+1. Scan tomorrow's events for anything before the meeting window
 2. If found, list each with time, title, and impact (e.g., "cuts Deep Work 1 short")
 3. If none: "None. Full deep work block protected."
 
@@ -60,9 +62,8 @@ Reads the manifest, inbox files, today's plan, and tomorrow's calendar. Produces
 Before generating, read TODAY's `Inbox/Today.md` (the one being replaced).
 
 ### Brain Dump carry-forward
-If Today.md has a `## Brain Dump` section with remaining items (not strikethrough/routed by EOD Phase 1):
 1. Personal items, ideas, and unrouted items carry forward into tomorrow's Brain Dump section as-is
-2. Items that were successfully routed by Phase 1 (marked with strikethrough) are dropped
+2. Items routed by Phase 1 (strikethrough) are dropped
 
 ### Task carry-forward
 1. Find unchecked non-meeting tasks (`- [ ]` without `<!-- type:meeting -->`)
@@ -77,7 +78,7 @@ If Today.md has a `## Brain Dump` section with remaining items (not strikethroug
 
 ## Step 6: Meeting Prep
 
-For each meeting tomorrow, pull context from client Company Profile, recent transcripts, and open tasks. Format:
+For each meeting tomorrow, pull context from the client Company Profile, recent transcripts, and open tasks:
 ```markdown
 ### HH:MM -- Meeting Title
 **Attendees:** [Contact Name], [Your Name]
@@ -93,30 +94,19 @@ For each meeting tomorrow, pull context from client Company Profile, recent tran
 
 ## Step 7: Deadline Radar
 
-Scan all client inbox files for deadlines in the next 7 days. Build a table sorted by date:
-```markdown
-| Deadline | Client | Task | Status |
-|----------|--------|------|--------|
-| Mar 19 | [Client A] | API integration | In progress |
-```
-Omit the section entirely if no deadlines found.
+Scan all client inbox files for deadlines in the next 7 days. Table sorted by date; omit the section if none.
 
 ---
 
 ## Step 8: North Star Goals
 
-Read strategic goals from each client Company Profile. Format one line per client:
-```
-**[Client A]:** Ship checkout flow integration
-**[Client B]:** v2 launch prep
-**Personal:** Not yet set
-```
+Read strategic goals from each client Company Profile. One line per client; "Not yet set" where empty.
 
 ---
 
 ## Step 9: Team Priorities
 
-Generate copy/paste-ready Slack message with **Primary focus** (1-2 items), **Secondary (if time allows)** (1 item), and **Blockers to flag**.
+Generate a copy/paste-ready Slack message with **Primary focus** (1-2 items), **Secondary (if time allows)** (1 item), and **Blockers to flag**.
 
 ---
 
@@ -124,7 +114,7 @@ Generate copy/paste-ready Slack message with **Primary focus** (1-2 items), **Se
 
 Assemble and write `Inbox/Today.md` using the Write tool. Section order:
 1. `# Today -- DayOfWeek, Month DD, YYYY`
-2. `## Brain Dump` -- quick capture area with carry-forward items from yesterday (if any)
+2. `## Brain Dump` -- quick capture area with carry-forward items (if any)
 3. `## Schedule` (table)
 4. `## Morning Exceptions`
 5. `## Tasks` -- subsections: Deep Work 1, Meeting Window, Deep Work 2, Carried Forward
@@ -133,15 +123,19 @@ Assemble and write `Inbox/Today.md` using the Write tool. Section order:
 8. `## This Week's North Star`
 9. `## Team Priorities`
 10. `## Adjustments` -- empty checkbox placeholder for morning review
-11. Footer: `*Generated by EOD Phase 5 at HH:MM PM [TZ]*`
+11. Footer: `*Generated by EOD at HH:MM [Your Timezone]*`
 
 ---
 
-## Step 11: Summary
+## Step 11: Summary and Save
 
 Print confirmation:
 ```
 Today.md generated for Wednesday, March 18, 2026
   5 tasks selected | 2 meetings | 1 carried forward | 2 deadlines this week
-  Generated at 11:47 PM [TZ]
+```
+
+**Save** (when running as a standalone session — inside single-command `/eod`, the final `/eod` save covers it):
+```bash
+git add -A && git commit -m "EOD $TODAY phase 5: Today.md for $TOMORROW" && git push
 ```

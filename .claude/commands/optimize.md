@@ -24,7 +24,7 @@ Based on their choice:
 
 **If tech stack:**
 - Read CLAUDE.md integrations section for currently connected tools
-- Read `.env` for all configured services
+- Check which credentials are configured: connector tools available this session, `printenv | grep -E 'KEY|TOKEN' | cut -d= -f1` for API-key env vars, and `.mcp.json` for MCP servers
 - Ask: "Are there tools you pay for that are not listed here?"
 - Build a table: Tool, Purpose, Monthly Cost (if known), How Often Used
 
@@ -116,3 +116,13 @@ For approved changes:
 For items saved for later:
 - Add to the relevant client file in `Inbox/`, or `Inbox/[YourCompany].md` if cross-client, with a target date
 - Include the analysis so you do not have to redo it
+
+---
+
+## Persistence
+
+This workflow records analysis and decisions in the vault. Finish by saving (Runtime & Persistence Protocol in CLAUDE.md):
+
+```bash
+git add -A && git commit -m "Optimize: <focus area>" && git push
+```

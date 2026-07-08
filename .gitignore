@@ -1,34 +1,34 @@
-# Environment and secrets
+# Secrets never live in this repo — use claude.ai connectors and
+# environment variables in your Claude Code environment configuration.
+# (.env is ignored defensively in case one is ever created by mistake.)
 .env
 .env.*
-!.env.example
 
-# macOS
+# Heavy binaries stay out of git so session clones stay fast.
+# Store files in Drive/Dropbox and link to them from notes.
+Attachments/
+
+# OS noise
 .DS_Store
 ._*
+Thumbs.db
 
-# Obsidian
-.obsidian/
+# Obsidian (optional local viewer): keep shared config, ignore per-device churn
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache/
+.obsidian/plugins/*/data.json
 
-# Claude Code (ignore everything except commands/)
-.claude/*
-!.claude/commands/
-
-# Node
-node_modules/
-
-# Python
+# Python / Node
 __pycache__/
 *.pyc
 *.pyo
 .venv/
+node_modules/
 
 # Logs
 *.log
-/tmp/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# NOTE: .claude/ is deliberately NOT ignored. On Claude Code on the web,
+# repo-committed .claude/settings.json, .claude/hooks/, .claude/commands/,
+# and .mcp.json are how sessions get configured. Keep them in git.

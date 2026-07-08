@@ -1,233 +1,137 @@
-# Claude Code Personal Assistant System
+# Claude Code Personal Assistant System — Cloud Edition
 
-An AI-powered personal assistant built on [Obsidian](https://obsidian.md) + [Claude Code](https://docs.anthropic.com/en/docs/claude-code). The vault is the operating system; Claude Code is the brain. Together they handle task management, meeting processing, email triage, time tracking, client work, and daily planning -- replacing a human executive assistant.
+An AI-powered personal assistant that runs in the cloud. Your vault (notes, tasks, plans) is a **private GitHub repository**; Claude Code operates on it from **claude.ai/code** — from any device, on a schedule, with your computer off. It handles task management, meeting processing, email triage, daily planning, and client work, replacing a human executive assistant.
 
-It can be used from either the Claude Desktop app or the Claude Code CLI. The setup now asks which one the user is using and changes the integration setup path accordingly.
-
-> **You do not need to be technical.** Claude will walk you through everything step by step.
+> **You do not need to be technical.** Claude walks you through everything step by step.
 >
-> **What you will need:** A Mac or PC, [Obsidian](https://obsidian.md) (free), and a [Claude Max subscription](https://claude.ai) ($100/month -- includes Claude Code).
+> **What you will need:** a free [GitHub](https://github.com) account, and a [Claude subscription](https://claude.ai) with access to Claude Code on the web.
 >
-> **Windows users:** Complete the Windows setup steps below before opening Claude for the first time.
-
-## Windows Setup (do this first)
-
-Skip this section if you are on Mac or Linux.
-
-These steps must be done **before** opening Claude Code. They require one restart, so we batch them together.
-
-**Step 1: Create your notes folder**
-- Open File Explorer, go to your **Documents** folder, and create a new folder called **Brain**
-
-**Step 2: Enable Developer Mode**
-- Open **Settings** > **System** > **For developers** (or search "Developer Mode" in Settings)
-- Turn on **Developer Mode** and confirm if prompted
-
-**Step 3: Install Git Bash**
-- Go to [git-scm.com](https://git-scm.com) and click **Download for Windows**
-- Run the installer -- accept all the default options (just click Next until it finishes)
-
-**Step 4: Install Claude**
-- Go to [claude.ai/download](https://claude.ai/download) and install the desktop app
-- Open Claude once -- it will install **Virtual Machine Platform** (a Windows component it needs). Let it finish.
-
-**Step 5: Restart your computer**
-- This one restart covers Git Bash, Developer Mode, and Virtual Machine Platform all at once
-
-**Step 6: Open Claude and start setup**
-- After restarting, open Claude and navigate to this folder
-- Type `/onboard` to begin
-
----
+> **No installs.** No Git Bash, no Node, no Python, no restarts. Setup happens in your browser.
 
 ## Get Started
 
-**Option A -- Open Claude Code in this folder:**
+1. **Create your vault repo.** On this repository's GitHub page, click **Use this template → Create a new repository**. Name it whatever you like (e.g. `Brain`), set it to **Private**, and create it under your own account.
+2. **Open it in Claude Code.** Go to **[claude.ai/code](https://claude.ai/code)**, connect your GitHub account when prompted, and start a session on your new repository.
+3. **Type `/onboard`.** Claude interviews you and builds your system around your work.
 
-```
-cd path/to/ClaudeCodeSystem
-claude
-```
-
-Then type `/onboard`.
-
-**Option B -- Already have an Obsidian vault?** Drop this entire folder into your vault, open Claude Code in your vault, and say:
-
-> Set me up
-
-Claude will find the setup files, copy the commands into place, and start the process automatically.
-
-Either way, Claude interviews you in a friendly question-and-answer format (no manual file editing). The full setup has 4 parts:
+The full setup has 4 parts. Each part ends by telling you what to type next; you can pause between parts and pick up later.
 
 | Step | Command | What It Does | Time |
 |------|---------|-------------|------|
-| 1 | `/onboard` | Detect Desktop vs CLI, learn about you, build your notes folder and files | ~20 min |
-| 2 | `/train` | Walk through Obsidian, your vault, skills, and the daily loop | ~15 min |
-| 3 | `/connect` | Connect each of your tools (calendar, email, tasks, etc.) one by one | ~20 min |
-| 4 | `/finish` | Live demo with real data, improvement tips, how to maximize the system | ~10 min |
-
-Each part ends by telling you what to type next. You can pause between parts and pick up later.
-
-> For a detailed reference of what gets set up, see the [Onboarding Guide](docs/onboarding-guide.md).
+| 1 | `/onboard` | Learn about you, personalize the vault, configure the cloud environment | ~20 min |
+| 2 | `/train` | Learn how your system works (the vault, saving, skills, the daily loop) | ~15 min |
+| 3 | `/connect` | Connect your tools (calendar, email, tasks, transcripts) one by one | ~20 min |
+| 4 | `/finish` | Live demo with real data, switch on the nightly automation | ~10 min |
 
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                         You (Morning Review)                      │
-│                    Read Today.md → /morning → Day starts          │
-└──────────────────────────────┬───────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│                        You (any device)                        │
+│     Phone · laptop · tablet — read Today.md → /morning → go    │
+└──────────────────────────────┬─────────────────────────────────┘
                                │
-┌──────────────────────────────▼───────────────────────────────────┐
-│                     Claude Code (AI Agent)                        │
-│              Reads CLAUDE.md · Executes skills                    │
-│              Reads .env · Calls APIs · Writes vault files        │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                    │
-│   MCP Servers          REST/GraphQL APIs       Custom Scripts     │
-│   (your tools)         Gmail                   md-to-gdoc.py      │
-│   Google Calendar      Slack (N workspaces)    (your scripts)     │
-│   Task Manager         Google Drive/Docs                          │
-│   Context7             Transcript Service                         │
-│                                                                    │
-├──────────────────────────────────────────────────────────────────┤
-│                       Obsidian Vault                              │
-│   Inbox/Today.md · Inbox/<Client>.md · Work/Clients/<Client>/    │
-│   [YourCompany]/ · Work/Daily/ · Templates/ · Resources/         │
-└──────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────▼─────────────────────────────────┐
+│              Claude Code on the web (claude.ai/code)           │
+│   Interactive sessions + scheduled Routines (nightly EOD)      │
+│   Reads CLAUDE.md · Runs skills · Saves everything as commits  │
+├────────────────────────────────────────────────────────────────┤
+│   Connectors (claude.ai)      Env vars + scripts    .mcp.json  │
+│   Google Calendar · Gmail     Fathom · Rize · any   extra MCP  │
+│   Drive · Slack · ClickUp     REST/GraphQL API      servers    │
+├────────────────────────────────────────────────────────────────┤
+│                 Your Vault = private GitHub repo               │
+│   Inbox/Today.md · Inbox/<Client>.md · Work/ · Graph/ ·        │
+│   System/state/ · .claude/commands/ (your skills)              │
+│   Every change = a commit: full history, nothing ever lost     │
+└────────────────────────────────────────────────────────────────┘
 ```
 
 ## How It Works
 
 **The daily loop:**
-1. **End of day** -- Run `/eod` before wrapping up. Claude processes your calls, emails, Slack, and tasks, then builds tomorrow's plan. You can walk away while it runs.
-2. **Morning** -- Read `Inbox/Today.md` (pre-built schedule, priorities, meeting prep)
-3. **Morning** -- Run `/morning` (3-5 min interactive review: confirm plan, adjust, create calendar blocks)
-4. **All day** -- Work with Claude Code as needed (drafting, research, task management, document creation)
-5. **End of day** -- Cycle repeats
+1. **Overnight (automatic)** — a scheduled Routine runs `/eod` in the cloud: processes your calls, emails, Slack, and tasks, then builds tomorrow's plan. Your computer is off. It does not matter.
+2. **Morning** — read `Inbox/Today.md` (pre-built schedule, priorities, meeting prep) wherever you like: a Claude session, Obsidian synced locally, or the GitHub app.
+3. **Morning** — run `/morning` (3-5 min interactive review, works with taps from your phone): confirm the plan, adjust, create calendar blocks.
+4. **All day** — work with Claude as needed: drafting, research, task management, `/brain-dump` from anywhere.
+5. **The cycle repeats.**
 
-## What the Setup Creates
+## Why the vault is a Git repository
 
-By the end of all 4 steps, you will have (see the [Onboarding Guide](docs/onboarding-guide.md) for details):
-
-- **Permissions** configured so Claude can work without interrupting you
-- **Notes folder** (Obsidian vault) with organized folders for clients, projects, and tasks
-- **Instruction manual** (CLAUDE.md) customized with your name, schedule, clients, and preferences
-- **Tool connections** to your calendar, email, task manager, and other services
-- **Skills** for morning review, end-of-day processing, and other workflows
-- **Understanding** of how the system works and how to improve it over time
-
-## Repository Structure
-
-```
-ClaudeCodeSystem/
-├── CLAUDE.md                           # Bootstrap file (tells Claude how to start setup)
-├── README.md                           # This file
-├── .claude/commands/                   # ALL Claude Code CLI slash commands (auto-discovered; every one installs during /onboard)
-│   ├── onboard.md                      # Part 1: Permissions, interview, build vault
-│   ├── train.md                        # Part 2: Learn the system
-│   ├── connect.md                      # Part 3: Connect all your tools
-│   ├── finish.md                       # Part 4: Live demo, improvement tips
-│   ├── handoff.md                      # Save current work state to a named briefing file
-│   ├── pickup.md                       # Resume from a named handoff in a fresh session
-│   ├── strategy.md / optimize.md       # Decision-making + tool/process improvement
-│   ├── build-skill.md / learn.md       # Turn tasks into skills · capture knowledge
-│   ├── graph-sync.md / graph-daily.md  # Knowledge graph maintenance
-│   ├── morning.md                      # Interactive morning review command
-│   ├── eod.md                          # End of day: monolithic (all phases in one)
-│   ├── eod-gather.md                   # EOD Phase 1: data gathering
-│   ├── eod-sync.md                     # EOD Phase 2: dedup, sync, hygiene
-│   ├── eod-time.md                     # EOD Phase 3: time tracking (if configured)
-│   ├── eod-note.md                     # EOD Phase 4: daily note generation
-│   ├── eod-today.md                    # EOD Phase 5: tomorrow's plan generation
-│   ├── monthly-review.md               # Monthly system review
-│   ├── brain-dump.md                   # Manual brain dump capture
-│   └── daily-note.md                   # Simplified daily note (lightweight EOD)
-├── cowork-commands/                    # CoWork versions (YAML frontmatter, manual upload)
-│   └── *.md                            # Mirror of all commands with YAML frontmatter
-├── docs/
-│   ├── onboarding-guide.md             # Reference for what /onboard sets up
-│   ├── vault-design-guide.md           # How to build the vault (folder structure, inbox, templates)
-│   ├── integration-architecture.md     # How Claude connects to your tools
-│   └── daily-workflow.md               # Today.md + /morning + EOD pipeline
-├── templates/
-│   ├── CLAUDE.md                       # Starting CLAUDE.md template (customized by /onboard)
-│   └── .env.example                    # All env var names with descriptions
-├── examples/                           # Optional CLI settings + advanced automation (NOT commands)
-│   ├── settings.json                   # CLI example: global Claude Code settings
-│   ├── settings.local.json             # CLI example: project-level permissions
-│   └── scripts/
-│       ├── md-to-gdoc.py               # Markdown to Google Doc converter
-│       ├── eod-runner.sh               # (Advanced) EOD phase orchestrator for cron
-│       ├── eod-cron.sh                 # (Advanced) Cron wrapper with version pinning
-│       └── com.brain.eod-runner.plist  # (Advanced) launchd config for nightly schedule
-├── .gitignore
-└── LICENSE                             # CC BY-NC-ND 4.0
-```
-
-## Documentation
-
-| Document | What It Covers |
-|----------|---------------|
-| [Onboarding Guide](docs/onboarding-guide.md) | Step-by-step setup for new users: permissions, Obsidian, CLAUDE.md, first tool connection, workflow discovery |
-| [Vault Design Guide](docs/vault-design-guide.md) | Folder structure, inbox system, CLAUDE.md design, skills, integrations, monthly reviews, step-by-step build guide |
-| [Integration Architecture](docs/integration-architecture.md) | How Claude connects to your tools: direct connections, tool credentials, custom scripts, scheduled automation |
-| [Daily Workflow](docs/daily-workflow.md) | Today.md structure, /morning interactive review, EOD 5-phase pipeline, scheduled automation, tracking list pattern, carry-forward system |
+- **Nothing is ever lost.** Every change Claude makes is a commit — inspectable, diffable, undoable. "What changed yesterday?" is a real question with a real answer.
+- **It runs 24/7.** Because the vault lives on GitHub, scheduled cloud sessions can work on it while you sleep. No always-on computer, no cron jobs, no launchd.
+- **It goes anywhere.** Phone, web, or a local clone with Obsidian — all the same vault, kept in sync by git.
+- **It is yours.** Private repo under your account. Invite your systems person to help maintain it; remove them anytime.
 
 ## Key Concepts
 
 ### CLAUDE.md
-The instruction file at your vault root. Claude reads it automatically every session. It defines your folder structure, integrations, preferences, workflows, and routing rules. Think of it as Claude's operating manual. Keep it under 30K characters; move detailed content to reference files.
+The instruction manual at the vault root. Claude reads it every session. It defines your schedule, clients, preferences, integrations, and the **Runtime & Persistence Protocol** — the rules that make cloud operation safe (always pull before working, always commit and push after, compute dates in your timezone, never store secrets in files).
 
 ### Skills
-Successful tasks turned into repeatable routines. Each skill is a text file that defines a multi-step workflow. Type `/skill-name` and Claude runs the full process. Examples: `/eod-gather` (collect all daily data), `/morning` (interactive morning review), `/audit-deliver` (populate a client portal). Your skills library grows over time as you turn successful one-off tasks into reusable routines.
+Repeatable routines in `.claude/commands/`. Type `/skill-name` and Claude runs the full process. Skills are auto-discovered in every cloud session, and because they live in the repo, a skill created once works everywhere forever. Your library grows as successful tasks become skills.
 
-**Two formats exist for different runtimes:**
-- **Claude Code (CLI):** Skills live in `.claude/commands/` and are auto-discovered. No special formatting needed.
-- **Claude CoWork:** Skills require YAML frontmatter (`name:` and `description:` fields in a `---` block) and must be manually uploaded through the **Customize** section in the app settings. The `cowork-commands/` directory contains pre-formatted versions of all skills ready for upload.
+### Routines (scheduled automation)
+Cloud-scheduled runs configured with `/automate`. The standard setup is a nightly `/eod` on weekdays. Each run is a fresh session that pulls your vault, does the work, and pushes the results — the run's commit *is* the receipt.
 
 ### Session Continuity (`/handoff` and `/pickup`)
-Every user gets these two commands. They solve the single biggest limitation of working with an AI agent: a session's memory is finite. When the context window fills up, or you run `/clear`, close the window, or the conversation gets compacted, everything that was only "in the chat" is gone.
+`/handoff <name>` checkpoints mid-stream work into `.handoffs/<name>.md` (and pushes it); `/pickup [name]` reloads it in any later session — even on a different device. Cloud sessions also resume natively from claude.ai/code with conversation history intact; handoffs are for crossing between sessions and workstreams.
 
-- **`/handoff <name>`** writes a self-contained briefing to `.handoffs/<name>.md`: the goal, what's been done, what was tried and rejected, the exact next steps, and which files and commands the next session should reload. Run it before `/clear`, before closing a window mid-task, or whenever a long conversation is getting unwieldy. The handoff is written *to the next Claude*, not to you, so it reads like a briefing for a colleague who just walked in.
-- **`/pickup [name]`** (in the next session) reads that file, reloads the listed context in parallel, sanity-checks it against the current state of the repo, and reports back where you left off, all without you re-explaining anything. With no argument it lists the available handoffs and asks which to resume.
+### Credentials (there is no .env)
+Secrets never live in the repo. Google/Slack/task tools connect through **claude.ai connectors** (auth held by Anthropic). API-key tools (Fathom, Rize) use **environment variables** in your Claude Code environment configuration. See `setup/docs/environment-setup.md`.
 
-Because each handoff is a named, persistent file inside the vault, they accumulate into a **track record of in-flight workstreams**: you can keep several open across different projects, and old ones stay put until you delete them. This is better task and context management than holding everything in one long chat. Use it for mid-stream work; `/eod` still handles end-of-day wrap-up and routing items to your task inboxes.
+### The Manifest Pattern
+Long-running workflows track every extracted item in a manifest (`System/state/eod-manifest-YYYY-MM-DD.md`) — committed with the run, so nothing gets lost and every EOD is auditable later.
 
-> Named `/pickup` (not `/resume`) so it doesn't shadow Claude Code's built-in `/resume` session picker.
+## Using it locally too (optional)
 
-### Tracking Lists (The Manifest Pattern)
-Long-running workflows track every extracted item in a tracking list (`/tmp/eod-manifest-TODAY.md`). Each item gets: description, client, type, source, destination, status. This makes sure nothing gets lost during long processes.
+The cloud is primary, but the same vault works with the Claude Code CLI on your machine: clone the repo, run `claude` inside it. Pair it with [Obsidian](https://obsidian.md) + the obsidian-git community plugin for a beautiful local reading/editing experience that stays in sync with the cloud. `/train` walks you through this if you choose Obsidian as your reading surface.
 
-### Safe File Writes (Atomic Writes)
-If your notes folder syncs via iCloud or Dropbox, use Python read-modify-write scripts instead of Claude's built-in editor. The editor's separate read and write operations can lose data when cloud sync modifies the file in between. This is a safety measure for cloud-synced notes.
+## Repository Structure (before /onboard personalizes it)
 
-### Route-As-You-Go
-Every extracted item is routed to its destination file immediately, not batched for later. This prevents data loss if a step fails partway through or the process runs long.
-
-### EOD Command
-The default `/eod` flow should run as one command in one Claude session. Claude Code now supports long-context sessions, so the simplest setup is a single `/eod` that gathers, routes, syncs, writes the daily note, and builds tomorrow's plan. If a user's workflow is unusually heavy, or if they want unattended scheduled automation, you can still split EOD into separate phases as an advanced fallback.
+```
+ClaudeCodeSystem-Cloud/
+├── CLAUDE.md                    # Bootstrap (replaced by your personalized manual)
+├── README.md                    # This file
+├── .claude/
+│   ├── commands/                # All skills (auto-discovered in every session)
+│   ├── hooks/session-start.sh   # Session bootstrap: deps + date/timezone orientation
+│   └── settings.json            # Hook registration + permissions
+├── .mcp.json                    # Extra MCP servers (managed by /connect)
+├── System/
+│   ├── state/                   # Durable machine state (manifests, sync markers)
+│   └── memory/                  # Operational memory files
+├── .handoffs/                   # Mid-stream work handoffs
+├── scripts/                     # Reusable API scripts (env-var credentials)
+│   └── md-to-gdoc.py            # Markdown → Google Doc converter
+└── setup/                       # Setup-time materials (archived by /finish)
+    ├── templates/               # CLAUDE.md template + methodology doc
+    └── docs/                    # Environment setup + cloud architecture guides
+```
 
 ## FAQ
 
 **Do I need all these tool connections?**
-No. Start with Calendar + Email + your meeting transcript service. Add connections as you need them.
+No. Start with Calendar + Email. Add connections as you need them — `/connect` can be run again anytime.
 
-**Does this work on Windows and Linux?**
-Yes. Everything works on Mac, Linux, and Windows. Windows users need Git Bash, Developer Mode, and Virtual Machine Platform -- the setup process handles all of this automatically.
+**Where is my data?**
+In your private GitHub repository, under your account. Claude works on it in isolated, temporary cloud sessions tied to your Claude account.
 
-**How much does this cost?**
-Claude Code requires a [Claude Max subscription](https://claude.ai) ($100/month). Connections to Google, Slack, and similar services are within their free tiers for personal use. Some tools (like meeting transcript services or time trackers) have their own pricing.
+**What if the nightly run fails or can't reach a tool?**
+It writes an "EOD Errors" section into your daily note and still saves everything else. `/morning` reads that section and catches up interactively. `/monthly-review` audits whether the routine ran every night.
+
+**Does this work on Windows / Mac / Linux / phone?**
+Yes — it runs in the browser and the Claude mobile app. There is nothing to install. (The optional local mode works on any OS with the Claude Code CLI.)
+
+**What does it cost?**
+A Claude subscription with Claude Code on the web access ([claude.ai](https://claude.ai)); scheduled Routines draw from your plan's usage. GitHub is free for private repositories. Note: Claude Code on the web is in research preview — features and limits may evolve.
 
 **Can I use this for a team?**
 The system is designed for one person. You could adapt it for a small team, but it would need significant customization.
 
-**What if the EOD routine fails partway through?**
-If you are using the default one-command `/eod`, just run it again after fixing the issue. If you later adopt the advanced phased version, you can re-run only the failed phase.
-
-**Can I automate the EOD to run on a schedule?**
-Yes, for power users. The `examples/scripts/` folder includes a shell orchestrator, cron wrapper, and launchd plist for running `/eod` automatically at a set time (e.g., 11:30 PM weekdays). This requires some terminal setup. Most users just run `/eod` manually before wrapping up for the day.
+**I'm coming from the local (original) edition — what changed?**
+See `CHANGELOG.md` for the full delta: no `.env`, no launchd/cron scripts, git persistence protocol everywhere, Routines for scheduling, `System/state/` instead of `/tmp`, and a new `/automate` command.
 
 ## License
 
-[CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/) — you may share this with attribution, but you may not sell it or distribute modified versions. See [LICENSE](LICENSE) for details.
+[CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/) — you may share this with attribution, but you may not sell it or distribute modified versions. See [LICENSE](LICENSE).

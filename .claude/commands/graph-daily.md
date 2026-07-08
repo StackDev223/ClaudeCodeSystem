@@ -1,25 +1,27 @@
-# Graph Daily Sync -- Incremental Knowledge Graph Update
+# Graph Daily Sync -- Incremental Knowledge Graph Update (Cloud Edition)
 
-Run this at the end of the day (or as part of your EOD routine) to keep the knowledge graph current. Only processes files that changed today, so it runs in 2-5 minutes.
+Run this at the end of the day (it is built into `/eod` as the graph phase) to keep the knowledge graph current. Only processes files changed since the last sync, so it stays fast.
 
-**When to use:** Daily, after your other EOD work is done. Can be added as a final phase of `/eod`.
+**When to use:** Daily via EOD, or manually after a burst of note-taking.
 
 ---
 
-## Phase 1: Identify Changed Files
+## Phase 1: Identify Changed Files (git-native)
 
-Find files modified today:
+File modification times are useless here — every cloud session starts from a fresh clone, which stamps all files with clone time. Change detection uses git instead:
 
-```bash
-find "$VAULT" -name "*.md" -newer /tmp/eod-graph-marker 2>/dev/null || \
-find "$VAULT" -name "*.md" -mtime -1
-```
-
-Also check `git diff --name-only --diff-filter=ACM` if the vault is a git repo.
-
-Filter out: `.claude/`, `.obsidian/`, `Graph/` files (those are outputs, not inputs).
-
-If no files changed, report "No changes today" and exit.
+1. Read the last-synced commit hash from `System/state/graph-last-sync` (single line, a commit SHA).
+2. Build the changed-file list:
+   ```bash
+   # Committed changes since the last sync:
+   git diff --name-only --diff-filter=ACM $(cat System/state/graph-last-sync)..HEAD -- '*.md'
+   # Plus anything changed in this session but not yet committed:
+   git status --porcelain -- '*.md' | awk '{print $2}'
+   ```
+   Deduplicate the combined list.
+3. **First run / missing or invalid marker:** if `System/state/graph-last-sync` does not exist or the hash is unknown to git (history may have been rewritten), do NOT sweep the whole vault — tell the user to run `/graph-sync` for the full rebuild, then initialize the marker (Phase 6) and exit.
+4. Filter out: `.claude/`, `.obsidian/`, `Graph/`, `System/`, `.handoffs/`, `Templates/`, `Archive/` files (outputs and machinery, not inputs).
+5. If no files changed, report "No changes since last sync", update nothing, and exit.
 
 ---
 
@@ -37,11 +39,11 @@ Report: `Frontmatter: N files checked, N updated`
 ## Phase 3: Wiki-Links on Changed Files
 
 For each changed file:
-1. Read entity registry (`Graph/entity-registry.md`)
+1. Read the entity registry (`Graph/entity-registry.md`)
 2. Scan for unlinked entity mentions
 3. Add `[[wiki-links]]` on first mentions
-4. Add or update `## Related` section if new connections found
-5. Do not re-link entities that are already linked elsewhere in the file
+4. Add or update a `## Related` section if new connections were found
+5. Do not re-link entities already linked elsewhere in the file
 
 Report: `Wiki-links: N links added across N files`
 
@@ -52,13 +54,9 @@ Report: `Wiki-links: N links added across N files`
 Check if any changed files are transcripts (in `**/Transcripts/` or `type: transcript` frontmatter).
 
 For each new transcript:
-1. Read the transcript content
-2. Extract 2-5 key takeaways: decisions made, action items assigned, important facts learned
-3. Add `key_takeaways` list to the transcript's frontmatter
-4. Push each takeaway to the relevant entity page (usually a client Company Profile):
-   - Add to a `## Recent Activity` or `## Recent Decisions` section
-   - Include source backlink
-   - Newest entries at top
+1. Extract 2-5 key takeaways: decisions made, action items assigned, important facts learned
+2. Add a `key_takeaways` list to the transcript's frontmatter
+3. Push each takeaway to the relevant entity page (usually a client Company Profile): `## Recent Activity` or `## Recent Decisions` section, source backlink, newest entries at top
 
 If no transcripts changed, skip this phase.
 
@@ -68,7 +66,7 @@ Report: `Transcripts: N processed, N takeaways extracted`
 
 ## Phase 5: Index and MOC Updates
 
-1. Check if any **new files** were created today (not just modified)
+1. Identify **new files** in the changed list (`--diff-filter=A` entries plus untracked files)
 2. For each new file that qualifies for the index (not a transcript, daily note, or archive):
    - Add an entry to `Graph/index.md` in the correct alphabetical position
    - Add to the relevant MOC file(s) based on type
@@ -78,10 +76,17 @@ Report: `Index: N new entries added`
 
 ---
 
-## Summary
+## Phase 6: Record the Sync Point and Save
 
-Write a brief sync report to `/tmp/eod-graph-YYYY-MM-DD.md` so the daily note can reference it.
-
-```
-Graph sync: N files processed, N links added, N takeaways extracted, N index entries added
-```
+1. Write a brief sync report to `System/state/eod-graph-$TODAY.md` so the daily note can reference it:
+   ```
+   Graph sync: N files processed, N links added, N takeaways extracted, N index entries added
+   ```
+2. Commit everything, THEN record the new sync point as the resulting commit, so the marker always points at a commit that includes this sync's own changes:
+   ```bash
+   git add -A && git commit -m "Graph sync $TODAY: N files, N links" 
+   git rev-parse HEAD > System/state/graph-last-sync
+   git add System/state/graph-last-sync && git commit --amend --no-edit
+   git push
+   ```
+   (When running inside `/eod`, fold this into the final EOD commit: stage everything, commit, write `git rev-parse HEAD` into the marker, amend, push once.)
