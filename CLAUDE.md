@@ -62,3 +62,11 @@ That is it. **You do NOT need to register the command anywhere in `onboard.md`.*
 ## After setup is complete
 
 This repo is no longer needed. Everything gets copied into the user's vault during `/onboard`. The `/finish` command offers to archive this folder.
+
+## Development workflow
+
+Follow the **Integral development playbook** (brainstorm → slice → plan → build → two-stage review → validation gate → PR → CodeRabbit loop → handoff → human merge). It is maintained as a single canonical copy and deliberately does **not** live in this repo:
+
+> https://github.com/IntegralOrg/ClaudeCodeSystem-Cloud/blob/main/docs/guides/development-process.md
+
+Do not copy it in here. It was duplicated across repos before, the copies drifted, and the drift silently broke the CodeRabbit loop. Read it there, and fix it there.
