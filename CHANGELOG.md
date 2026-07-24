@@ -6,6 +6,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-07-24] - Add /morning-precheck and /reconcile
+
+Two commands added, adapted for the local edition's iCloud vault and launchd/cron scheduling.
+
+### Added
+- **`/morning-precheck`** (`.claude/commands/morning-precheck.md` + `cowork-commands/morning-precheck.md`) -- headless research pass that runs as a scheduled task (macOS `launchd` or Linux `cron`) ~6:30 AM weekdays, before the interactive `/morning`. Fans out parallel Task-tool subagents against Gmail, Slack, Calendar, and Fathom transcripts to verify what is actually still open; auto-marks HIGH-confidence completions in the client Inbox files (Python atomic-write pattern so iCloud sync cannot race between read and write); and writes `Inbox/Morning Precheck.md` for `/morning` to consume. Bakes in three hard-won rules: **done-by-anyone counts** (a teammate resolving the request is done for the user), **full-thread reading** (not just sender-side signals), and **exact-line matching instead of keyword matching** (keyword matches can wrongly check off the wrong task). `AskUserQuestion` is explicitly forbidden -- ambiguous items go to `## Confirm` for `/morning` to ask about later. Deployment guidance for both `com.brain.morning-precheck.plist` (macOS launchd, mirroring the existing eod-runner example) and cron.
+- **`/reconcile`** (`.claude/commands/reconcile.md` + `cowork-commands/reconcile.md`) -- interactive light EOD counterpart to `/eod`. Walks the day's time blocks and captures four states per block (done / carried / **skipped** / new-followup) so plan-adherence is honest -- silently dropping missed blocks inflates the metric and hides the pattern the user wants to see. Checks off the client Inbox files (Python atomic writes), patches Google Calendar with actuals prefixed `[done]` / `[carried]` / `[skipped]` so the calendar becomes a historical record of how time was actually spent, and upserts a row into `Work/Daily/Plan Adherence Log.md` (also atomic-write) for day-over-day trend visibility. `/eod` still owns Rize / Fathom / graph / daily-note; this is the fast midday-or-EOD "did I do my blocks?" pass only.
+
+### Design notes
+- Both commands use inline `[YOUR_UTC_OFFSET]` and `[YOUR_IANA_TIMEZONE]` placeholders for timezone (not `.env` vars), matching the repo's existing `[Your Timezone]` / `[Client A]` / `[YourCompany]` customization pattern -- one-time swap when installing, not runtime config.
+- Both commands use the Python atomic-write pattern for every Inbox edit and for the adherence-log upsert -- consistent with the "Critical rule: Atomic writes" already documented in `/eod-gather`.
+- `/reconcile` is intentionally interactive (not a scheduled task). It needs the user present to name exceptions ("which planned blocks did NOT happen?"); a headless variant would either auto-mark everything done (dishonest) or auto-mark everything skipped (useless).
+
+---
+
 ## [2026-06-18] - Single Command Folder: Removed examples/commands/, Unconditional Install
 
 ### Fixed
