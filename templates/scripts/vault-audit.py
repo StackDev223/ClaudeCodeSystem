@@ -253,6 +253,7 @@ def structural_checks(vault, schema, files):
     whitelist = set(schema.get("root_whitelist") or [])
     folders = schema.get("folders") or []
     required = schema.get("frontmatter_required") or []
+    no_merge = no_merge_paths(schema)
     now = time.time()
     for rel in files:
         full = os.path.join(vault, rel)
@@ -269,6 +270,11 @@ def structural_checks(vault, schema, files):
         if exact and exact.get("naming"):
             if not naming_regex(str(exact["naming"])).match(stem):
                 findings["naming_violations"].append(rel)
+        # Records under a no_merge folder are never merged, split, or
+        # rewritten, so neither check below fires for them: adding
+        # frontmatter is a rewrite, and staging/expanding a stub is too.
+        if is_protected(rel, no_merge):
+            continue
         keys, body = read_frontmatter_keys_and_body(full)
         if required and not all(k in keys for k in required):
             findings["missing_frontmatter"].append(rel)
@@ -327,22 +333,6 @@ def inbound_links(vault, targets, files):
     return result
 
 
-def _unique_dest(dest_dir, name):
-    """Return a destination path under dest_dir for name, appending
-    -2, -3, ... before the extension if name already exists there so a
-    flattened-name collision never silently overwrites a prior staged file."""
-    dest = os.path.join(dest_dir, name)
-    if not os.path.exists(dest):
-        return dest
-    stem, ext = os.path.splitext(name)
-    i = 2
-    while True:
-        candidate = os.path.join(dest_dir, "%s-%d%s" % (stem, i, ext))
-        if not os.path.exists(candidate):
-            return candidate
-        i += 1
-
-
 def stage_files(vault, rels):
     schema = load_schema(vault)
     protected = schema.get("protected", [])
@@ -364,8 +354,12 @@ def stage_files(vault, rels):
         if not os.path.isfile(src):
             sys.stderr.write("warning: skipping %s (not a regular file)\n" % rel)
             continue
-        # All checks passed, stage the file
-        dest = _unique_dest(dest_dir, rel.replace("/", "__"))
+        # All checks passed, stage the file. Preserve the relative directory
+        # structure under the dated trash dir instead of flattening the path
+        # into the filename: two distinct paths (e.g. "a/b__c.md" and
+        # "a__b/c.md") can otherwise collide on the same flattened name.
+        dest = os.path.join(dest_dir, rel)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
         shutil.move(src, dest)
         index["files"].pop(rel, None)
     index["watched_clusters"] = [c for c in index.get("watched_clusters", [])
