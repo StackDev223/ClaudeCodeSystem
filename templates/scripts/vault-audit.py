@@ -17,7 +17,7 @@ import time
 from datetime import date, datetime, timedelta
 
 ALWAYS_PROTECTED = [".git", ".git-cloud", ".claude", ".obsidian", "Attachments",
-                    "node_modules", "cowork-commands", "docs"]
+                    "node_modules", "cowork-commands"]
 
 # ---------- schema ----------
 
@@ -361,8 +361,8 @@ def stage_files(vault, rels):
             sys.stderr.write("warning: skipping %s (protected)\n" % rel)
             continue
         src = os.path.join(vault, rel)
-        if not os.path.exists(src):
-            sys.stderr.write("warning: skipping %s (does not exist)\n" % rel)
+        if not os.path.isfile(src):
+            sys.stderr.write("warning: skipping %s (not a regular file)\n" % rel)
             continue
         # All checks passed, stage the file
         dest = _unique_dest(dest_dir, rel.replace("/", "__"))

@@ -36,8 +36,8 @@ Work the order. A move or rename ALWAYS requires checking inbound links via the 
 
 - `root_clutter` and `unknown_folder`: read the file (skim is fine), pick the destination from the schema's folder purposes, `mkdir -p` if needed, `mv` it. If no folder fits, the closest general-purpose folder wins (e.g., `Resources/Reference/`); note the mismatch for Step 5.
 - `exact_duplicates`: keep the copy whose folder the schema endorses (tie-break: most recently modified); `stage` the rest. When both copies sit in the SAME folder, mtime lies (the stray copy is usually newer): keep the one whose name the index or inbound links already know, falling back to git creation date. Repoint links from staged copies to the keeper.
-- `empty_stubs`: read each before acting. `stage` only the genuinely contentless (template header only, no information). A tiny body that carries real information (an ID, a number, a link) is content, not a stub: keep the file and expand it minimally (frontmatter plus a one-line context sentence) so it stops flagging.
-- `missing_frontmatter`: add minimal frontmatter (`type` per the folder's content, `created` from the file's git or mtime date). Follow CLAUDE.md's frontmatter schema if one is documented; otherwise use `type`/`created` at minimum.
+- `empty_stubs`: skip any path under `no_merge_paths` (records are never rewritten, so a short record stays as-is even if it flags here). For everything else, read each before acting. `stage` only the genuinely contentless (template header only, no information). A tiny body that carries real information (an ID, a number, a link) is content, not a stub: keep the file and expand it minimally (frontmatter plus a one-line context sentence) so it stops flagging.
+- `missing_frontmatter`: skip any path under `no_merge_paths` (adding frontmatter is a rewrite, which records never get). For everything else, add minimal frontmatter (`type` per the folder's content, `created` from the file's git or mtime date). Follow CLAUDE.md's frontmatter schema if one is documented; otherwise use `type`/`created` at minimum.
 - `naming_violations`: rename to satisfy the pattern (derive the date from frontmatter/content), repoint links.
 
 ## Step 3: Semantic re-index
@@ -79,7 +79,7 @@ Then report ONE line: `Vault audit: N moved, N merged, N staged, N amendments`. 
 
 ## Init (one time per vault)
 
-1. Draft `.claude/vault-schema.md` from CLAUDE.md's folder-structure block plus the real tree (`ls` root and one level down). Include `root_whitelist`, `protected`, `folders` with purposes, `naming` for dated records, `no_merge: true` for records, `frontmatter_required`.
+1. `mkdir -p "$VAULT/.claude"` first (a fresh vault has no `.claude/` yet, and the schema, index, and trash state all live under it). Then draft `.claude/vault-schema.md` from CLAUDE.md's folder-structure block plus the real tree (`ls` root and one level down). Include `root_whitelist`, `protected`, `folders` with purposes, `naming` for dated records, `no_merge: true` for records, `frontmatter_required`.
 2. **Derive `protected` by convention, do not ask for it.** Default protected paths: generated-output folders (anything a command overwrites wholesale, e.g. `Inbox/Today.md`'s parent if the vault renders it), `Archive/`, `Attachments/`, `Templates/`, `.claude/` and any other dot-folder, `.handoffs/`. This is a non-technical user's vault -- a raw "which paths should I protect" question is a technical question they can't answer well. Instead, ask **at most one** plain-language question:
 
    > "Are there folders I should never reorganize, like a private journal? I will still keep them tidy if you want, just never merge or rewrite them."
