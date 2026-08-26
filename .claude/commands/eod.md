@@ -49,6 +49,8 @@ Advanced fallback:
 
 Source "$VAULT/.env" before any API calls. The manifest is at $MANIFEST.
 
+Continuity check first: look at the newest note in `Work/Daily/` and the date on the current `Inbox/Today.md`. If the newest daily note is not from the previous calendar day, one or more days have no note. Say so explicitly at the top of the run and name the missing dates before proceeding. Date-scoped API fetches only cover the day you run for, so a silent gap means those days are never captured. Do not backfill mid-run; just surface it.
+
 Critical rules:
 - Atomic writes: always use Python read-modify-write for existing Inbox files.
 - Route-as-you-go: route every item and log it to the manifest immediately.
