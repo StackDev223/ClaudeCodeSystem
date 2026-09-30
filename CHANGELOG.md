@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2026-09-30] - /handoff always ends with the copy-ready /pickup command
+
+`/handoff` printed "To resume: /pickup NAME" inside its summary, mixed in with the other lines. In practice the name got lost in the summary or dropped when the reply carried extra warnings, and the user had to retype it in the next session.
+
+### Changed
+- **`/handoff` Step 4** (`.claude/commands/handoff.md` + `cowork-commands/handoff.md`) -- the reply now always ends with the exact resume command, alone in its own fenced code block, with the real handoff name filled in (for example `/pickup client-onboarding-fix`). It is the final line of the reply, after any warnings or open questions, and it is printed again whenever the handoff is re-saved in the same conversation. The name matches the saved filename exactly, so a single copy and paste resumes the work.
+
+---
+
 ## [2026-09-24] - Local routines are backed up in the vault
 
 A Claude desktop LOCAL scheduled task lives only on the machine that created it (prompt on disk under `~/.claude/scheduled-tasks/`, schedule and approvals in app state that nothing exports, absent from the account's cloud routine list). A crashed or replaced computer lost them silently, and no rule told the agent to back them up.

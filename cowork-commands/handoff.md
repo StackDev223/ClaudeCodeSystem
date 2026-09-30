@@ -132,7 +132,7 @@ Run these reads/commands in parallel at the start of your response, before sayin
 
 ## Step 4: Confirm With the User
 
-After writing the file, show a compact summary:
+After writing the file, show a compact summary. **The last thing in your reply is always the exact resume command, on its own, in a fenced code block, with the real name filled in**, so the user can copy it straight into the next session instead of typing it:
 
 ```
 Handoff saved: .handoffs/HANDOFF_NAME.md
@@ -140,10 +140,18 @@ Handoff saved: .handoffs/HANDOFF_NAME.md
   Goal: [one line]
   Next steps: [1-line summary of first next action]
   Context to pull: [count] files, [count] commands
-
-To resume: /pickup HANDOFF_NAME
-To see all handoffs: /pickup
 ```
+
+Then end the reply with exactly this block (substitute the real name, never the placeholder):
+
+```
+/pickup HANDOFF_NAME
+```
+
+Rules for the resume command:
+- It is the final line of the reply, after any other text (including warnings or open questions you raise). Nothing follows it.
+- Use the sanitized `HANDOFF_NAME` exactly as saved, so it matches the filename.
+- If you edit or re-save the handoff later in the same conversation, output the command again at the end of that reply too.
 
 Do not dump the full file content into the chat. The user can read it if they want to verify. The point is the file exists and is ready for the next session.
 
