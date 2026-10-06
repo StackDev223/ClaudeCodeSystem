@@ -143,6 +143,10 @@ You do not need to duplicate permissions from the global file here. The global s
 
 ---
 
+### Guardrail hooks
+
+`/onboard` installs four small hooks with `examples/settings.json` (merged into your vault's `.claude/settings.json`). They guarantee that Claude cannot open or print your credentials file or the environment (your scripts still use the logins through `scripts/envload.py` and `scripts/with-env.py`), that every tool call is logged with secrets masked, that a client profile keeps exactly one `## Current State` plus an append-only `## Log`, and that each session starts with the branch, uncommitted work, and latest handoff. To prove they are on, run the two commands in the README "Guardrails" section from the vault root: the first must exit 2 (blocked) and the second exit 0.
+
 ## Step 3: Install Obsidian and Create Your Notes Folder
 
 Obsidian is a notes app where your notes live on your computer as plain text files instead of on someone else's server. Claude can read files on your computer instantly, which makes Obsidian a perfect workspace.
