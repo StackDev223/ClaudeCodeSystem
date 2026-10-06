@@ -26,13 +26,11 @@ The Write tool is acceptable for creating the adherence log for the first time (
 
 ## First action: live time check
 
-Run `date`. Set `TODAY=YYYY-MM-DD`. Trust the live clock, never the system-prompt date. Source `.env` so the calendar helper has credentials:
+Run `date`. Set `TODAY=YYYY-MM-DD`. Trust the live clock, never the system-prompt date. Run every calendar helper through the credential wrapper so it has credentials without you reading the credentials file:
 
-```bash
-set -a && source .env 2>/dev/null && set +a
-```
+The exact invocations are in Sections 1 and 2 (`python3 scripts/with-env.py -- python3 - ... <<'PY'`).
 
-(`set -a` is required so the vars export into the Python subprocess. A plain `source` leaves them as shell-only vars and the calendar helper will `KeyError`.)
+(The wrapper exports the variables into the child process only. Never read, source, or print the credentials file.)
 
 ## When to use
 
@@ -49,16 +47,17 @@ set -a && source .env 2>/dev/null && set +a
 2. Pull today's **live** calendar events and capture their event IDs (the morning's blocks contain "Deep Work" in the title):
 
    ```bash
-   python3 - "$TODAY" <<'PY'
+   python3 scripts/with-env.py -- python3 - "$TODAY" <<'PY'
    import os, sys, json, urllib.request, urllib.parse
+   def _v(k): return os.getenv(k) or sys.exit('missing ' + k)
    d = sys.argv[1]
    TZ_OFFSET = "[YOUR_UTC_OFFSET]"  # replace with your UTC offset. Examples: -05:00 (EST), -08:00 (PST), +00:00 (UTC), +01:00 (CET), +05:30 (IST), +09:00 (JST)
    tok = json.load(urllib.request.urlopen('https://oauth2.googleapis.com/token',
        urllib.parse.urlencode({
            'grant_type': 'refresh_token',
-           'client_id': os.environ['GOOGLE_CLIENT_ID'],
-           'client_secret': os.environ['GOOGLE_CLIENT_SECRET'],
-           'refresh_token': os.environ['GOOGLE_REFRESH_TOKEN'],
+           'client_id': _v('GOOGLE_CLIENT_ID'),
+           'client_secret': _v('GOOGLE_CLIENT_SECRET'),
+           'refresh_token': _v('GOOGLE_REFRESH_TOKEN'),
        }).encode()))['access_token']
    url = f"https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin={d}T00:00:00{TZ_OFFSET}&timeMax={d}T23:59:59{TZ_OFFSET}&singleEvents=true&orderBy=startTime"
    for e in json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'Authorization': f'Bearer {tok}'}))).get('items', []):
@@ -104,14 +103,15 @@ Goal: the calendar should show **what actually happened**, so future-you can see
 - If a block was interrupted (e.g., a nap + an ad-hoc call landed mid-block), split it: shorten the block to its real focused window and add the interrupting events so the timeline is honest.
 
 ```bash
-python3 - <<'PY'
-import os, json, urllib.request, urllib.parse
+python3 scripts/with-env.py -- python3 - <<'PY'
+import os, sys, json, urllib.request, urllib.parse
+def _v(k): return os.getenv(k) or sys.exit('missing ' + k)
 tok = json.load(urllib.request.urlopen('https://oauth2.googleapis.com/token',
     urllib.parse.urlencode({
         'grant_type': 'refresh_token',
-        'client_id': os.environ['GOOGLE_CLIENT_ID'],
-        'client_secret': os.environ['GOOGLE_CLIENT_SECRET'],
-        'refresh_token': os.environ['GOOGLE_REFRESH_TOKEN'],
+        'client_id': _v('GOOGLE_CLIENT_ID'),
+        'client_secret': _v('GOOGLE_CLIENT_SECRET'),
+        'refresh_token': _v('GOOGLE_REFRESH_TOKEN'),
     }).encode()))['access_token']
 H = {'Authorization': f'Bearer {tok}', 'Content-Type': 'application/json'}
 BASE = 'https://www.googleapis.com/calendar/v3/calendars/primary/events'
@@ -178,7 +178,7 @@ Report back, tight:
 
 | Step | Action |
 |------|--------|
-| Time check | `date`; `set -a && source .env && set +a` |
+| Time check | `date`; run helpers via `python3 scripts/with-env.py -- ...` |
 | Load | Read `Inbox/Today.md` for the plan; use client Inbox files for task identity; pull live calendar event IDs ("Deep Work" titles) |
 | Run-through | Ask for **exceptions**, confirm **deferred** items explicitly, capture done/carried/**skipped**/new follow-ups |
 | Tasks | Check off `- [ ]` -> `- [x]` in client files with actuals (Python atomic write); append new follow-ups under `## Open Tasks` with source note; never hand-edit Today.md |
@@ -195,7 +195,7 @@ Report back, tight:
 - **Skipping the adherence log.** Even a clean 100% day gets a row -- the value is the trend, and gaps in the log read as "didn't reconcile," not "perfect day."
 - **Counting pending blocks as misses on a midday run.** Later-today blocks aren't skipped yet; exclude them from the denominator and mark the row `(midday)`.
 - **Forgetting the new follow-up.** "Done, but the client then asked for X" means the task is done AND a new task exists. Capture both.
-- **Plain `source .env` without `set -a`.** The Python calendar helper can't see `GOOGLE_*` and dies with `KeyError`.
+- **Running the calendar helper without the wrapper.** The Python helper can't see `GOOGLE_*` and dies with `KeyError`. Run it as `python3 scripts/with-env.py -- python3 - ...`; never source the credentials file.
 - **Direct Edit-tool writes to Inbox files.** iCloud sync races between the read and the write. Always use the Python atomic-write pattern for check-offs, follow-up appends, and the adherence-log upsert.
 - **Treating this as `/eod`.** No time tracking / transcripts / graph here. Run `/eod` for the full closeout.
 
