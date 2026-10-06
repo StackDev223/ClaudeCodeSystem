@@ -223,6 +223,54 @@ python3 scripts/vault-embed.py report --vault <path> --install
 ### EOD Command
 The default `/eod` flow should run as one command in one Claude session. Claude Code now supports long-context sessions, so the simplest setup is a single `/eod` that gathers, routes, syncs, writes the daily note, and builds tomorrow's plan. If a user's workflow is unusually heavy, or if they want unattended scheduled automation, you can still split EOD into separate phases as an advanced fallback.
 
+## Install the System Journal (optional)
+
+The System Journal turns every Claude Code session into a durable, checkable record so a later
+review can spot what keeps coming back. It ships in `templates/scripts/system-journal/` (full
+reference: that folder's `README.md`). This template ships **capture** only: there is no weekly
+reflection command and no Themes writer yet.
+
+1. **Install the scripts and record your vault path** (macOS can block execution of scripts in a
+   cloud-synced folder, so they are copied to a plain local dir):
+   ```bash
+   bash scripts/system-journal/install.sh --vault "$VAULT" --write-hooks
+   ```
+   `--vault` writes your vault path to `~/.system-journal/config.json`; `--write-hooks` merges
+   three hooks into your user-level `~/.claude/settings.json` (it only adds hooks that are not
+   already present and preserves everything else). Re-run `install.sh` (no flags) after editing
+   any script.
+2. **What the hooks do.** `Stop` extracts the live session every ~15 minutes (no model call);
+   `SessionEnd` extracts the finished session and distills one journal line; `SessionStart`
+   injects directory-matched Themes (inert until a reflection step writes `_generated/Themes.md`,
+   which this template does not).
+3. **Per-session cost.** The journal line is produced by your own `claude -p` call with the
+   default Sonnet distiller: about **nine cents per finished session**. Set `SYSTEM_JOURNAL_MODEL`
+   to change the model. The Stop-hook extract and the SessionStart inject are free.
+4. **What is kept.** Your words verbatim, the agent's visible words capped, the tool calls it
+   made and the errors that came back. **No tool outputs**, no thinking, no attachments. Full
+   transcripts are never stored (Claude Code keeps its own for ~30 days locally).
+5. **Where the files land.** `_generated/system-journal/` in your vault: `evidence/<YYYY-MM>/`
+   (deterministic, kept forever) and `<YYYY-MM>.<host>.jsonl` (one journal line per session).
+6. **Cost guard.** Before any bulk re-run, read the pending count first:
+   ```bash
+   python3 ~/scripts/system-journal/distill.py --dry-run | tail -1
+   ```
+   `--force` keeps existing journal lines unless you also pass `--redistill`.
+7. **Privacy.** Everything stays in your own vault repo. The audit tier (a work-only projection
+   with personal lines dropped) is **generated locally only and shipped nowhere**.
+
+**Cloud capture (optional).** If you also run your vault in Claude Code on the web, add the
+repo-level hook block in `examples/cloud-hooks.settings.json` to your vault's own committed
+`.claude/settings.json`. Those hooks (`scripts/cloud-land.sh` and
+`scripts/system-journal/cloud-journal.sh`) ship to every cloud container that clones your vault,
+land the session's file edits and journal on `main` without the agent running git, and bypass the
+permission classifier so an unattended run never stalls. The cloud environment needs push access
+to your vault's `origin` (main).
+
+**Knowledge graph.** `scripts/graph-render.py` renders `Graph/index.md` and the MOCs from
+frontmatter and the concept index; `/graph-daily` and `/graph-sync` drive it. Graph files are
+generated, not hand-edited, and links are structural edges only (no inline wiki-link pass).
+
 ## FAQ
 
 **Do I need all these tool connections?**
