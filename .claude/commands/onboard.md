@@ -74,8 +74,8 @@ Tell the user:
 
 **Action:** Read `~/.claude/settings.json` (it may not exist yet).
 
-- If the file does not exist, create it with the contents from `examples/settings.json` in this repository.
-- If it exists, **merge** permissions: add any missing entries from `examples/settings.json` to the existing `allow` array and `additionalDirectories` array without removing anything. Preserve any other settings (like `mcpServers`).
+- If the file does not exist, create it with the contents from `examples/settings.json` in this repository, leaving out its `hooks` object (hooks are installed per vault in Phase 6A).
+- If it exists, **merge** permissions: add any missing entries from `examples/settings.json` to the existing `allow` array and `additionalDirectories` array without removing anything. Do not copy its `hooks` object here; hooks are installed per vault in Phase 6A. Preserve any other settings (like `mcpServers`).
 
 After writing: "Done. Permissions are set. You will not see approval prompts during setup."
 
@@ -399,6 +399,8 @@ Options:
 - Yes, never touch it at all (they name the folder)
 
 Map the answer: "keep tidy but never rewrite" -> mark that folder `no_merge: true` in the schema (filed and indexed, never merged or rewritten). "Never touch it at all" -> add it to `protected` (skipped entirely). Everything else about the schema -- folder purposes, naming patterns -- write from the structure above and correct it later; `/vault-audit`'s own Step 5 self-amends the schema when it sees the same misfile pattern 3+ nights running, so an imperfect first draft is fine.
+
+Also install the guardrail hooks and credential helpers: `mkdir -p VAULT_PATH/scripts && cp -R REPO_PATH/templates/scripts/hooks VAULT_PATH/scripts/hooks && cp REPO_PATH/templates/scripts/{envload,with-env,sanitize_ingest,profile-convert}.py VAULT_PATH/scripts/ && mkdir -p VAULT_PATH/scripts/tests && cp REPO_PATH/templates/scripts/tests/*.py VAULT_PATH/scripts/tests/`. The `hooks` object in `examples/settings.json` points at `$CLAUDE_PROJECT_DIR/scripts/hooks/...`, so it belongs in the VAULT's `VAULT_PATH/.claude/settings.json` (merge the `hooks` object in; keep any hooks already there), never in the home-folder settings. They block reading the credentials file or environment, log every tool call, and keep client profiles to one `## Current State` plus an append-only `## Log`. Create each client's `Work/Clients/<Client>/Company Profile.md` from `REPO_PATH/templates/Client Note.md` (copy it to `VAULT_PATH/Templates/Client Note.md` first).
 
 Also copy the audit script into the vault: `mkdir -p VAULT_PATH/scripts && cp REPO_PATH/templates/scripts/vault-audit.py VAULT_PATH/scripts/vault-audit.py`.
 
