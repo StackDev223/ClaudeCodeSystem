@@ -1,3 +1,5 @@
+> **This repository is archived (2026-10-08).** The ClaudeCodeSystem now lives at https://github.com/IntegralOrg/ClaudeCodeSystem: one edition, cloud-first, with a local layer, and setup that runs itself. Start at https://integralorg.github.io/ClaudeCodeSystem/.
+
 # Claude Code Personal Assistant System
 
 An AI-powered personal assistant built on [Obsidian](https://obsidian.md) + [Claude Code](https://docs.anthropic.com/en/docs/claude-code). The vault is the operating system; Claude Code is the brain. Together they handle task management, meeting processing, email triage, time tracking, client work, and daily planning -- replacing a human executive assistant.
